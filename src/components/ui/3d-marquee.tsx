@@ -28,8 +28,8 @@ export const ThreeDMarquee = ({
         className,
       )}
     >
-      <div className="flex size-full items-center justify-center">
-        <div className="size-[1720px] shrink-0 scale-50 sm:scale-75 lg:scale-100">
+      <div className="flex size-full items-center justify-center transform-3d">
+        <div className="size-[1720px] shrink-0 scale-50 transform-3d sm:scale-75 lg:scale-100">
           <div
             style={{
               transform: "rotateX(55deg) rotateY(0deg) rotateZ(-45deg)",
@@ -49,7 +49,7 @@ export const ThreeDMarquee = ({
                       }
                 }
                 key={colIndex + "marquee"}
-                className="flex flex-col items-start gap-8"
+                className="flex flex-col items-start gap-8 transform-3d"
               >
                 <GridLineVertical className="-left-4" offset="80px" />
                 {subarray.map((image, imageIndex) => {
@@ -63,8 +63,16 @@ export const ThreeDMarquee = ({
                   const opacity = 0.7 + nearness * 0.3;
                   // Helligkeit/Kontrast, damit die Sektionen klar als Website-Panels lesbar sind
                   const pop = "brightness(1.18) contrast(1.12) saturate(1.08)";
+                  // Echte Tiefe: nahe Kacheln (nearness≈1) weiter vorn, ferne weiter hinten.
+                  // Zentriert um 0, damit die Gesamt-Komposition gleich bleibt — beim
+                  // Maus-Kippen parallaxen die vorderen Kacheln dadurch stärker als die hinteren.
+                  const depthZ = (nearness - 0.5) * 120; // px, −60 … +60
                   return (
-                    <div className="relative" key={imageIndex + image}>
+                    <div
+                      className="relative transform-3d"
+                      style={{ transform: `translateZ(${depthZ}px)` }}
+                      key={imageIndex + image}
+                    >
                       <GridLineHorizontal className="-top-4" offset="20px" />
                       <motion.img
                         initial={{ filter: `blur(${blur}px) ${pop}`, opacity }}
