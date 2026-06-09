@@ -233,10 +233,16 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
       yPercent: -16, opacity: 0, ease: 'none',
       scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom 35%', scrub: true },
     });
-    gsap.to('.hero-bg', {
-      yPercent: -10, ease: 'none',
-      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
-    });
+    /* Scroll-gekoppelt: Marquee-Hintergrund schiebt hoch UND zoomt/rotiert dezent mit,
+       sodass der Hero beim Verlassen lebendig „mitatmet" statt nur statisch wegzufaden.
+       Läuft auf .hero-bg (Wrapper) — kollidiert NICHT mit dem Maus-Parallax auf .hero-marquee. */
+    gsap.fromTo('.hero-bg',
+      { scale: 1, rotation: 0 },
+      {
+        yPercent: -10, scale: 1.12, rotation: 1.5, ease: 'none',
+        scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
+      },
+    );
     window.addEventListener('load', () => ScrollTrigger.refresh());
   }
 
