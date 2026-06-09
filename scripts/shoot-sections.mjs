@@ -2,6 +2,8 @@ import { chromium } from "playwright";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { mkdirSync } from "node:fs";
+import sharp from "sharp";
+import { unlink } from "node:fs/promises";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = resolve(__dirname, "../public/marquee");
@@ -35,7 +37,11 @@ for (const id of sections) {
   try {
     await el.scrollIntoViewIfNeeded();
     await page.waitForTimeout(400);
-    await el.screenshot({ path: resolve(outDir, `${id}.png`) });
+    // Playwright kann nur PNG → sofort nach WebP konvertieren (gleiche Optik, ~90% kleiner)
+    const png = resolve(outDir, `${id}.png`);
+    await el.screenshot({ path: png });
+    await sharp(png).webp({ quality: 82 }).toFile(resolve(outDir, `${id}.webp`));
+    await unlink(png); // PNG verwerfen — das Marquee nutzt die WebP-Dateien
     console.log("✓", id);
   } catch (e) {
     console.log("✗", id, e.message);
@@ -43,4 +49,4 @@ for (const id of sections) {
 }
 
 await browser.close();
-console.log("Fertig →", outDir);
+console.log("Fertig (WebP) →", outDir);

@@ -9,12 +9,12 @@ const t = useTranslations(lang);
 // Kacheln für den 3D-Marquee = Screenshots der eigenen Sektionen.
 // Mehrfach wiederholt, damit alle 4 Spalten gut gefüllt sind.
 const marqueeBase = [
-  '/marquee/services.png',
-  '/marquee/work.png',
-  '/marquee/pricing.png',
-  '/marquee/faq.png',
-  '/marquee/contact.png',
-  '/marquee/hero.png',
+  '/marquee/services.webp',
+  '/marquee/work.webp',
+  '/marquee/pricing.webp',
+  '/marquee/faq.webp',
+  '/marquee/contact.webp',
+  '/marquee/hero.webp',
 ];
 const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqueeBase.length]);
 ---
