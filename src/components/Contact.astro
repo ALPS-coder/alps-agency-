@@ -1,0 +1,249 @@
+---
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+const sourceOptions = ['google', 'referral', 'social', 'other'] as const;
+---
+<section id="contact" class="section contact" aria-labelledby="contact-title">
+  <div class="section-inner contact-grid">
+    <div class="contact-intro">
+      <p class="eyebrow" data-reveal>{t('contact.eyebrow')}</p>
+      <h2 id="contact-title" class="h-section" data-reveal>{t('contact.title')}</h2>
+      <p class="sec-sub" data-reveal>{t('contact.subtitle')}</p>
+    </div>
+
+    <form id="contact-form" class="contact-form glass" novalidate data-reveal>
+      <!-- Honeypot gegen Bots (visuell + a11y versteckt) -->
+      <div class="hp" aria-hidden="true">
+        <label>Bitte leer lassen<input type="text" name="company" tabindex="-1" autocomplete="off" /></label>
+      </div>
+
+      <div class="field">
+        <label for="cf-name">{t('contact.fields.name.label')}</label>
+        <input id="cf-name" name="name" type="text" required
+          placeholder={t('contact.fields.name.placeholder')} autocomplete="name" />
+        <span class="field-err" data-err></span>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="cf-email">{t('contact.fields.email.label')}</label>
+          <input id="cf-email" name="email" type="email" required
+            placeholder={t('contact.fields.email.placeholder')} autocomplete="email" />
+          <span class="field-err" data-err></span>
+        </div>
+        <div class="field">
+          <label for="cf-phone">{t('contact.fields.phone.label')}</label>
+          <input id="cf-phone" name="phone" type="tel"
+            placeholder={t('contact.fields.phone.placeholder')} autocomplete="tel" />
+          <span class="field-err" data-err></span>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="cf-industry">{t('contact.fields.industry.label')}</label>
+          <input id="cf-industry" name="industry" type="text"
+            placeholder={t('contact.fields.industry.placeholder')} />
+          <span class="field-err" data-err></span>
+        </div>
+        <div class="field">
+          <label for="cf-source">{t('contact.fields.source.label')}</label>
+          <select id="cf-source" name="source">
+            <option value="" selected disabled>{t('contact.fields.source.placeholder')}</option>
+            {sourceOptions.map((o) => (
+              <option value={o}>{t(`contact.fields.source.options.${o}`)}</option>
+            ))}
+          </select>
+          <span class="field-err" data-err></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="cf-message">{t('contact.fields.message.label')}</label>
+        <textarea id="cf-message" name="message" rows="4" required
+          placeholder={t('contact.fields.message.placeholder')}></textarea>
+        <span class="field-err" data-err></span>
+      </div>
+
+      <button type="submit" class="btn-primary contact-submit">
+        <span class="cs-label">{t('contact.submit')}</span>
+        <span class="cs-sending" hidden>{t('contact.sending')}</span>
+      </button>
+
+      <div class="contact-success glass" role="status" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+        <div>
+          <strong>{t('contact.success_title')}</strong>
+          <p>{t('contact.success_text')}</p>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script
+  is:inline
+  define:vars={{
+    errRequired: t('contact.errors.required'),
+    errEmail: t('contact.errors.email'),
+    errPhone: t('contact.errors.phone'),
+  }}
+>
+  // Fehlertexte aus den locales (DE/EN) global verfügbar machen
+  window.__contactErrors = { required: errRequired, email: errEmail, phone: errPhone };
+</script>
+
+<style>
+  .contact-grid {
+    display: grid;
+    gap: clamp(2rem, 5vw, 3.5rem);
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  @media (min-width: 960px) { .contact-grid { grid-template-columns: 0.85fr 1.15fr; } }
+
+  .contact-intro .eyebrow { margin-bottom: 1rem; }
+  .sec-sub { margin-top: 1.1rem; color: var(--color-muted); font-size: clamp(1rem, 2vw, 1.15rem); }
+
+  .contact-form { padding: clamp(1.5rem, 4vw, 2.4rem); display: flex; flex-direction: column; gap: 1.1rem; }
+
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  .field { display: flex; flex-direction: column; gap: 0.45rem; }
+  .field-row { display: grid; gap: 1.1rem; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .field-row { grid-template-columns: 1fr 1fr; } }
+
+  label {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-muted);
+  }
+  input, select, textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 0.7rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  textarea { resize: vertical; min-height: 6rem; }
+  input::placeholder, textarea::placeholder { color: rgba(169, 184, 212, 0.55); }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-accent-bright);
+    background: rgba(26, 63, 255, 0.06);
+  }
+  select { appearance: none; cursor: pointer; }
+  select option { background: var(--color-night-soft); color: #fff; }
+
+  .field.has-error input,
+  .field.has-error select,
+  .field.has-error textarea { border-color: #ff5d6c; }
+  .field-err {
+    min-height: 1rem;
+    font-size: 0.8rem;
+    color: #ff8a94;
+  }
+  .field-err:empty { display: none; }
+
+  .contact-submit { margin-top: 0.5rem; width: 100%; }
+  .contact-submit[aria-busy="true"] { opacity: 0.7; pointer-events: none; }
+
+  .contact-success {
+    display: none;
+    align-items: center;
+    gap: 0.9rem;
+    margin-top: 0.5rem;
+    padding: 1.1rem 1.3rem;
+    border-color: rgba(37, 211, 102, 0.4);
+    background: rgba(37, 211, 102, 0.08);
+  }
+  .contact-success:not([hidden]) { display: flex; }
+  .contact-success svg { width: 1.6rem; height: 1.6rem; flex-shrink: 0; color: var(--color-whatsapp); }
+  .contact-success strong { font-family: var(--font-display); }
+  .contact-success p { margin: 0.15rem 0 0; color: var(--color-muted); font-size: 0.92rem; }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const section = document.getElementById('contact');
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+
+  // Reveal
+  const reveal = section?.querySelectorAll('[data-reveal]');
+  if (reveal && reveal.length) {
+    if (reduceMotion) gsap.set(reveal, { opacity: 1, y: 0 });
+    else gsap.fromTo(reveal, { y: 30, opacity: 0 }, {
+      y: 0, opacity: 1, duration: 0.75, stagger: 0.08, ease: 'power3.out',
+      scrollTrigger: { trigger: section, start: 'top 80%' },
+    });
+  }
+
+  if (form) {
+    const errors = (window as any).__contactErrors ?? { required: 'Pflichtfeld', email: 'Ungültige E-Mail', phone: 'Ungültige Nummer' };
+    const setErr = (name: string, msg: string) => {
+      const field = form.querySelector(`[name="${name}"]`)?.closest('.field');
+      if (!field) return;
+      field.classList.toggle('has-error', !!msg);
+      const slot = field.querySelector('[data-err]');
+      if (slot) slot.textContent = msg;
+    };
+
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRe = /^[+\d][\d\s/().-]{5,}$/;
+
+    const validate = () => {
+      let ok = true;
+      const get = (n: string) => (form.elements.namedItem(n) as HTMLInputElement | null)?.value.trim() ?? '';
+      for (const n of ['name', 'email', 'message']) {
+        if (!get(n)) { setErr(n, errors.required); ok = false; } else setErr(n, '');
+      }
+      if (get('email') && !emailRe.test(get('email'))) { setErr('email', errors.email); ok = false; }
+      if (get('phone') && !phoneRe.test(get('phone'))) { setErr('phone', errors.phone); ok = false; }
+      return ok;
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Honeypot: Bot hat das Feld gefüllt → still abbrechen
+      if ((form.elements.namedItem('company') as HTMLInputElement | null)?.value) return;
+      if (!validate()) {
+        form.querySelector<HTMLElement>('.has-error input, .has-error select, .has-error textarea')?.focus();
+        return;
+      }
+
+      const btn = form.querySelector('.contact-submit') as HTMLButtonElement;
+      const label = btn.querySelector('.cs-label') as HTMLElement;
+      const sending = btn.querySelector('.cs-sending') as HTMLElement;
+      btn.setAttribute('aria-busy', 'true');
+      label.hidden = true; sending.hidden = false;
+
+      // TODO: an echtes Backend/Formspree/Supabase anbinden.
+      // Aktuell: visuelle Bestätigung (kein Versand-Endpunkt vorhanden).
+      window.setTimeout(() => {
+        const success = form.querySelector('.contact-success') as HTMLElement;
+        form.querySelectorAll('.field, .field-row, .contact-submit').forEach((el) => ((el as HTMLElement).style.display = 'none'));
+        success.hidden = false;
+        if (!reduceMotion) gsap.fromTo(success, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' });
+        success.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+      }, 700);
+    });
+
+    // Fehler beim Tippen wieder lösen
+    form.addEventListener('input', (e) => {
+      const el = e.target as HTMLElement;
+      const name = el.getAttribute('name');
+      if (name) setErr(name, '');
+    });
+  }
+</script>

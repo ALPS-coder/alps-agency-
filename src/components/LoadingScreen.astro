@@ -1,0 +1,72 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../assets/alps-logo.jpg';
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+---
+<div id="loader" class="loader" role="status" aria-live="polite">
+  <span class="sr-only">{t('loading.label')}</span>
+  <div class="loader-logo logo-mask">
+    <Image src={logo} alt="" width={240} height={240} loading="eager" />
+  </div>
+</div>
+
+<style>
+  .loader {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    background: var(--color-night-deep);
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  .loader.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .loader-logo {
+    position: relative;
+    width: min(46vw, 220px);
+    animation: logo-pulse 2.2s ease-in-out infinite;
+  }
+  .loader-logo::before {
+    content: "";
+    position: absolute;
+    inset: -28%;
+    z-index: -1;
+    background: radial-gradient(circle, rgba(26, 63, 255, 0.35), transparent 70%);
+    filter: blur(8px);
+  }
+  .loader-logo :global(img) {
+    width: 100%;
+    height: auto;
+    opacity: 0;
+    animation: logo-in 1s ease forwards;
+  }
+  @keyframes logo-in { to { opacity: 1; } }
+  @keyframes logo-pulse {
+    0%, 100% { filter: drop-shadow(0 0 16px rgba(26, 63, 255, 0.25)); }
+    50% { filter: drop-shadow(0 0 34px rgba(26, 63, 255, 0.6)); }
+  }
+</style>
+
+<script>
+  const loader = document.getElementById('loader');
+  if (loader) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.documentElement.style.overflow = 'hidden';
+    const hide = () => {
+      loader.classList.add('is-hidden');
+      loader.setAttribute('aria-hidden', 'true');
+      document.documentElement.style.overflow = '';
+    };
+    const delay = reduce ? 150 : 1400;
+    let done = false;
+    const start = () => { if (done) return; done = true; setTimeout(hide, delay); };
+    window.addEventListener('load', start);
+    setTimeout(start, 3000); // Fallback, falls 'load' nie feuert
+  }
+</script>

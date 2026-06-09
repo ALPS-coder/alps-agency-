@@ -1,0 +1,116 @@
+---
+name: references
+description: Referenz-Websites, Design-Prinzipien und technische Standards für Alps Agency. IMMER aktivieren wenn visueller Output, Komponenten, Animationen, Layouts oder Hero Sections erstellt werden. Pflicht vor jedem Design-Task.
+---
+
+# Alps Agency — References & Design Standards
+
+## ⚠️ Pflicht vor jedem visuellen Task
+1. Alle Referenz-Links zuerst testen — tote Links überspringen
+2. Bei totem Link: selbst Ersatz suchen auf Awwwards/Godly
+3. Mindestens 2 funktionierende Referenzen konsultieren
+4. Stil ableiten — niemals kopieren
+5. Eigene kreative Lösung bauen die BESSER ist
+
+## Beispiele Ordner
+Pfad: .claude/references/examples/
+- Erste Datei die IMMER zuerst gelesen wird: _index.md
+- Dateien in examples/ NUR lesen wenn Skill aktiv UND User speichern will
+- Sonst: gesamten Ordner ignorieren
+- Format: {kategorie}-{name}.md
+- Max 5-7 Sätze pro Datei
+- Nur User oder dieser Skill darf speichern
+- Nur wenn User explizit sagt "speichern"
+
+## Aktuelle Referenzen ✅ geprüft Juni 2026
+| Website | Was lernen |
+|---|---|
+| https://activetheory.net | 3D WebGL, cineastische Kamera |
+| https://resn.co.nz | Scroll-Storytelling, Transitions |
+| https://dogstudio.co | Bold Hero, GSAP, Kontraste |
+| https://unit9.com | 3D Interaktion, Cursor-Effekte |
+| https://unseen.co | Elegantes Design + Motion |
+| https://garden-eight.com | Minimalistisch, Illustration-Storytelling |
+
+## Fallback (immer aktuell)
+- https://www.awwwards.com/sites/type/agency
+- https://godly.website
+- https://www.awwwards.com/inspiration/3d
+
+## 3D Hero Standards
+- Three.js oder Spline für 3D Objekte
+- Maus-Interaktion: Objekt folgt Cursor subtil
+- Particle System als Atmosphäre
+- Loading Screen mit Fortschritt
+
+## Animation Prinzipien
+- Easing: easeInOut oder custom cubic-bezier
+- Dauer: 0.6s–1.2s groß, 0.3s klein
+- Stagger: 0.07s–0.1s
+- Scroll: GSAP ScrollTrigger scrub: 1.5
+
+## Parallax Implementierung
+Nur aktivieren wenn ein Bau-Skill aktiv ist.
+
+### Mit GSAP ScrollTrigger (empfohlen für 3D Szenen)
+gsap.to(".bg-layer", {
+  yPercent: -30,
+  ease: "none",
+  scrollTrigger: {
+    trigger: ".hero",
+    start: "top top",
+    end: "bottom top",
+    scrub: 1.5
+  }
+});
+
+gsap.to(".mid-layer", {
+  yPercent: -15,
+  ease: "none",
+  scrollTrigger: {
+    trigger: ".hero",
+    scrub: 1.5
+  }
+});
+
+### Mit CSS (für einfache 2-Layer Effekte)
+.parallax-container {
+  perspective: 1px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+.parallax-bg {
+  transform: translateZ(-1px) scale(2);
+}
+
+### Mit Framer Motion (für React Komponenten)
+<motion.div
+  style={{ y: useTransform(scrollY, [0, 500], [0, -150]) }}
+>
+  Hintergrund Element
+</motion.div>
+
+### Speed Werte
+- Hintergrund: yPercent: -30 (langsam)
+- Mittelebene: yPercent: -15 (mittel)
+- Vordergrund: yPercent: 0 (normal)
+
+### Regeln
+- Subtil wirkt edler — nie zu aggressiv
+- prefers-reduced-motion immer prüfen!
+
+## Typografie
+- Max 2 Fonts — Display + Clean Sans
+- Alternativen: Neue Montreal, PP Editorial, Clash Display
+- Fluid Typography mit clamp()
+
+## Technische Checkliste
+- [ ] 60fps Desktop
+- [ ] Mobile funktioniert
+- [ ] prefers-reduced-motion berücksichtigt
+- [ ] Ladezeit unter 3 Sekunden
+
+## Farben
+- Background: #0a0a0a
+- Text: #f5f5f5
+- Akzent: wird vom User definiert

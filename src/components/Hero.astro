@@ -1,0 +1,263 @@
+---
+import { Image } from 'astro:assets';
+import logo from '../assets/alps-logo.jpg';
+import { ThreeDMarquee } from './ui/3d-marquee';
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+// Kacheln für den 3D-Marquee = Screenshots der eigenen Sektionen.
+// Mehrfach wiederholt, damit alle 4 Spalten gut gefüllt sind.
+const marqueeBase = [
+  '/marquee/services.png',
+  '/marquee/work.png',
+  '/marquee/pricing.png',
+  '/marquee/faq.png',
+  '/marquee/contact.png',
+  '/marquee/hero.png',
+];
+const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqueeBase.length]);
+---
+<section id="hero" class="hero" aria-label={t('hero.title_pre') + ' ' + t('hero.title_accent')}>
+  <!-- 3D-Marquee als bewegter Hero-Hintergrund (eigene Sektions-Screenshots) -->
+  <div class="hero-bg" data-scene="bg" aria-hidden="true">
+    <ThreeDMarquee client:load images={marqueeImages} className="hero-marquee" />
+  </div>
+
+  <!-- Verlauf: links dunkel (Lesbarkeit), unten Übergang -->
+  <div class="hero-veil" aria-hidden="true"></div>
+
+  <!-- Inhalt — alles linksbündig -->
+  <div class="hero-content">
+    <div class="hero-logo logo-mask" data-reveal>
+      <Image src={logo} alt="Alps Agency" width={240} height={240} loading="eager" />
+    </div>
+    <p class="eyebrow" data-reveal>{t('hero.badge')}</p>
+    <h1 class="h-hero hero-title">
+      <span class="line" data-reveal>{t('hero.title_pre')}</span>
+      <span class="line accent text-glow" data-reveal>{t('hero.title_accent')}</span>
+    </h1>
+    <p class="hero-sub" data-reveal>{t('hero.subtitle')}</p>
+    <div class="hero-cta" data-reveal>
+      <a href="#contact" class="btn-primary">{t('hero.cta_primary')}</a>
+      <a href="#work" class="btn-ghost">{t('hero.cta_secondary')}</a>
+    </div>
+  </div>
+
+  <a href="#services" class="hero-scroll" data-reveal aria-label={t('hero.scroll')}>
+    <span class="hero-scroll-label">{t('hero.scroll')}</span>
+    <span class="hero-scroll-line"><span class="hero-scroll-dot"></span></span>
+  </a>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    isolation: isolate;
+    min-height: 100svh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 7rem clamp(1.25rem, 5vw, 5rem) 6rem;
+  }
+
+  /* 3D-Marquee-Hintergrund */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    will-change: transform;
+    perspective: 1400px; /* Tiefe für den Maus-Parallax */
+  }
+  .hero-bg :global(.hero-marquee) {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    opacity: 1; /* voll sichtbar — Sektionen klar als Website-Panels erkennbar */
+    transform: scale(1.06); /* Ruhezustand (leichter Zoom gegen Ränder beim Kippen) */
+    transform-style: preserve-3d;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+
+  /* Verlauf — dunkler, damit der Inhalt über dem Marquee gut lesbar ist */
+  .hero-veil {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      linear-gradient(to right,
+        rgba(6, 15, 28, 0.96) 0%,
+        rgba(8, 18, 34, 0.85) 34%,
+        rgba(10, 22, 40, 0.55) 68%,
+        rgba(10, 22, 40, 0.35) 100%),
+      linear-gradient(to bottom,
+        rgba(6, 15, 28, 0.7) 0%,
+        rgba(10, 22, 40, 0.25) 24%,
+        rgba(10, 22, 40, 0.35) 60%,
+        var(--color-night) 100%);
+  }
+
+  /* Inhalt linksbündig */
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 42rem;
+    text-align: left;
+    will-change: transform, opacity;
+  }
+
+  .hero-logo {
+    width: clamp(140px, 16vw, 200px);
+    margin-bottom: 2rem;
+  }
+  .hero-logo :global(img) {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 0 32px rgba(26, 63, 255, 0.28));
+  }
+
+  .eyebrow { margin-bottom: 1.25rem; }
+
+  .hero-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.08em;
+    margin: 0 0 1.6rem;
+    font-weight: 700;
+  }
+  .hero-title .accent {
+    background: linear-gradient(120deg, #ffffff 0%, #9fb4ff 45%, #1a3fff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero-sub {
+    max-width: 34rem;
+    margin: 0 0 2.5rem;
+    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+    color: var(--color-muted);
+  }
+
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 1rem; }
+
+  /* Scroll-Indikator (linksbündig) */
+  .hero-scroll {
+    position: absolute;
+    z-index: 10;
+    bottom: 2rem;
+    left: clamp(1.25rem, 5vw, 5rem);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: var(--color-muted);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+  .hero-scroll-line {
+    width: 2.4rem;
+    height: 1.5px;
+    background: rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .hero-scroll-dot {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    width: 40%;
+    background: var(--color-accent-bright);
+    border-radius: 2px;
+    animation: scroll-dot 2s ease-in-out infinite;
+  }
+  @keyframes scroll-dot {
+    0% { transform: translateX(-100%); }
+    60%, 100% { transform: translateX(250%); }
+  }
+
+  /* Mobile: kräftigerer Veil, Text gut lesbar über dem Berg */
+  @media (max-width: 768px) {
+    .hero-veil {
+      background:
+        linear-gradient(to bottom,
+          rgba(6, 15, 28, 0.72) 0%,
+          rgba(10, 22, 40, 0.42) 38%,
+          rgba(10, 22, 40, 0.62) 74%,
+          var(--color-night) 100%);
+    }
+    .hero-content { max-width: none; }
+  }
+  @media (max-width: 480px) {
+    .hero-cta .btn-primary, .hero-cta .btn-ghost { width: 100%; justify-content: center; }
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hero = document.getElementById('hero');
+
+  /* Dezentes Fade-in (Logo → Text → CTA), failsafe sichtbar */
+  function revealContent() {
+    const items = hero?.querySelectorAll('[data-reveal]');
+    if (!items || !items.length) return;
+    if (reduceMotion) { gsap.set(items, { opacity: 1, y: 0 }); return; }
+    gsap.fromTo(
+      items,
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.9, stagger: 0.1, ease: 'power3.out', delay: 1.4 }
+    );
+  }
+  try { revealContent(); }
+  catch { hero?.querySelectorAll('[data-reveal]').forEach((el) => ((el as HTMLElement).style.opacity = '1')); }
+
+  /* Hero faded beim Scrollen sanft weg + schiebt hoch */
+  if (!reduceMotion && hero) {
+    gsap.to('.hero-content', {
+      yPercent: -16, opacity: 0, ease: 'none',
+      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom 35%', scrub: true },
+    });
+    gsap.to('.hero-bg', {
+      yPercent: -10, ease: 'none',
+      scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true },
+    });
+    window.addEventListener('load', () => ScrollTrigger.refresh());
+  }
+
+  /* Maus-Parallax: der Marquee-Hintergrund kippt sanft mit der Maus (extra 3D-Tiefe) */
+  if (!reduceMotion && hero && !window.matchMedia('(pointer: coarse)').matches) {
+    const marquee = hero.querySelector('.hero-marquee') as HTMLElement | null;
+    if (marquee) {
+      const MAX = 7; // max. Neigung in Grad
+      let raf = 0;
+      const onMove = (e: MouseEvent) => {
+        const r = hero.getBoundingClientRect();
+        const nx = (e.clientX - r.left) / r.width - 0.5;  // -0.5 … 0.5
+        const ny = (e.clientY - r.top) / r.height - 0.5;
+        if (raf) cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          marquee.style.transform =
+            `scale(1.06) rotateY(${nx * MAX}deg) rotateX(${-ny * MAX}deg)`;
+        });
+      };
+      const onLeave = () => {
+        if (raf) cancelAnimationFrame(raf);
+        marquee.style.transform = ''; // zurück zum CSS-Ruhezustand (scale 1.06)
+      };
+      hero.addEventListener('mousemove', onMove);
+      hero.addEventListener('mouseleave', onLeave);
+    }
+  }
+</script>

@@ -1,0 +1,58 @@
+---
+name: remotion
+description: Erstellt Brand Intro Videos für Alps Agency mit Remotion. Aktivieren bei: Video erstellen, Intro machen, Brand Video, Animation rendern, MP4 erstellen.
+---
+
+# Remotion — Alps Agency Brand Intros
+
+## Was dieser Skill macht
+Erstellt 8-15 Sekunden Brand Intro Videos mit React/TypeScript → MP4.
+
+## ⚠️ Vor jedem Video
+1. Logo und Referenzbild vom User holen
+2. Farben bestätigen: Steel Blue, Charcoal, Cold White
+3. Länge bestätigen: 8-15s
+4. Erst dann coden
+
+## Projekt Setup
+npx create-video@latest
+cd my-video
+npm install
+
+## Komposition Regeln
+- FPS: 30
+- Breite: 1920, Höhe: 1080
+- Dauer: 240-450 Frames (8-15s bei 30fps)
+- Aspect Ratio: 16:9
+
+## Alps Agency Stil
+- Hintergrund: #0a0a0a
+- Akzent: Steel Blue #4A7FA5
+- Text: Cold White #F0F4F8
+- Font: Space Grotesk oder Neue Montreal
+- Kein Lens Flare, keine Partikel
+
+## Parallax Standard
+const frame = useCurrentFrame();
+const bgY = interpolate(frame, [0, durationInFrames], [0, -30]);
+const midY = interpolate(frame, [0, durationInFrames], [0, -15]);
+
+## Logo Reveal Standard
+const opacity = interpolate(frame, [180, 240], [0, 1], {
+  extrapolateLeft: 'clamp',
+  extrapolateRight: 'clamp'
+});
+
+## Kamera Bewegung
+- Push in: scale 1.0 → 1.08
+- Pan links: translateX 0 → -80px ab Frame 150
+- Immer easeInOut
+
+## Render Befehl
+npx remotion render src/index.ts AlpsAgencyIntro out/intro.mp4
+
+## Checkliste
+- [ ] Logo scharf
+- [ ] Parallax subtil
+- [ ] Fade to black am Ende
+- [ ] 30fps ohne Ruckeln

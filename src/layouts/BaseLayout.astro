@@ -1,0 +1,125 @@
+---
+import '../styles/global.css';
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+import LoadingScreen from '../components/LoadingScreen.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  lang?: Lang;
+}
+
+const { title, description, lang = defaultLang } = Astro.props;
+const t = useTranslations(lang);
+
+const metaTitle = title ?? t('meta.title');
+const metaDesc = description ?? t('meta.description');
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/logo/alps-logo.jpg', Astro.site);
+
+const orgSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Alps Agency',
+  url: Astro.site?.href,
+  logo: ogImage.href,
+  description: metaDesc,
+  areaServed: 'DE',
+};
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>document.documentElement.classList.add('js');</script>
+
+    <title>{metaTitle}</title>
+    <meta name="description" content={metaDesc} />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={canonical.href} />
+
+    <!-- hreflang (EN-Routing folgt; aktuell Platzhalter auf Root) -->
+    <link rel="alternate" hreflang="de" href={canonical.href} />
+    <link rel="alternate" hreflang="en" href={canonical.href} />
+    <link rel="alternate" hreflang="x-default" href={canonical.href} />
+
+    <!-- Icons & Theme -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#0a1628" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Alps Agency" />
+    <meta property="og:title" content={metaTitle} />
+    <meta property="og:description" content={metaDesc} />
+    <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={ogImage.href} />
+    <meta property="og:image:alt" content={t('meta.og_alt')} />
+    <meta property="og:locale" content={lang === 'de' ? 'de_DE' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={metaTitle} />
+    <meta name="twitter:description" content={metaDesc} />
+    <meta name="twitter:image" content={ogImage.href} />
+
+    <!-- Fonts: Space Grotesk (Display) + Satoshi (Body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap"
+    />
+
+    <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} is:inline />
+  </head>
+
+  <body>
+    <a href="#main" class="skip-link">{t('nav.skip')}</a>
+
+    <div class="grid-layer bg-grid mask-radial" aria-hidden="true"></div>
+
+    <span id="top" class="anchor-top" aria-hidden="true"></span>
+    <Header lang={lang} />
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <Footer lang={lang} />
+
+    <LoadingScreen lang={lang} />
+
+    <style>
+      .skip-link {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 200;
+        transform: translateY(-200%);
+        background: var(--color-accent);
+        color: #fff;
+        padding: 0.6rem 1rem;
+        border-radius: 0.5rem;
+        font-family: var(--font-display);
+        transition: transform 0.2s ease;
+      }
+      .skip-link:focus { transform: translateY(0); }
+
+      .grid-layer {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+      }
+      .anchor-top { position: absolute; top: 0; }
+    </style>
+  </body>
+</html>

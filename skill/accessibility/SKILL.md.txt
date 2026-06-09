@@ -1,0 +1,65 @@
+---
+name: accessibility
+description: Audit and improve web accessibility following WCAG 2.2 guidelines. Use when asked to "improve accessibility", "a11y audit", "WCAG compliance", "screen reader support", "keyboard navigation", or "make accessible". Always activate when building forms, navigation, or interactive components.
+---
+
+# Accessibility (a11y)
+
+## WCAG Prinzipien
+| Prinzip | Beschreibung |
+|---|---|
+| Perceivable | Inhalte durch verschiedene Sinne wahrnehmbar |
+| Operable | Interface für alle bedienbar |
+| Understandable | Inhalte verständlich |
+| Robust | Funktioniert mit Assistive Technologies |
+
+## Konformitätslevel
+- **A** → Minimum, muss bestehen
+- **AA** → Standard, gesetzlich oft vorgeschrieben
+- **AAA** → Enhanced, nice to have
+
+## Kritische Regeln
+
+### Bilder
+- Immer `alt` Text bei informativen Bildern
+- Dekorative Bilder: `alt=""` + `role="presentation"`
+
+### Kontrast
+- Normaler Text: min. 4.5:1
+- Großer Text (≥18px): min. 3:1
+- UI Komponenten: min. 3:1
+
+### Keyboard
+- Alle Funktionen per Tastatur erreichbar
+- Native Elemente bevorzugen (`<button>`, `<a>`)
+- Fokus niemals mit `outline: none` entfernen
+- `:focus-visible` statt `:focus` verwenden
+
+### Formulare
+- Jedes Input braucht ein Label
+- Fehler mit `aria-invalid` + `aria-describedby` markieren
+- Fehler mit `role="alert"` ankündigen
+
+### Bewegung
+- `prefers-reduced-motion` immer respektieren:
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+## Testing Checkliste
+- [ ] Keyboard Navigation durch gesamte Seite
+- [ ] Screen Reader Test (VoiceOver/NVDA)
+- [ ] Zoom auf 200% funktioniert
+- [ ] Fokus Reihenfolge logisch
+- [ ] Touch Targets min. 24x24px
+- [ ] npx lighthouse --only-categories=accessibility
+
+## Prioritäten
+**Sofort fixen:** Labels, Alt Texte, Kontrast, Keyboard Traps, Fokus
+**Vor Launch:** Seitensprache, Heading Struktur, Skip Links
+**Bald:** ARIA Labels, Konsistente Navigation

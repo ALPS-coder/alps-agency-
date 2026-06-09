@@ -1,0 +1,42 @@
+---
+name: i18n
+description: Implementiert mehrsprachige Unterstützung für Websites. Aktivieren bei: neue Texte hinzufügen, Sprache wechseln, Übersetzungen fehlen, hardcodierter Text in Komponenten, DE/EN Setup, neue Sprache hinzufügen. Immer aktivieren wenn Text in Komponenten geschrieben wird.
+---
+
+# i18n — Internationalisierung
+
+## Setup
+- Framework: `next-i18next` für Next.js, `i18next + react-i18next` für React
+- Texte → `/locales/{sprache}/{namespace}.json`
+- Sprach-Umschalter: client-side, gecacht für schnelles Umschalten
+
+## Struktur
+/locales/
+├── de/
+│   └── common.json
+├── en/
+│   └── common.json
+└── {sprache}/
+    └── common.json
+
+## Regeln
+- Kein hardcodierter Text in Komponenten — niemals
+- Immer t('key') verwenden
+- Keys hierarchisch: hero.title, nav.about
+- Neue Texte immer in ALLEN aktiven Sprachen anlegen
+- Fehlender Key → Fallback auf DE
+
+## Neuen Text hinzufügen
+1. Key in /locales/de/common.json anlegen
+2. Gleichen Key in alle anderen Sprachen
+3. t('key') in Komponente verwenden
+
+## Neue Sprache hinzufügen
+1. /locales/{code}/ Ordner erstellen
+2. Alle bestehenden JSONs kopieren und übersetzen
+3. Sprache in Config registrieren
+
+## Performance
+- Nur aktive Sprache laden — nicht alle
+- Static Generation wo möglich (getStaticProps)
+- Sprach-Präferenz in localStorage speichern

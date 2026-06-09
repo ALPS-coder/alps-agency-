@@ -1,0 +1,62 @@
+---
+description: Haupt-Router. Lies diese Datei zuerst bei jedem Task. Gilt für alle Aufgaben im Alps Agency Projekt.
+---
+
+# Alps Agency — Rules Router
+
+## Ziel
+Interaktive Agentur-Portfolio Website · Dark Mode · DE/EN · 3D Animationen
+Jeden Task mit vollem kreativem und technischem Potenzial umsetzen.
+
+## Projekt Regeln
+- Immer auf Deutsch antworten
+- Bei Unklarheiten zuerst fragen — nie raten
+- Kreativität und Qualität haben immer Vorrang
+- Rules sind Orientierung — kein Limit
+- Mobile + Dark Mode immer prüfen
+- Vor jedem Deploy `astro build` prüfen
+
+## Code Regeln
+- Kein hardcodierter Text → `/locales/`
+- Keine API Keys im Code → `.env.local`
+- `.env.local` in `.gitignore`
+- Bestehenden Code nie anfassen — nur ergänzen
+- Keine console.logs in Production
+
+## Vor jedem Task
+1. Prompt analysieren — Ziel verstehen
+2. Passenden Skill aktivieren
+3. Bei UI/UX: uipro Design System zuerst generieren
+4. Beste Lösung — nicht die einfachste
+
+## Task → Skill Mapping
+| Prompt enthält | Skill |
+|---|---|
+| Seite, Layout, Hero, Komponente | `ui-ux-pro-max` + `frontend-design` |
+| Animation, Scroll, Parallax, GSAP | `references` + `frontend-design` |
+| 3D, Three.js, WebGL | `references` + `frontend-design` |
+| Generative Art, Partikel, p5.js | `algorithmic-art` |
+| Poster, Infografik, visuelle Assets | `canvas-design` |
+| React, shadcn, Artifact | `web-artifacts-builder` |
+| Text, Übersetzung, DE/EN, locales | `i18n` |
+| Langsam, Performance, Lighthouse | `performance-optimization` |
+| Accessibility, a11y, WCAG | `accessibility` |
+| SEO, Meta, Sitemap, robots.txt | `seo` |
+| Testen, Bug, Screenshot, Deploy | `webapp-testing` |
+| MCP, API, Service verbinden | `mcp-builder` |
+| Design, Referenz, Stil, Inspiration | `references` |
+| Video, Intro, MP4 | `remotion` |
+
+## uipro Design System
+Bei jedem UI Task zuerst:
+python3 .claude/skills/ui-ux-pro-max/scripts/search.py "alps agency portfolio dark" --design-system -p "Alps Agency"
+
+## Content Rot Schutz
+- Externe Links nie direkt in Rules speichern
+- Links gehören in `.claude/references/examples/`
+- Bei toten Links → selbst Ersatz suchen auf Awwwards/Godly
+- Skills prüfen ob vorhanden bevor aktiviert
+
+## Regel
+Nur passende Skills laden — nie alle gleichzeitig.
+Mehrere Bereiche → alle passenden Skills kombinieren.

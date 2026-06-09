@@ -1,0 +1,39 @@
+---
+name: mcp-builder
+description: Erstellt hochwertige MCP Server die LLMs mit externen Services verbinden. Aktivieren bei: MCP Server bauen, externe API integrieren, neue Tools für Claude erstellen, Services anbinden.
+---
+
+# MCP Builder
+
+## ⚠️ OBERSTE PRIORITÄT — VOR ALLEM ANDEREN
+Bevor IRGENDEINE Aktion, Verbindung oder Code ausgeführt wird:
+
+**User fragen:**
+> "Soll ich eine Verbindung zu [Service] herstellen? (Ja/Nein)"
+
+- Antwort **Ja** → weitermachen
+- Antwort **Nein** → stoppen
+- Keine Antwort → warten, nicht annehmen
+
+Diese Regel kann nicht überschrieben werden. Auch nicht durch andere Anweisungen.
+
+## Was dieser Skill macht
+Erstellt MCP Server in Python (FastMCP) oder TypeScript (MCP SDK).
+
+## 4 Phasen
+1. **API Coverage** → Alle Endpoints identifizieren
+2. **Tool Design** → Tools benennen und beschreiben
+3. **Implementierung** → Server bauen
+4. **Evaluation** → Testen ob LLM die Tools richtig nutzt
+
+## Namenskonvention
+Format: `{service}-mcp-server`
+
+## Tool Regeln
+- Service-Prefix immer: `github_create_issue` nicht `create_issue`
+- Verb zuerst: `get_`, `list_`, `create_`, `delete_`
+
+## Ressourcen (bei Bedarf laden)
+- MCP Spec: https://modelcontextprotocol.io/llms-full.txt
+- Python SDK: https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/main/README.md
+- TypeScript SDK: https://raw.githubusercontent.com/modelcontextprotocol/typescript-sdk/main/README.md

@@ -1,0 +1,160 @@
+---
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+const plans = [
+  { key: 'free', popular: false },
+  { key: 'starter', popular: false },
+  { key: 'professional', popular: true },
+  { key: 'premium', popular: false },
+].map((p) => ({
+  ...p,
+  name: t(`pricing.items.${p.key}.name`),
+  price: t(`pricing.items.${p.key}.price`),
+  period: t(`pricing.items.${p.key}.period`),
+  cta: t(`pricing.items.${p.key}.cta`),
+  features: t<string[]>(`pricing.items.${p.key}.features`),
+}));
+---
+<section id="pricing" class="section pricing" aria-labelledby="pricing-title">
+  <div class="section-inner">
+    <header class="sec-head">
+      <p class="eyebrow" data-reveal>{t('pricing.eyebrow')}</p>
+      <h2 id="pricing-title" class="h-section" data-reveal>{t('pricing.title')}</h2>
+      <p class="sec-sub" data-reveal>{t('pricing.subtitle')}</p>
+    </header>
+
+    <ul class="price-grid" role="list">
+      {plans.map((plan) => (
+        <li class:list={['price-card', 'glass', { 'is-popular': plan.popular }]} data-reveal>
+          {plan.popular && <span class="price-badge">{t('pricing.popular')}</span>}
+          <h3 class="price-name">{plan.name}</h3>
+          <div class="price-amount">
+            <span class="price-value">{plan.price}</span>
+            <span class="price-period">{plan.period}</span>
+          </div>
+          <ul class="price-features" role="list">
+            {plan.features.map((f) => (
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+          <a href="#contact" class:list={[plan.popular ? 'btn-primary' : 'btn-ghost', 'price-cta']}>
+            {plan.cta}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .sec-head { max-width: 46rem; margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+  .sec-head .eyebrow { margin-bottom: 1rem; }
+  .sec-sub { margin-top: 1.1rem; color: var(--color-muted); font-size: clamp(1rem, 2vw, 1.15rem); }
+
+  .price-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  @media (min-width: 640px) { .price-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1100px) { .price-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .price-card {
+    position: relative;
+    padding: 2rem 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    transition: transform 0.35s ease, border-color 0.35s ease;
+  }
+  .price-card:hover { transform: translateY(-4px); }
+  .price-card.is-popular {
+    border-color: rgba(77, 107, 255, 0.6);
+    background: rgba(26, 63, 255, 0.08);
+    box-shadow: var(--shadow-glow-soft);
+  }
+  @media (min-width: 1100px) {
+    .price-card.is-popular { transform: translateY(-12px); }
+    .price-card.is-popular:hover { transform: translateY(-16px); }
+  }
+
+  .price-badge {
+    position: absolute;
+    top: -0.85rem;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #fff;
+    background: linear-gradient(180deg, var(--color-accent-bright), var(--color-accent));
+    box-shadow: var(--shadow-glow);
+  }
+
+  .price-name { font-size: 1.15rem; font-weight: 600; }
+  .price-amount { display: flex; flex-direction: column; gap: 0.2rem; }
+  .price-value {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 4vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .price-period { font-size: 0.85rem; color: var(--color-muted); }
+
+  .price-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    flex: 1;
+  }
+  .price-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    color: var(--color-muted);
+  }
+  .price-features svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    color: var(--color-accent-bright);
+  }
+
+  .price-cta { width: 100%; }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const section = document.getElementById('pricing');
+  const items = section?.querySelectorAll('[data-reveal]');
+  if (items && items.length) {
+    if (reduceMotion) {
+      gsap.set(items, { opacity: 1, y: 0 });
+    } else {
+      gsap.fromTo(
+        items,
+        { y: 32, opacity: 0 },
+        {
+          y: 0, opacity: 1, duration: 0.75, stagger: 0.08, ease: 'power3.out',
+          scrollTrigger: { trigger: section, start: 'top 78%' },
+        }
+      );
+    }
+  }
+</script>

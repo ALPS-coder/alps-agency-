@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "title": "Alps Agency — KI-Webdesign & lokale Google-Sichtbarkeit",
+    "description": "Alps Agency bringt lokale Unternehmen an die Spitze: KI-gestütztes Webdesign, Google-Profil-Optimierung und mehr Bewertungen — damit dich mehr Kunden finden und buchen.",
+    "og_alt": "Alps Agency — Berggipfel über den Wolken"
+  },
+  "nav": {
+    "services": "Leistungen",
+    "work": "Arbeiten",
+    "pricing": "Preise",
+    "faq": "FAQ",
+    "contact": "Kontakt",
+    "cta": "Erstgespräch",
+    "skip": "Zum Inhalt springen",
+    "menu_open": "Menü öffnen",
+    "menu_close": "Menü schließen"
+  },
+  "loading": {
+    "label": "Alps Agency wird geladen"
+  },
+  "hero": {
+    "badge": "KI-Webdesign · Google-Sichtbarkeit",
+    "title_pre": "Wir bringen dein Business",
+    "title_accent": "an die Spitze.",
+    "subtitle": "Alps Agency verbindet KI-gestütztes Webdesign mit lokaler Google-Sichtbarkeit — damit dich mehr Kunden finden, dir vertrauen und bei dir buchen.",
+    "cta_primary": "Kostenloses Erstgespräch",
+    "cta_secondary": "Unsere Arbeiten",
+    "scroll": "Scrollen"
+  },
+  "services": {
+    "eyebrow": "Leistungen",
+    "title": "Alles für deine digitale Sichtbarkeit",
+    "subtitle": "Von der Google-Optimierung bis zur fertigen Website — wir kümmern uns um deinen kompletten Auftritt.",
+    "items": {
+      "boost": {
+        "title": "30 Tage Sichtbarkeits-Boost",
+        "desc": "In nur 30 Tagen messbar mehr Reichweite in der lokalen Google-Suche."
+      },
+      "profile": {
+        "title": "Profiloptimierung",
+        "desc": "Dein Google-Unternehmensprofil vollständig optimiert für maximale Auffindbarkeit."
+      },
+      "posts": {
+        "title": "Google Beiträge veröffentlichen",
+        "desc": "Regelmäßige Beiträge halten dein Profil aktiv und relevant für den Algorithmus."
+      },
+      "webdesign": {
+        "title": "AI Webdesign",
+        "desc": "Moderne, schnelle Websites mit KI gestaltet — individuell auf deine Marke abgestimmt."
+      },
+      "reviews": {
+        "title": "Bewertungen sammeln & beantworten",
+        "desc": "Mehr echte Bewertungen und professionelle Antworten stärken dein Vertrauen."
+      }
+    }
+  },
+  "work": {
+    "eyebrow": "Referenzen",
+    "title": "Unsere Arbeiten",
+    "subtitle": "Ein Auszug aus Projekten, die wir sichtbar gemacht haben.",
+    "view": "Ansehen",
+    "placeholder_note": "Platzhalter — echte Projekte folgen.",
+    "items": {
+      "one": { "title": "Lokales Handwerk", "category": "Website + Google-Profil" },
+      "two": { "title": "Gastronomie", "category": "30 Tage Sichtbarkeits-Boost" },
+      "three": { "title": "Dienstleister", "category": "Komplettpaket & Bewertungen" }
+    }
+  },
+  "pricing": {
+    "eyebrow": "Pakete & Preise",
+    "title": "Transparente Pakete",
+    "subtitle": "Klar kalkulierbar, ohne versteckte Kosten. Du startest immer mit einem kostenlosen Erstgespräch.",
+    "popular": "Beliebteste Wahl",
+    "from": "ab",
+    "items": {
+      "free": {
+        "name": "Kostenloses Erstgespräch",
+        "price": "0 €",
+        "period": "unverbindlich",
+        "features": [
+          "Beratungsgespräch",
+          "Informationsaustausch",
+          "Erste Einschätzung",
+          "Individuelle Empfehlung"
+        ],
+        "cta": "Termin sichern"
+      },
+      "starter": {
+        "name": "Starter",
+        "price": "1.500 €",
+        "period": "einmalig",
+        "features": [
+          "Profiloptimierung",
+          "30 Tage Sichtbarkeits-Boost",
+          "4 Google Beiträge / Monat",
+          "Basis-Reporting"
+        ],
+        "cta": "Paket wählen"
+      },
+      "professional": {
+        "name": "Professional",
+        "price": "2.400 €",
+        "period": "einmalig",
+        "features": [
+          "Alles aus Starter",
+          "KI-Website (One-Pager)",
+          "Bewertungs-Management",
+          "Wöchentliche Beiträge",
+          "Priority Support"
+        ],
+        "cta": "Paket wählen"
+      },
+      "premium": {
+        "name": "Premium",
+        "price": "Auf Anfrage",
+        "period": "individuell",
+        "features": [
+          "Alles aus Professional",
+          "Individuelle Multi-Page Website",
+          "Laufende Betreuung",
+          "Monatliche Strategie-Calls"
+        ],
+        "cta": "Anfrage senden"
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Häufige Fragen",
+    "subtitle": "Was Unternehmen vor der Zusammenarbeit am häufigsten beschäftigt.",
+    "items": {
+      "q1": {
+        "q": "Warum hat die bisherige Agentur nicht funktioniert?",
+        "a": "Oft fehlt eine klare Strategie und ehrliche Kommunikation. Viele Agenturen liefern Standardlösungen ohne lokalen Fokus. Wir analysieren zuerst deine Ausgangslage und setzen nur Maßnahmen um, die messbar Kunden bringen."
+      },
+      "q2": {
+        "q": "Welche Probleme gab es bisher?",
+        "a": "Typisch sind ein unvollständiges Google-Profil, eine veraltete Website und fehlende Bewertungen. Genau diese Hebel optimieren wir gezielt und sichtbar."
+      },
+      "q3": {
+        "q": "Was wurde bisher versucht?",
+        "a": "Häufig wurden Anzeigen geschaltet, ohne die Basis zu optimieren. Werbung verpufft, wenn Profil und Website nicht überzeugen — wir bauen erst das Fundament."
+      },
+      "q4": {
+        "q": "Welche Ziele wurden nicht erreicht?",
+        "a": "Meist bleiben konstante Anfragen und Sichtbarkeit in der lokalen Suche aus. Wir definieren klare, realistische Ziele und machen den Fortschritt transparent messbar."
+      },
+      "q5": {
+        "q": "Wie lange dauert ein Projekt?",
+        "a": "Der Sichtbarkeits-Boost zeigt erste Effekte in rund 30 Tagen. Eine komplette Website ist je nach Umfang in 2–4 Wochen startklar."
+      },
+      "q6": {
+        "q": "Was macht Alps Agency anders?",
+        "a": "Wir kombinieren KI-gestütztes Design mit echtem lokalem Marketing — ehrlich, messbar und persönlich betreut. Kein Baukasten, keine leeren Versprechen."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Kontakt",
+    "title": "Kostenloses Erstgespräch sichern",
+    "subtitle": "Erzähl uns kurz von deinem Vorhaben — wir melden uns innerhalb von 24 Stunden.",
+    "fields": {
+      "name": { "label": "Name", "placeholder": "Vor- und Nachname" },
+      "email": { "label": "E-Mail", "placeholder": "name@beispiel.de" },
+      "phone": { "label": "Telefon", "placeholder": "+49 …" },
+      "industry": { "label": "Branche", "placeholder": "z. B. Gastronomie, Handwerk …" },
+      "source": {
+        "label": "Wie hast du uns gefunden?",
+        "placeholder": "Bitte auswählen",
+        "options": {
+          "google": "Google-Suche",
+          "referral": "Empfehlung",
+          "social": "Social Media",
+          "other": "Sonstiges"
+        }
+      },
+      "message": { "label": "Nachricht", "placeholder": "Worum geht es?" }
+    },
+    "submit": "Kostenloses Gespräch anfragen",
+    "sending": "Wird gesendet …",
+    "success_title": "Danke! Deine Anfrage ist da.",
+    "success_text": "Wir melden uns innerhalb von 24 Stunden bei dir.",
+    "errors": {
+      "required": "Dieses Feld wird benötigt.",
+      "email": "Bitte gib eine gültige E-Mail-Adresse ein.",
+      "phone": "Bitte gib eine gültige Telefonnummer ein."
+    }
+  },
+  "footer": {
+    "tagline": "KI-Webdesign & lokale Google-Sichtbarkeit für Unternehmen, die wachsen wollen.",
+    "nav_title": "Navigation",
+    "contact_title": "Kontakt",
+    "legal_title": "Rechtliches",
+    "email": "hallo@alpsagency.de",
+    "phone": "+49 000 0000000",
+    "whatsapp": "WhatsApp schreiben",
+    "imprint": "Impressum",
+    "privacy": "Datenschutz",
+    "rights": "Alle Rechte vorbehalten.",
+    "placeholder_note": "Kontaktdaten sind Platzhalter — bitte ersetzen."
+  }
+}

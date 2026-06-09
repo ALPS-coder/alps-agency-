@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build-Output
+dist/
+.astro/
+
+# ZIP-Backups (separat, nicht versionieren)
+_backups/
+
+# Logs & Env
+*.log
+.env
+.env.*
+
+# OS / Editor
+.DS_Store
+Thumbs.db

@@ -1,0 +1,249 @@
+@import "tailwindcss";
+
+/* ============================================================
+   ALPS AGENCY — Design System
+   Tief Dunkelblau · Weiß · Royal-Blau · Cyber/AI · Glassmorphism
+   ============================================================ */
+
+@theme {
+  /* Farben */
+  --color-night: #0a1628;        /* Background */
+  --color-night-deep: #060f1c;   /* tiefer (Footer, Loading) */
+  --color-night-soft: #0e1d35;   /* Sektions-Abstufung */
+  --color-accent: #1a3fff;       /* Royal Blau */
+  --color-accent-bright: #4d6bff;/* hellerer Akzent (Text/Hover) */
+  --color-ink: #ffffff;          /* Primary */
+  --color-muted: #a9b8d4;        /* gedämpfter Body-Text (AA auf night) */
+  --color-whatsapp: #25d366;
+
+  /* Typografie */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Satoshi", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* Effekte */
+  --shadow-glow: 0 0 40px -4px rgba(26, 63, 255, 0.45);
+  --shadow-glow-soft: 0 0 60px -10px rgba(26, 63, 255, 0.3);
+}
+
+/* ----------------------------- Base ----------------------------- */
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: var(--color-accent) var(--color-night-deep);
+  }
+
+  body {
+    background-color: var(--color-night);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  p { line-height: 1.65; }
+
+  ::selection {
+    background: var(--color-accent);
+    color: #fff;
+  }
+
+  /* Sichtbarer Fokus — niemals entfernen (a11y) */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-bright);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  /* Custom Scrollbar (WebKit) */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-night-deep); }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-radius: 999px;
+  }
+}
+
+/* -------------------------- Komponenten -------------------------- */
+@layer components {
+  /* Glassmorphism Card */
+  .glass {
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+  }
+
+  /* Sektions-Wrapper */
+  .section {
+    position: relative;
+    width: 100%;
+    padding-inline: clamp(1.25rem, 5vw, 5rem);
+    padding-block: clamp(6rem, 14vw, 11rem);
+    scroll-margin-top: 5rem; /* Offset für den fixen Header beim Anspringen */
+  }
+  .section-inner {
+    max-width: 80rem;
+    margin-inline: auto;
+  }
+
+  /* --- Sanfte Übergänge zwischen den Sektionen ---
+     Abwechselnde Sektionen erhalten ein dezent helleres Band, das oben
+     und unten ausläuft → weicher Verlauf statt hartem Schnitt. */
+  main > .section:nth-of-type(even) {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      color-mix(in srgb, var(--color-night-soft) 70%, transparent) 14%,
+      color-mix(in srgb, var(--color-night-soft) 70%, transparent) 86%,
+      transparent 100%
+    );
+  }
+
+  /* Fein glühende, an den Rändern auslaufende Trennlinie am Sektionsanfang */
+  main > .section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(80rem, 88%);
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(77, 107, 255, 0.4),
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* Eyebrow / Label über Headlines */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--color-accent-bright);
+  }
+  .eyebrow::before {
+    content: "";
+    width: 1.75rem;
+    height: 1px;
+    background: var(--color-accent-bright);
+  }
+
+  /* Primärer CTA-Button */
+  .btn-primary {
+    --b: var(--color-accent);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.95rem 1.8rem;
+    border-radius: 0.75rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1rem;
+    color: #fff;
+    background: linear-gradient(180deg, var(--color-accent-bright), var(--color-accent));
+    box-shadow: var(--shadow-glow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+    will-change: transform;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 55px -2px rgba(26, 63, 255, 0.65);
+    filter: brightness(1.08);
+  }
+
+  /* Sekundärer Ghost-Button */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.95rem 1.6rem;
+    border-radius: 0.75rem;
+    font-family: var(--font-display);
+    font-weight: 500;
+    color: var(--color-ink);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.03);
+    transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+  }
+  .btn-ghost:hover {
+    border-color: var(--color-accent-bright);
+    background: rgba(26, 63, 255, 0.08);
+    transform: translateY(-2px);
+  }
+}
+
+/* --------------------------- Utilities --------------------------- */
+@layer utilities {
+  /* Subtiles Grid im Hintergrund (#1a3fff, sehr niedrige Opazität) */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(26, 63, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(26, 63, 255, 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+
+  /* Logo (JPG mit dunklem Rand) — weiche Kante gegen sichtbares Rechteck */
+  .logo-mask {
+    -webkit-mask-image: radial-gradient(circle at center, #000 84%, transparent 100%);
+    mask-image: radial-gradient(circle at center, #000 84%, transparent 100%);
+  }
+
+  /* Text mit Akzent-Glow */
+  .text-glow {
+    text-shadow: 0 0 28px rgba(26, 63, 255, 0.55);
+  }
+
+  /* Fluid-Headline Größen */
+  .h-hero { font-size: clamp(2.6rem, 8vw, 6.5rem); }
+  .h-section { font-size: clamp(2rem, 5vw, 3.5rem); }
+
+  /* Radialer Verlauf für Grid-Masken */
+  .mask-radial {
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 100%);
+  }
+}
+
+/* ----------------- Reveal-Mechanik (FOUC-sicher) ----------------- */
+/* Inline-Head-Script setzt <html class="js"> vor dem Paint.
+   Ohne JS bleibt alles sichtbar. */
+.js [data-reveal] {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* ------------------- prefers-reduced-motion ---------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* Inhalte sofort sichtbar, falls JS noch nicht lief */
+  .js [data-reveal] { opacity: 1 !important; transform: none !important; }
+}

@@ -1,0 +1,85 @@
+==============================================================
+ ALPS AGENCY — PROJEKT-NOTIZEN  (Kurz-Zusammenfassung)
+==============================================================
+
+ZWECK DIESER DATEI
+  Grober Überblick für einen schnellen Wiedereinstieg in einer neuen
+  Session. Nur das Essenzielle. Der 3D-Marquee ist etwas detaillierter,
+  weil daran zuletzt gearbeitet wurde.
+
+--------------------------------------------------------------
+ 1. PROJEKT-BASIS
+--------------------------------------------------------------
+  - Astro 5.18 (statische Website), Tailwind v4, GSAP (Scroll-Reveals),
+    i18n DE/EN, dunkles Blau-Theme. KEIN Next.js.
+  - Start (Dev):   npm run dev      -> http://localhost:4321
+  - Build:         npm run build    (Production-Build, läuft fehlerfrei)
+  - Antwortsprache mit dem Nutzer: IMMER Deutsch.
+
+  WICHTIG — Vite-Override:
+  - package.json hat  "overrides": { "vite": "^7.1.5" }.
+  - Grund: Tailwind/React zogen vite@8 (rolldown) -> React-Fast-Refresh
+    crasht im Dev ("Missing field moduleType", 500er, Ladescreen hängt).
+  - Nach npm install prüfen:  npm ls vite  -> muss überall 7.x zeigen.
+    Sonst greift der Override nicht und der Dev-Server 500t wieder.
+  - Production-Build war davon NIE betroffen.
+
+--------------------------------------------------------------
+ 2. 3D-MARQUEE (zuletzt gebaut, wichtigster Teil)
+--------------------------------------------------------------
+  WAS ES IST
+  - Aceternity "3D Marquee" als React-Island (einziges React auf der Seite).
+  - Läuft als bewegter HERO-HINTERGRUND (hinter dem Hero-Text).
+  - Die Kacheln = echte SCREENSHOTS der eigenen Website-Sektionen
+    -> wirkt, als wäre die ganze Website im Marquee.
+
+  DATEIEN
+  - src/components/ui/3d-marquee.tsx  ... die Marquee-Komponente
+  - src/lib/utils.ts                  ... cn()-Helfer (clsx + tailwind-merge)
+  - src/components/Hero.astro         ... Einbau als Hintergrund + Parallax
+  - public/marquee/*.png              ... die Sektions-Kacheln (hero, services,
+                                          work, pricing, faq, contact)
+  - scripts/shoot-sections.mjs        ... erzeugt die Screenshots neu
+        Aufruf:  node scripts/shoot-sections.mjs   (Dev-Server muss laufen)
+        -> nach Design-Änderungen erneut laufen lassen!
+
+  EINGEBAUTE EFFEKTE / EINSTELLUNGEN
+  - Maus-Parallax: Hintergrund kippt mit der Maus (max. 7°),
+    NUR Desktop (auf Touch aus), respektiert reduced-motion.
+    -> Script unten in Hero.astro; Stellschraube: Konstante MAX (Grad).
+  - Tiefenschärfe (Depth-of-Field): obere/hintere Kacheln leicht unscharf
+    (blur 0.8px) + dunkler, untere/vordere scharf. Hover macht scharf.
+  - "Rausstechen"-Tuning: Deckkraft 100%, brightness 1.18 / contrast 1.12 /
+    saturate 1.08, leuchtend-blauer Rahmen (ring #6f8bff) + Schatten.
+    -> Kacheln klar als Website-Panels erkennbar.
+  - Reduced-Motion: useReducedMotion() in 3d-marquee.tsx -> Marquee steht
+    still, wenn der Nutzer "Bewegung reduzieren" aktiv hat. Normalfall
+    unverändert (betrifft NICHT die normale Desktop-Ansicht).
+
+  STELLSCHRAUBEN (wo justieren)
+  - Deckkraft & Ruhe-Zoom scale(1.06):  Hero.astro -> .hero-marquee
+  - Blur / Opacity / brightness-contrast / Rahmen:  3d-marquee.tsx (Bild-Map)
+  - Parallax-Stärke (MAX Grad):  Hero.astro <script>
+  - Tempo der Spalten: 10s / 15s in 3d-marquee.tsx (animate/transition)
+
+  VOM NUTZER ABGELEHNT (nicht umsetzen):
+  - Kacheln NICHT größer machen.
+  - Dunklen Verlauf (Veil) rechts NICHT dünner machen.
+
+--------------------------------------------------------------
+ 3. ZUSTAND / GETESTET
+--------------------------------------------------------------
+  - Desktop & Handy getestet: läuft sauber, keine Konsolenfehler,
+    kein horizontaler Überlauf, Text lesbar.
+  - Online-fähig: ja (normaler statischer Astro-Build). Würde nicht
+    buggen/laggen auf normalen Geräten.
+
+--------------------------------------------------------------
+ 4. OFFENE PUNKTE
+--------------------------------------------------------------
+  - PNG -> WebP konvertieren (public/marquee/) für schnelleren Load.
+  - Optional: auf sehr schwachen Handys weniger Kacheln / Blur aus.
+  - astro.config.mjs: site-URL steht auf Platzhalter https://alpsagency.de
+    -> vor einem echten Deploy auf die echte Domain ändern.
+  - Kontaktformular hat noch kein Backend (nur visuelle Bestätigung).
+==============================================================

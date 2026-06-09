@@ -1,0 +1,202 @@
+{
+  "meta": {
+    "title": "Alps Agency — AI Web Design & Local Google Visibility",
+    "description": "Alps Agency takes local businesses to the top: AI-powered web design, Google Business Profile optimization and more reviews — so more customers find and book you.",
+    "og_alt": "Alps Agency — mountain peak above the clouds"
+  },
+  "nav": {
+    "services": "Services",
+    "work": "Work",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "cta": "Free call",
+    "skip": "Skip to content",
+    "menu_open": "Open menu",
+    "menu_close": "Close menu"
+  },
+  "loading": {
+    "label": "Loading Alps Agency"
+  },
+  "hero": {
+    "badge": "AI Web Design · Google Visibility",
+    "title_pre": "We take your business",
+    "title_accent": "to the top.",
+    "subtitle": "Alps Agency combines AI-powered web design with local Google visibility — so more customers find you, trust you and book with you.",
+    "cta_primary": "Free initial consultation",
+    "cta_secondary": "Our work",
+    "scroll": "Scroll"
+  },
+  "services": {
+    "eyebrow": "Services",
+    "title": "Everything for your digital visibility",
+    "subtitle": "From Google optimization to a finished website — we handle your entire online presence.",
+    "items": {
+      "boost": {
+        "title": "30-Day Visibility Boost",
+        "desc": "Measurably more reach in local Google search in just 30 days."
+      },
+      "profile": {
+        "title": "Profile Optimization",
+        "desc": "Your Google Business Profile fully optimized for maximum discoverability."
+      },
+      "posts": {
+        "title": "Publishing Google Posts",
+        "desc": "Regular posts keep your profile active and relevant to the algorithm."
+      },
+      "webdesign": {
+        "title": "AI Web Design",
+        "desc": "Modern, fast websites designed with AI — tailored to your brand."
+      },
+      "reviews": {
+        "title": "Collecting & Answering Reviews",
+        "desc": "More genuine reviews and professional replies strengthen your trust."
+      }
+    }
+  },
+  "work": {
+    "eyebrow": "Work",
+    "title": "Our Work",
+    "subtitle": "A selection of projects we have made visible.",
+    "view": "View",
+    "placeholder_note": "Placeholder — real projects coming soon.",
+    "items": {
+      "one": { "title": "Local Trades", "category": "Website + Google Profile" },
+      "two": { "title": "Hospitality", "category": "30-Day Visibility Boost" },
+      "three": { "title": "Service Provider", "category": "Full package & reviews" }
+    }
+  },
+  "pricing": {
+    "eyebrow": "Packages & Pricing",
+    "title": "Transparent packages",
+    "subtitle": "Clearly calculable, no hidden costs. You always start with a free initial consultation.",
+    "popular": "Most popular",
+    "from": "from",
+    "items": {
+      "free": {
+        "name": "Free Consultation",
+        "price": "€0",
+        "period": "no obligation",
+        "features": [
+          "Consultation call",
+          "Information exchange",
+          "Initial assessment",
+          "Individual recommendation"
+        ],
+        "cta": "Book a slot"
+      },
+      "starter": {
+        "name": "Starter",
+        "price": "€1,500",
+        "period": "one-time",
+        "features": [
+          "Profile optimization",
+          "30-Day Visibility Boost",
+          "4 Google posts / month",
+          "Basic reporting"
+        ],
+        "cta": "Choose package"
+      },
+      "professional": {
+        "name": "Professional",
+        "price": "€2,400",
+        "period": "one-time",
+        "features": [
+          "Everything in Starter",
+          "AI website (one-pager)",
+          "Review management",
+          "Weekly posts",
+          "Priority support"
+        ],
+        "cta": "Choose package"
+      },
+      "premium": {
+        "name": "Premium",
+        "price": "On request",
+        "period": "custom",
+        "features": [
+          "Everything in Professional",
+          "Custom multi-page website",
+          "Ongoing management",
+          "Monthly strategy calls"
+        ],
+        "cta": "Send request"
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "title": "Frequently asked questions",
+    "subtitle": "What businesses most often wonder before working with us.",
+    "items": {
+      "q1": {
+        "q": "Why didn't the previous agency work out?",
+        "a": "Often there is no clear strategy and honest communication. Many agencies deliver standard solutions without local focus. We analyze your starting point first and only implement measures that measurably bring customers."
+      },
+      "q2": {
+        "q": "What problems were there?",
+        "a": "Typical issues are an incomplete Google profile, an outdated website and missing reviews. These are exactly the levers we optimize, visibly."
+      },
+      "q3": {
+        "q": "What has been tried so far?",
+        "a": "Often ads were run without optimizing the basics. Advertising fizzles out when profile and website don't convince — we build the foundation first."
+      },
+      "q4": {
+        "q": "Which goals were not achieved?",
+        "a": "Usually consistent inquiries and local search visibility are missing. We define clear, realistic goals and make progress transparently measurable."
+      },
+      "q5": {
+        "q": "How long does a project take?",
+        "a": "The visibility boost shows first effects in around 30 days. A complete website is ready in 2–4 weeks depending on scope."
+      },
+      "q6": {
+        "q": "What makes Alps Agency different?",
+        "a": "We combine AI-powered design with real local marketing — honest, measurable and personally managed. No page builder, no empty promises."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Contact",
+    "title": "Book your free consultation",
+    "subtitle": "Tell us briefly about your project — we'll get back to you within 24 hours.",
+    "fields": {
+      "name": { "label": "Name", "placeholder": "First and last name" },
+      "email": { "label": "Email", "placeholder": "name@example.com" },
+      "phone": { "label": "Phone", "placeholder": "+49 …" },
+      "industry": { "label": "Industry", "placeholder": "e.g. hospitality, trades …" },
+      "source": {
+        "label": "How did you find us?",
+        "placeholder": "Please select",
+        "options": {
+          "google": "Google search",
+          "referral": "Referral",
+          "social": "Social media",
+          "other": "Other"
+        }
+      },
+      "message": { "label": "Message", "placeholder": "What is it about?" }
+    },
+    "submit": "Request free consultation",
+    "sending": "Sending …",
+    "success_title": "Thanks! We received your request.",
+    "success_text": "We'll get back to you within 24 hours.",
+    "errors": {
+      "required": "This field is required.",
+      "email": "Please enter a valid email address.",
+      "phone": "Please enter a valid phone number."
+    }
+  },
+  "footer": {
+    "tagline": "AI web design & local Google visibility for businesses that want to grow.",
+    "nav_title": "Navigation",
+    "contact_title": "Contact",
+    "legal_title": "Legal",
+    "email": "hello@alpsagency.de",
+    "phone": "+49 000 0000000",
+    "whatsapp": "Message on WhatsApp",
+    "imprint": "Imprint",
+    "privacy": "Privacy",
+    "rights": "All rights reserved.",
+    "placeholder_note": "Contact details are placeholders — please replace."
+  }
+}

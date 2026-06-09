@@ -1,0 +1,51 @@
+---
+name: seo
+description: Search engine optimization based on Lighthouse SEO audits and Google Search guidelines. Use when asked about SEO, meta tags, search ranking, structured data, sitemap, robots.txt, or crawlability. Always activate when building new pages or adding content.
+---
+
+# SEO
+
+## On-Page Basics
+- Title: 50-60 Zeichen, einzigartig pro Seite
+- Description: 150-160 Zeichen
+- Nur eine h1 pro Seite
+- Heading Hierarchie: h1 → h2 → h3
+
+## Technisches SEO
+robots.txt:
+User-agent: *
+Allow: /
+Sitemap: https://domain.com/sitemap.xml
+
+Canonical:
+<link rel="canonical" href="https://domain.com/seite" />
+
+## Structured Data
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Alps Agency",
+  "url": "https://alpsagency.com"
+}
+</script>
+
+## Mobile SEO
+- <meta name="viewport" content="width=device-width, initial-scale=1">
+- Touch Targets min. 48x48px
+- Schriftgröße min. 16px
+
+## Mehrsprachig DE/EN
+<link rel="alternate" hreflang="de" href="https://domain.com/de/" />
+<link rel="alternate" hreflang="en" href="https://domain.com/en/" />
+
+## Lighthouse Ziel: ≥ 95
+
+## Checkliste vor Launch
+- [ ] Title + Description auf allen Seiten
+- [ ] robots.txt vorhanden
+- [ ] Sitemap erstellt
+- [ ] Canonical URLs gesetzt
+- [ ] Structured Data validiert
+- [ ] Mobile-friendly
+- [ ] hreflang für DE/EN

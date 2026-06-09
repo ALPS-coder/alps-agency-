@@ -1,0 +1,28 @@
+---
+name: webapp-testing
+description: Testet lokale Web Apps mit Python Playwright. Automatische UI Verifikation, Screenshots, DOM Inspektion und Debugging. Aktivieren bei: Testen, Bug suchen, UI prüfen, Screenshot machen, Mobile Layout checken, vor Deploy prüfen.
+---
+
+# Webapp Testing
+
+## Was dieser Skill macht
+Testet die fertige Website im Browser — unabhängig von der Code-Sprache.
+
+## Prozess
+Ist es statisches HTML?
+├─ Ja → HTML direkt lesen → Selektoren finden → Playwright Script
+└─ Nein (dynamisch) → Server bereits running?
+    ├─ Nein → python scripts/with_server.py --help
+    └─ Ja → Screenshot → DOM inspizieren → testen
+
+## Wichtige Regeln
+- Immer page.wait_for_load_state('networkidle') bei dynamischen Apps
+- Screenshot zuerst zur Inspektion:
+  page.screenshot(path='/tmp/inspect.png', full_page=True)
+- Scripts mit --help starten bevor Source gelesen wird
+- Scripts als Black-Box verwenden — nicht in Context laden
+
+## Für Alps Agency
+- Alle Seiten auf Mobile + Desktop prüfen
+- Animationen auf Funktion testen
+- Vor jedem Vercel Deploy ausführen

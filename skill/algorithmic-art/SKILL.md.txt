@@ -1,0 +1,36 @@
+---
+name: algorithmic-art
+description: Generative Art mit p5.js, seeded randomness und parametrischer Exploration. Erstellt algorithmische Philosophien als interaktive p5.js Sketches mit vollem Parameter-Kontrolle. Aktivieren bei: generative Art, Animationen, Flow Fields, Partikel-Systeme, visuelle Effekte.
+---
+
+# Algorithmic Art
+
+## Was dieser Skill macht
+Erstellt generative Kunst durch algorithmische Philosophien — zuerst Konzept, dann Code.
+
+## Output
+- `.md` → Algorithmische Philosophie
+- `.html` → Interaktiver Viewer mit Sidebar-Controls
+- `.js` → Generativer Algorithmus
+
+## Prozess
+1. Algorithmische Philosophie entwickeln (4-6 Paragraphen)
+2. Parameter definieren (was soll steuerbar sein?)
+3. p5.js Algorithmus implementieren
+4. HTML Viewer mit Controls bauen
+
+## Technische Regeln
+- Immer Seed für Reproduzierbarkeit:
+```js
+  let seed = 12345;
+  randomSeed(seed);
+  noiseSeed(seed);
+```
+- Seed Navigation: previous / next / random / jump
+- Echtzeit Parameter via Slider und Color Pickers
+- Alles self-contained in einer HTML Datei
+
+## Wichtig
+- Konzept subtil einweben — nicht literal, immer sophisticated
+- Controlled Chaos: emergentes Verhalten durch mathematische Regeln
+- Noise Fields, Partikel-Systeme, Flow Dynamics bevorzugen

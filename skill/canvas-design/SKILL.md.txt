@@ -1,0 +1,28 @@
+---
+name: canvas-design
+description: Erstellt visuell-getriebene Design Artefakte als PNG oder PDF. Philosophie zuerst, dann visueller Ausdruck. Aktivieren bei: Poster, Cover Art, Infografiken, visuelle Assets, Design-Konzepte, Brand Visuals.
+---
+
+# Canvas Design
+
+## Was dieser Skill macht
+Museum-qualität visuelle Kunst und Design als .png oder .pdf — in zwei Stufen.
+
+## Output
+- `.md` → Design Philosophie
+- `.png` / `.pdf` → Finales Artwork
+
+## Prozess
+1. Design Philosophie entwickeln (ästhetische Bewegung mit visuellen Prinzipien)
+2. Philosophie auf Canvas ausdrücken — Form, Farbe, Komposition
+3. Einzel-Seite, hochvisuell, design-forward
+
+## Regeln
+- Immer sophisticated — nie cartoonhaft oder amateurhaft
+- Konzept subtil einweben — nicht literal
+- Museum oder Magazin Qualität als Ziel
+- Wiederholende Muster und perfekte Formen bevorzugen
+- Minimaler Text im finalen Output
+
+## Wichtig
+Nicht für einfache Grafiken — nur wenn echte Design-Qualität gefragt ist.

@@ -1,0 +1,132 @@
+---
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+// Platzhalter-Projekte (echte folgen). Jeder Eintrag mit eigenem Verlauf.
+const items = [
+  { key: 'one', from: '#1a3fff', to: '#4d6bff' },
+  { key: 'two', from: '#3a2b8f', to: '#6d5bff' },
+  { key: 'three', from: '#0e3a6b', to: '#2bb6ff' },
+] as const;
+---
+<section id="work" class="section work" aria-labelledby="work-title">
+  <div class="section-inner">
+    <header class="sec-head">
+      <p class="eyebrow" data-reveal>{t('work.eyebrow')}</p>
+      <h2 id="work-title" class="h-section" data-reveal>{t('work.title')}</h2>
+      <p class="sec-sub" data-reveal>{t('work.subtitle')}</p>
+    </header>
+
+    <ul class="work-grid" role="list">
+      {items.map((item) => (
+        <li class="work-card glass" data-reveal>
+          <div class="work-thumb" style={`--from:${item.from};--to:${item.to};`} aria-hidden="true">
+            <svg class="work-peak" viewBox="0 0 64 40" aria-hidden="true">
+              <path d="M2 38 L22 8 L32 22 L42 4 L62 38 Z" fill="rgba(255,255,255,0.16)" />
+            </svg>
+          </div>
+          <div class="work-body">
+            <span class="work-cat">{t(`work.items.${item.key}.category`)}</span>
+            <h3 class="work-title">{t(`work.items.${item.key}.title`)}</h3>
+            <a href="#contact" class="work-link">
+              {t('work.view')}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+        </li>
+      ))}
+    </ul>
+
+    <p class="work-note" data-reveal>{t('work.placeholder_note')}</p>
+  </div>
+</section>
+
+<style>
+  .sec-head { max-width: 46rem; margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+  .sec-head .eyebrow { margin-bottom: 1rem; }
+  .sec-sub { margin-top: 1.1rem; color: var(--color-muted); font-size: clamp(1rem, 2vw, 1.15rem); }
+
+  .work-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) { .work-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .work-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .work-card {
+    overflow: hidden;
+    padding: 0;
+    transition: transform 0.35s ease, border-color 0.35s ease;
+  }
+  .work-card:hover { transform: translateY(-4px); border-color: rgba(77, 107, 255, 0.4); }
+
+  .work-thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--from), var(--to));
+    overflow: hidden;
+  }
+  .work-thumb::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.18), transparent 60%);
+  }
+  .work-peak { width: 45%; height: auto; position: relative; z-index: 1; transition: transform 0.5s ease; }
+  .work-card:hover .work-peak { transform: translateY(-4px) scale(1.05); }
+
+  .work-body { padding: 1.4rem 1.6rem 1.6rem; }
+  .work-cat {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent-bright);
+  }
+  .work-title { font-size: 1.25rem; font-weight: 600; margin: 0.45rem 0 1rem; }
+  .work-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-display);
+    font-weight: 500;
+    color: #fff;
+  }
+  .work-link svg { width: 1.1rem; height: 1.1rem; transition: transform 0.25s ease; }
+  .work-link:hover svg { transform: translateX(4px); }
+
+  .work-note {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    opacity: 0.8;
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const section = document.getElementById('work');
+  const items = section?.querySelectorAll('[data-reveal]');
+  if (items && items.length) {
+    if (reduceMotion) {
+      gsap.set(items, { opacity: 1, y: 0 });
+    } else {
+      gsap.fromTo(
+        items,
+        { y: 36, opacity: 0 },
+        {
+          y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out',
+          scrollTrigger: { trigger: section, start: 'top 78%' },
+        }
+      );
+    }
+  }
+</script>

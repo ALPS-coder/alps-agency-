@@ -1,0 +1,25 @@
+# Alps Agency
+
+Interaktive Agentur-Portfolio Website. Dark Mode, DE/EN, 3D Animationen.
+
+## Stack
+Astro · Tailwind · TypeScript · Three.js · GSAP · i18next
+
+## Regeln
+- Immer auf Deutsch antworten
+- Simpel und sauber bauen
+- Bei Unklarheiten zuerst fragen, dann umsetzen
+- Vor jedem Task `.claude/rules/` lesen
+
+## Prozess
+1. Rules lesen
+2. Umsetzen
+3. DE/EN Texte → `/locales/`
+
+## Projekt-Isolation
+- Ausschließlich DIESES Projekt (der aktuelle Ordner) ist relevant.
+- Niemals Dateien, Code oder Memorys aus anderen Projekten lesen, durchsuchen
+  oder heranziehen — auch nicht aus Projekten, die ich künftig erstelle.
+- Das Gedächtnis (Memory) ist benutzerweit geteilt: Einträge zu fremden
+  Projekten konsequent ignorieren, als gäbe es sie hier nicht.
+- Im Zweifel gilt: nur, was innerhalb dieses Projektordners liegt, ist gültig.

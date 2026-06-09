@@ -1,0 +1,8 @@
+# Examples Index
+<!-- KI: Diesen Ordner NUR lesen wenn references Skill aktiv UND User speichern will. Sonst ignorieren. -->
+
+## Gespeicherte Beispiele
+_Noch keine Beispiele vorhanden — wird vom User befüllt._
+
+## Format
+{kategorie}-{name}.md · Max 5-7 Sätze · Nur auf Anweisung speichern

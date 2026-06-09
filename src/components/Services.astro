@@ -1,0 +1,128 @@
+---
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+// Reihenfolge + zugehörige Icons (inline SVG, currentColor)
+const items = [
+  { key: 'boost', icon: 'boost' },
+  { key: 'profile', icon: 'profile' },
+  { key: 'posts', icon: 'posts' },
+  { key: 'webdesign', icon: 'webdesign' },
+  { key: 'reviews', icon: 'reviews' },
+] as const;
+---
+<section id="services" class="section services" aria-labelledby="services-title">
+  <div class="section-inner">
+    <header class="sec-head">
+      <p class="eyebrow" data-reveal>{t('services.eyebrow')}</p>
+      <h2 id="services-title" class="h-section" data-reveal>{t('services.title')}</h2>
+      <p class="sec-sub" data-reveal>{t('services.subtitle')}</p>
+    </header>
+
+    <ul class="svc-grid" role="list">
+      {items.map((item) => (
+        <li class="svc-card glass" data-reveal>
+          <span class="svc-icon" aria-hidden="true">
+            {item.icon === 'boost' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-9"/><path d="M16 7h5v5"/></svg>
+            )}
+            {item.icon === 'profile' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-5.3-7-10a7 7 0 0 1 14 0c0 4.7-7 10-7 10z"/><circle cx="12" cy="11" r="2.5"/></svg>
+            )}
+            {item.icon === 'posts' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M7.5 9h9M7.5 13h6"/></svg>
+            )}
+            {item.icon === 'webdesign' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 22h8"/></svg>
+            )}
+            {item.icon === 'reviews' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 17l-5.2 2.6 1-5.8L3.5 9.7l5.9-.9z"/></svg>
+            )}
+          </span>
+          <h3 class="svc-title">{t(`services.items.${item.key}.title`)}</h3>
+          <p class="svc-desc">{t(`services.items.${item.key}.desc`)}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .sec-head { max-width: 46rem; margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+  .sec-head .eyebrow { margin-bottom: 1rem; }
+  .sec-sub {
+    margin-top: 1.1rem;
+    color: var(--color-muted);
+    font-size: clamp(1rem, 2vw, 1.15rem);
+  }
+
+  .svc-grid {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) { .svc-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) {
+    .svc-grid { grid-template-columns: repeat(6, 1fr); }
+    /* 5 Karten harmonisch auf 6er-Raster: 3 oben (je 2 Spalten), 2 unten (je 3) */
+    .svc-card:nth-child(1),
+    .svc-card:nth-child(2),
+    .svc-card:nth-child(3) { grid-column: span 2; }
+    .svc-card:nth-child(4),
+    .svc-card:nth-child(5) { grid-column: span 3; }
+  }
+
+  .svc-card {
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    transition: transform 0.35s ease, border-color 0.35s ease, background 0.35s ease;
+  }
+  .svc-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(77, 107, 255, 0.4);
+    background: rgba(26, 63, 255, 0.06);
+  }
+
+  .svc-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.8rem;
+    color: var(--color-accent-bright);
+    background: rgba(26, 63, 255, 0.12);
+    border: 1px solid rgba(77, 107, 255, 0.25);
+  }
+  .svc-icon svg { width: 1.5rem; height: 1.5rem; }
+
+  .svc-title { font-size: 1.2rem; font-weight: 600; }
+  .svc-desc { color: var(--color-muted); font-size: 0.98rem; }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const section = document.getElementById('services');
+  const items = section?.querySelectorAll('[data-reveal]');
+  if (items && items.length) {
+    if (reduceMotion) {
+      gsap.set(items, { opacity: 1, y: 0 });
+    } else {
+      gsap.fromTo(
+        items,
+        { y: 32, opacity: 0 },
+        {
+          y: 0, opacity: 1, duration: 0.8, stagger: 0.08, ease: 'power3.out',
+          scrollTrigger: { trigger: section, start: 'top 78%' },
+        }
+      );
+    }
+  }
+</script>

@@ -1,0 +1,47 @@
+---
+name performance-optimization
+description Optimizes application performance. Use when performance requirements exist, when you suspect performance regressions, or when Core Web Vitals or load times need improvement. Use when profiling reveals bottlenecks that need fixing.
+---
+
+# Performance Optimization
+
+## Wichtig
+Messen vor optimieren — ohne Daten ist es raten.
+
+## Core Web Vitals Ziele
+ Metric  Gut  Verbesserung nötig 
+---------
+ LCP  ≤ 2.5s  ≤ 4.0s 
+ INP  ≤ 200ms  ≤ 500ms 
+ CLS  ≤ 0.1  ≤ 0.25 
+
+## Workflow
+1. MESSEN → Baseline mit echten Daten
+2. IDENTIFIZIEREN → Echten Bottleneck finden
+3. FIXEN → Spezifischen Bottleneck beheben
+4. VERIFIZIEREN → Nochmal messen
+5. SICHERN → Monitoring hinzufügen
+
+## Performance Budget
+- JS Bundle  200KB gzipped
+- CSS  50KB gzipped
+- Bilder  200KB pro Bild (above the fold)
+- API Response  200ms (p95)
+- Lighthouse Score ≥ 90
+
+## Häufige Probleme
+- N+1 Queries → mit includejoin lösen
+- Fehlende Bildoptimierung → widthheight, lazy, avifwebp
+- Große Bundles → Code Splitting, lazy imports
+- Fehlender Cache → HTTP Cache Headers setzen
+- React Re-renders → React.memo, useMemo, stabile Referenzen
+
+## CI Enforcement
+- npx bundlesize --config bundlesize.config.json
+- npx lhci autorun
+
+## Verification
+- VorherNachher Messungen vorhanden
+- Core Web Vitals im Good Bereich
+- Bundle Size nicht gestiegen
+- Keine N+1 Queries in neuem Code

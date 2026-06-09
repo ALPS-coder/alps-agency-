@@ -1,0 +1,118 @@
+---
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+const keys = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'] as const;
+---
+<section id="faq" class="section faq" aria-labelledby="faq-title">
+  <div class="section-inner faq-inner">
+    <header class="sec-head" data-reveal>
+      <p class="eyebrow">{t('faq.eyebrow')}</p>
+      <h2 id="faq-title" class="h-section">{t('faq.title')}</h2>
+      <p class="sec-sub">{t('faq.subtitle')}</p>
+    </header>
+
+    <div class="faq-list">
+      {keys.map((k) => (
+        <details class="faq-item glass" data-reveal>
+          <summary class="faq-q">
+            <span>{t(`faq.items.${k}.q`)}</span>
+            <span class="faq-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+          </summary>
+          <div class="faq-a"><p>{t(`faq.items.${k}.a`)}</p></div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq-inner { max-width: 56rem; }
+  .sec-head { margin-bottom: clamp(2.5rem, 5vw, 3.5rem); }
+  .sec-head .eyebrow { margin-bottom: 1rem; }
+  .sec-sub { margin-top: 1.1rem; color: var(--color-muted); font-size: clamp(1rem, 2vw, 1.15rem); }
+
+  .faq-list { display: flex; flex-direction: column; gap: 0.9rem; }
+
+  .faq-item {
+    padding: 0 1.4rem;
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+  .faq-item[open] { border-color: rgba(77, 107, 255, 0.45); background: rgba(26, 63, 255, 0.05); }
+
+  .faq-q {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #fff;
+  }
+  .faq-q::-webkit-details-marker { display: none; }
+
+  .faq-icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    color: var(--color-accent-bright);
+    transition: transform 0.3s ease;
+  }
+  .faq-icon svg { width: 1.3rem; height: 1.3rem; }
+  .faq-item[open] .faq-icon { transform: rotate(180deg); }
+
+  /* Animierter Aufklapp-Bereich (JS steuert max-height) */
+  .faq-a {
+    overflow: hidden;
+    color: var(--color-muted);
+    line-height: 1.7;
+  }
+  .faq-a p { padding-bottom: 1.3rem; margin: 0; }
+
+  /* Ohne JS: details/summary funktioniert nativ */
+  .js .faq-a { max-height: 0; transition: max-height 0.4s ease; }
+  .js .faq-item[open] .faq-a { max-height: var(--faq-h, 30rem); }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const section = document.getElementById('faq');
+  const items = section?.querySelectorAll<HTMLElement>('details.faq-item');
+
+  // Sanfte, höhen-exakte Animation: max-height auf Inhaltshöhe setzen
+  section?.querySelectorAll<HTMLDetailsElement>('details.faq-item').forEach((d) => {
+    const body = d.querySelector<HTMLElement>('.faq-a');
+    const sync = () => {
+      if (body) d.style.setProperty('--faq-h', `${body.scrollHeight}px`);
+    };
+    d.addEventListener('toggle', () => { if (d.open) sync(); });
+    sync();
+  });
+
+  const reveal = section?.querySelectorAll('[data-reveal]');
+  if (reveal && reveal.length) {
+    if (reduceMotion) {
+      gsap.set(reveal, { opacity: 1, y: 0 });
+    } else {
+      gsap.fromTo(
+        reveal,
+        { y: 28, opacity: 0 },
+        {
+          y: 0, opacity: 1, duration: 0.7, stagger: 0.07, ease: 'power3.out',
+          scrollTrigger: { trigger: section, start: 'top 80%' },
+        }
+      );
+    }
+  }
+  void items;
+</script>
