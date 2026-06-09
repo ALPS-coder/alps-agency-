@@ -80,6 +80,10 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
     transform-style: preserve-3d;
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
+    /* Rand-Fade / Vignette: Kacheln laufen zu allen Rändern weich aus
+       statt hart abzuschneiden — wirkt eingebettet statt „abgeschnitten". */
+    -webkit-mask-image: radial-gradient(125% 125% at 50% 42%, #000 52%, transparent 100%);
+    mask-image: radial-gradient(125% 125% at 50% 42%, #000 52%, transparent 100%);
   }
 
   /* Verlauf — dunkler, damit der Inhalt über dem Marquee gut lesbar ist */
