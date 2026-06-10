@@ -7,13 +7,27 @@ import { cn } from "@/lib/utils";
 export const ThreeDMarquee = ({
   images,
   className,
+  onTileClick,
+  dimmed = false,
+  frozen = false,
 }: {
   images: string[];
   className?: string;
+  onTileClick?: (image: string, rect: DOMRect) => void;
+  // dimmed: andere Kacheln weichen zurück + werden unscharf (Fokus auf die fliegende).
+  // frozen: laufende Spalten-Bewegung einfrieren (im Klick-Moment).
+  dimmed?: boolean;
+  frozen?: boolean;
 }) => {
   // Respektiert die System-Einstellung "Bewegung reduzieren" (Barrierefreiheit).
   // Greift NUR, wenn der Nutzer das aktiv aktiviert hat — sonst kein Effekt.
   const reduceMotion = useReducedMotion();
+  const still = reduceMotion || frozen;
+
+  // Je Spalte ein EIGENES, ruhiges Tempo (statt nur 10s/15s im Wechsel) — wirkt
+  // eleganter & smoother, der gegenläufige Versatz bleibt erhalten.
+  const COL_DURATIONS = [13, 17, 15, 19]; // Sekunden, alle unterschiedlich
+  const SMOOTH = [0.45, 0, 0.55, 1] as const; // weiche ease-in-out-Kurve (buttrig)
 
   // Split the images array into 4 equal parts
   const chunkSize = Math.ceil(images.length / 4);
@@ -25,10 +39,19 @@ export const ThreeDMarquee = ({
     <div
       className={cn(
         "mx-auto block h-[600px] overflow-hidden rounded-2xl max-sm:h-100",
+        dimmed && "pointer-events-none",
         className,
       )}
     >
-      <div className="flex size-full items-center justify-center transform-3d">
+      <div
+        className="flex size-full items-center justify-center transform-3d"
+        style={{
+          // Andere Kacheln weichen zurück + werden unscharf, sobald eine fliegt.
+          filter: dimmed ? "blur(7px) brightness(0.5)" : "none",
+          transform: dimmed ? "scale(0.9)" : "none",
+          transition: "filter 0.5s ease, transform 0.5s ease",
+        }}
+      >
         <div className="size-[1720px] shrink-0 scale-50 transform-3d sm:scale-75 lg:scale-100">
           <div
             style={{
@@ -38,15 +61,18 @@ export const ThreeDMarquee = ({
           >
             {chunks.map((subarray, colIndex) => (
               <motion.div
-                animate={reduceMotion ? { y: 0 } : { y: colIndex % 2 === 0 ? 100 : -100 }}
+                animate={still ? { y: 0 } : { y: colIndex % 2 === 0 ? 100 : -100 }}
                 transition={
                   reduceMotion
                     ? { duration: 0 }
-                    : {
-                        duration: colIndex % 2 === 0 ? 10 : 15,
-                        repeat: Infinity,
-                        repeatType: "reverse",
-                      }
+                    : frozen
+                      ? { duration: 0.6, ease: "easeOut" } // im Klick-Moment sanft einfrieren
+                      : {
+                          duration: COL_DURATIONS[colIndex],
+                          ease: SMOOTH,
+                          repeat: Infinity,
+                          repeatType: "reverse",
+                        }
                 }
                 key={colIndex + "marquee"}
                 className="flex flex-col items-start gap-8 transform-3d"
@@ -67,6 +93,24 @@ export const ThreeDMarquee = ({
                   // Zentriert um 0, damit die Gesamt-Komposition gleich bleibt — beim
                   // Maus-Kippen parallaxen die vorderen Kacheln dadurch stärker als die hinteren.
                   const depthZ = (nearness - 0.5) * 120; // px, −60 … +60
+                  // Die Berg-/Logo-Kachel (hero) bekommt einen spezielleren, aufregenderen Hover.
+                  const isHero = image.includes("hero");
+                  // Alle Kacheln: Anheben + leichtes Vergrößern + blauer Glow.
+                  // Berg-Kachel: stärker vorgehoben, kräftigerer/größerer Glow + Mini-Kick-Pop.
+                  const hover = isHero
+                    ? {
+                        y: -26,
+                        scale: 1.1,
+                        filter:
+                          "blur(0px) brightness(1.28) contrast(1.18) saturate(1.28) drop-shadow(0 14px 40px rgba(111,139,255,0.9))",
+                        opacity: 1,
+                      }
+                    : {
+                        y: -16,
+                        scale: 1.05,
+                        filter: `blur(0px) ${pop} drop-shadow(0 10px 26px rgba(111,139,255,0.55))`,
+                        opacity: 1,
+                      };
                   return (
                     <div
                       className="relative transform-3d"
@@ -74,25 +118,61 @@ export const ThreeDMarquee = ({
                       key={imageIndex + image}
                     >
                       <GridLineHorizontal className="-top-4" offset="20px" />
-                      <motion.img
-                        initial={{ filter: `blur(${blur}px) ${pop}`, opacity }}
-                        animate={{ filter: `blur(${blur}px) ${pop}`, opacity }}
-                        whileHover={{
-                          y: -10,
-                          filter: `blur(0px) ${pop}`,
-                          opacity: 1,
-                        }}
-                        transition={{
-                          duration: 0.3,
-                          ease: "easeInOut",
-                        }}
-                        key={imageIndex + image}
-                        src={image}
-                        alt={`Image ${imageIndex + 1}`}
-                        className="aspect-[970/700] rounded-lg object-cover ring-1 ring-[#6f8bff]/45 shadow-xl shadow-black/40 hover:ring-2 hover:ring-[#9fb4ff]/80 hover:shadow-2xl"
-                        width={970}
-                        height={700}
-                      />
+                      {/* Stabiles Hover-/Tap-Ziel: bewegt sich NICHT mit. Das Bild
+                          hebt/skaliert sich per Variants im Inneren — so springt die
+                          Kachel beim Anheben nicht unter dem Cursor weg (= kein
+                          Flacker-Feedback). Ring folgt via group-hover dem stabilen Ziel. */}
+                      {/* onClick liegt auf dem STILLSTEHENDEN Wrapper (nicht auf dem
+                          sich anhebenden/skalierenden Bild): so passieren pointerdown
+                          und pointerup auf demselben Element → der Klick feuert
+                          zuverlässig, auch während Bild + Spalte sich bewegen. */}
+                      <motion.div
+                        className={cn(
+                          "group relative",
+                          onTileClick && "cursor-pointer",
+                        )}
+                        initial="rest"
+                        animate="rest"
+                        whileHover="hover"
+                        whileTap="tap"
+                        onClick={
+                          onTileClick
+                            ? (e) =>
+                                onTileClick(
+                                  image,
+                                  (e.currentTarget as HTMLElement).getBoundingClientRect(),
+                                )
+                            : undefined
+                        }
+                      >
+                        <motion.img
+                          variants={{
+                            rest: {
+                              y: 0,
+                              scale: 1,
+                              filter: `blur(${blur}px) ${pop}`,
+                              opacity,
+                            },
+                            hover,
+                            tap: onTileClick ? { scale: 0.97 } : {},
+                          }}
+                          transition={
+                            isHero
+                              ? { type: "spring", stiffness: 320, damping: 16 }
+                              : { duration: 0.3, ease: "easeInOut" }
+                          }
+                          src={image}
+                          alt={`Image ${imageIndex + 1}`}
+                          className={cn(
+                            "aspect-[970/700] rounded-lg object-cover shadow-xl shadow-black/40",
+                            isHero
+                              ? "ring-2 ring-[#6f8bff]/70 group-hover:ring-[3px] group-hover:ring-[#bcccff]"
+                              : "ring-1 ring-[#6f8bff]/45 group-hover:ring-2 group-hover:ring-[#9fb4ff]/80",
+                          )}
+                          width={970}
+                          height={700}
+                        />
+                      </motion.div>
                     </div>
                   );
                 })}

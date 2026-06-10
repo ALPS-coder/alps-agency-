@@ -1,7 +1,7 @@
 ---
 import { Image } from 'astro:assets';
 import logo from '../assets/alps-logo.jpg';
-import { ThreeDMarquee } from './ui/3d-marquee';
+import MarqueeHero from './ui/MarqueeHero';
 import { useTranslations, defaultLang, type Lang } from '../i18n';
 const { lang = defaultLang } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
@@ -21,7 +21,7 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
 <section id="hero" class="hero" aria-label={t('hero.title_pre') + ' ' + t('hero.title_accent')}>
   <!-- 3D-Marquee als bewegter Hero-Hintergrund (eigene Sektions-Screenshots) -->
   <div class="hero-bg" data-scene="bg" aria-hidden="true">
-    <ThreeDMarquee client:load images={marqueeImages} className="hero-marquee" />
+    <MarqueeHero client:load images={marqueeImages} className="hero-marquee" />
   </div>
 
   <!-- Verlauf: links dunkel (Lesbarkeit), unten Übergang -->
@@ -113,6 +113,15 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
     max-width: 42rem;
     text-align: left;
     will-change: transform, opacity;
+  }
+
+  /* Während eine Kachel herausfliegt: Hero-Inhalt + Veil weich wegblenden */
+  .hero.flying .hero-content,
+  .hero.flying .hero-veil,
+  .hero.flying .hero-scroll {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
   }
 
   .hero-logo {

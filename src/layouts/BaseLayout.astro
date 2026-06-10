@@ -97,6 +97,29 @@ const orgSchema = {
 
     <LoadingScreen lang={lang} />
 
+    <script>
+      // Kachel-Flug-Landung: Wenn man per 3D-Flug in einer Sektion ankommt, soll sie
+      // SOFORT komplett sichtbar sein (keine Einblend-Animation im Lande-Moment).
+      // Dafür die [data-reveal]-Elemente der Ziel-Sektion final setzen und nur DEREN
+      // ScrollTrigger killen — andere Sektionen animieren beim Scrollen weiter normal.
+      import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+      window.addEventListener('flight-land', (e) => {
+        const id = (e as CustomEvent).detail?.id as string | undefined;
+        if (!id) return;
+        const section = document.getElementById(id);
+        if (!section) return;
+        section.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
+          el.style.opacity = '1';
+          el.style.transform = 'none';
+        });
+        ScrollTrigger.getAll().forEach((t) => {
+          const trg = t.trigger as Element | undefined;
+          if (trg && section.contains(trg)) t.kill();
+        });
+      });
+    </script>
+
     <style>
       .skip-link {
         position: fixed;
