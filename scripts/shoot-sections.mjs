@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const outDir = resolve(__dirname, "../public/marquee");
 mkdirSync(outDir, { recursive: true });
 
-const sections = ["hero", "services", "work", "pricing", "faq", "contact"];
+const sections = ["hero", "services", "work", "beispiele", "pricing", "faq", "contact"];
 
 const browser = await chromium.launch();
 const page = await browser.newPage({

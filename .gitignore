@@ -16,3 +16,7 @@ _backups/
 # OS / Editor
 .DS_Store
 Thumbs.db
+
+# Scratch / Arbeitsordner (nicht versionieren)
+Test ordner mit screenshots/
+Logo,Hintergrund/

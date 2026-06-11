@@ -7,6 +7,7 @@
   "nav": {
     "services": "Services",
     "work": "Work",
+    "beispiele": "Examples",
     "pricing": "Pricing",
     "faq": "FAQ",
     "contact": "Contact",
@@ -61,9 +62,38 @@
     "view": "View",
     "placeholder_note": "Placeholder — real projects coming soon.",
     "items": {
-      "one": { "title": "Local Trades", "category": "Website + Google Profile" },
-      "two": { "title": "Hospitality", "category": "30-Day Visibility Boost" },
-      "three": { "title": "Service Provider", "category": "Full package & reviews" }
+      "one": {
+        "title": "Local Trades",
+        "category": "Website + Google Profile"
+      },
+      "two": {
+        "title": "Hospitality",
+        "category": "30-Day Visibility Boost"
+      },
+      "three": {
+        "title": "Service Provider",
+        "category": "Full package & reviews"
+      }
+    }
+  },
+  "beispiele": {
+    "eyebrow": "Examples",
+    "title": "Examples from Practice",
+    "subtitle": "Concrete insights into results we delivered for our clients.",
+    "note": "More examples coming soon.",
+    "items": {
+      "one": {
+        "title": "Website Relaunch",
+        "category": "Live example"
+      },
+      "two": {
+        "title": "Local Visibility",
+        "category": "Coming soon"
+      },
+      "three": {
+        "title": "Brand Presence",
+        "category": "Coming soon"
+      }
     }
   },
   "pricing": {
@@ -160,10 +190,22 @@
     "title": "Book your free consultation",
     "subtitle": "Tell us briefly about your project — we'll get back to you within 24 hours.",
     "fields": {
-      "name": { "label": "Name", "placeholder": "First and last name" },
-      "email": { "label": "Email", "placeholder": "name@example.com" },
-      "phone": { "label": "Phone", "placeholder": "+49 …" },
-      "industry": { "label": "Industry", "placeholder": "e.g. hospitality, trades …" },
+      "name": {
+        "label": "Name",
+        "placeholder": "First and last name"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "name@example.com"
+      },
+      "phone": {
+        "label": "Phone",
+        "placeholder": "+49 …"
+      },
+      "industry": {
+        "label": "Industry",
+        "placeholder": "e.g. hospitality, trades …"
+      },
       "source": {
         "label": "How did you find us?",
         "placeholder": "Please select",
@@ -174,7 +216,10 @@
           "other": "Other"
         }
       },
-      "message": { "label": "Message", "placeholder": "What is it about?" }
+      "message": {
+        "label": "Message",
+        "placeholder": "What is it about?"
+      }
     },
     "submit": "Request free consultation",
     "sending": "Sending …",

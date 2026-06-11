@@ -14,10 +14,9 @@ export type FlightMode = "in" | "out";
 export type TileQuad = { x0: number; y0: number; x1: number; y1: number; x3: number; y3: number };
 
 const HEADER = 80; // entspricht scroll-margin-top: 5rem
-const DURATION_DESKTOP = 2600; // ms — ruhig/cinematisch (getragen)
-const DURATION_MOBILE = 1900; // auf Touch etwas reduzierter
+const DURATION_DESKTOP = 1300; // ms — „schwebt zum User" (~1,2s), nahtlos in die Sektion
+const DURATION_MOBILE = 950; // auf Touch zügiger
 const PERSPECTIVE = 1200;
-
 // Weiche ease-in-out-Kurve (sanft rein & raus) für den ganzen Flug.
 const easeInOutCubic = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -97,6 +96,15 @@ export function runSectionFlight({
   });
   clone.style.margin = "0";
 
+  // Hintergrund leicht abdunkeln, während die Kachel zum User schwebt — sie tritt
+  // hervor, die zurückweichenden Kacheln treten zurück. Liegt UNTER dem Klon (z<wrap).
+  const veil = document.createElement("div");
+  veil.setAttribute("aria-hidden", "true");
+  veil.style.cssText =
+    "position:fixed;inset:0;z-index:44;pointer-events:none;background:#040b16;" +
+    `opacity:${mode === "in" ? 0 : 0.45};transition:opacity ${mode === "in" ? 0.4 : (isMobile ? DURATION_MOBILE : DURATION_DESKTOP) / 1000}s ease;`;
+  main.appendChild(veil);
+
   const wrap = document.createElement("div");
   wrap.setAttribute("aria-hidden", "true");
   wrap.style.cssText =
@@ -104,117 +112,112 @@ export function runSectionFlight({
     `transform-origin:0 0;pointer-events:none;will-change:transform,opacity;` +
     // Deckender Seiten-Hintergrund — die Sektionen selbst sind transparent (bg liegt auf body).
     `background:var(--color-night,#0a1628);overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6);`;
+  // Sofort die ECHTE Sektion zeigen (Live-Klon) — KEIN Screenshot-Overlay mehr.
+  void tileImage;
   wrap.appendChild(clone);
-
-  // Kachel-Bild als oberste Ebene: der Flug startet sichtbar mit dem Marquee-Screenshot
-  // (exakt im Kachel-Format) und blendet gleichmäßig über den Flug in die echte (Klon-)Sektion.
-  let tileEl: HTMLImageElement | null = null;
-  if (tileImage) {
-    tileEl = document.createElement("img");
-    tileEl.src = tileImage;
-    tileEl.alt = "";
-    tileEl.style.cssText =
-      "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" +
-      "pointer-events:none;will-change:opacity;";
-    wrap.appendChild(tileEl);
-  }
   main.appendChild(wrap);
+  // Veil sanft einblenden (in) bzw. ausblenden (out) — Reflow erzwingen, dann Zielwert.
+  void veil.offsetHeight;
+  veil.style.opacity = mode === "in" ? "0.45" : "0";
 
-  const vh = window.innerHeight;
   const tilt = isMobile ? 0.35 : 1;
   const ARC = (isMobile ? 0.012 : 0.04) * vw; // dezenter Bogen
   const wrapH = wrap.offsetHeight || vw * 0.6; // Klon-Höhe (volle Sektion, in voller Breite)
-  // EINHEITLICHE, GENEIGTE START-KARTE: Die 3D-Perspektive projiziert die Kacheln SEHR
-  // unterschiedlich groß (rechts ~240px Kante, links/mitte bis ~630px) — die gemessene Kachel
-  // direkt als Start zu nehmen ließ große Kacheln „überdimensional" hervorploppen. Stattdessen
-  // startet JEDE Kachel mit derselben moderaten Größe und derselben kanonischen Schräg-Form
-  // (Richtung aus dem Marquee-Transform rotateZ(-45)·rotateX(55) abgeleitet) — zentriert auf den
-  // sichtbaren Kachel-MITTELPUNKT. Form/Neigung bleiben, nur die Größe ist normiert ⇒ kein Pop,
-  // alle gleich groß; von dort wächst die Affine gleichmäßig in die volle Sektion.
-  const Cx0 = (quad.x1 + quad.x3) / 2; // Parallelogramm-Mitte = sichtbare Kachel-Mitte
-  const Cy0 = (quad.y1 + quad.y3) / 2;
-  const TU = 300; // Ziel-Kantenlänge der oberen Kante (px, Bildschirm) — moderat, wie rechte Kacheln
-  const TV = (TU * 700) / 970; // aspekttreu (Kachel 970×700) ≈ 216
-  // Kanonische Kanten-Richtungen (Einheitsvektoren) aus rotateZ(-45)·rotateX(55):
-  const U = { x: 0.867 * TU, y: -0.498 * TU }; // obere Kante → rechts-oben
-  const V = { x: 0.867 * TV, y: 0.498 * TV }; //  linke Kante → rechts-unten
-  let P0x = Cx0 - (U.x + V.x) / 2;
-  let P0y = Cy0 - (U.y + V.y) / 2;
-  // In den Sichtbereich klemmen (reine Translation, Form bleibt): keine Ecke außerhalb (Rand M).
-  {
-    const M = 20;
-    const xs = [P0x, P0x + U.x, P0x + V.x, P0x + U.x + V.x];
-    const ys = [P0y, P0y + U.y, P0y + V.y, P0y + U.y + V.y];
-    const minX = Math.min(...xs), maxX = Math.max(...xs);
-    const minY = Math.min(...ys), maxY = Math.max(...ys);
-    if (minX < M) P0x += M - minX;
-    else if (maxX > vw - M) P0x += vw - M - maxX;
-    if (minY < M) P0y += M - minY;
-    else if (maxY > vh - M) P0y += vh - M - maxY;
-  }
-  // Start-Affine bildet die Karten-Box (0,0)–(vw,wrapH) auf das einheitliche Schräg-Parallelogramm
-  // ab und interpoliert zur Identität (= aufrechte Vollsektion). f relativ zum Wrap-Top (HEADER).
-  const aS = U.x / vw;
-  const bS = U.y / vw;
-  const cS = V.x / wrapH;
-  const dS = V.y / wrapH;
-  const eS = P0x;
-  const fS = P0y - HEADER;
+  // START-Basis: EINHEITLICHE, SAUBERE Start-Karte (NICHT mehr das rohe gemessene Quad).
+  // Warum: Am 3D-Grid-RAND (rotateX55·rotateZ−45) sind Kacheln extrem schräg/klein projiziert
+  // und angeschnittene Kacheln liefern ECKEN AUSSERHALB des Bildes (negativ) ⇒ das rohe Quad
+  // ist degeneriert → der Flug startete verzerrt/an falscher Stelle (nur bei Randkacheln).
+  // Lösung (entzerrt das Quad, bleibt aber an der Kachel): JEDE Kachel startet mit DERSELBEN
+  // kanonischen Schräg-Richtung (Einheitsvektoren U/V aus rotateZ(−45)·rotateX(55)) und
+  // DERSELBEN moderaten Größe, zentriert auf die SICHTBARE Kachel-Mitte und in den Viewport
+  // geklemmt. So ist der Start IMMER sauber & unverzerrt — bei zentralen wie bei Randkacheln.
+  const U = { x: 0.867, y: -0.498 }; // Richtung der oberen Kachel-Kante (Einheitsvektor)
+  const V = { x: 0.867, y: 0.498 }; // Richtung der seitlichen Kachel-Kante
+  const START_TOP = isMobile ? 150 : 300; // Bildschirm-Länge der oberen Start-Kante (px)
+  const S = START_TOP / vw; // uniformer Maßstab Box→Start-Karte
+  const aS = U.x * S;
+  const bS = U.y * S;
+  const cS = V.x * S;
+  const dS = V.y * S;
+  // Sichtbare Kachel-Mitte (Parallelogramm-Mitte) in Bildschirm-Koordinaten.
+  let mx = (quad.x1 + quad.x3) / 2;
+  let my = (quad.y1 + quad.y3) / 2;
+  // Halbe Ausdehnung der Start-Karte (AABB) → Mitte so klemmen, dass die Karte VOLL im Bild
+  // liegt (Randkacheln werden dadurch leicht nach innen gezogen, statt angeschnitten/off-screen).
+  const halfW = (Math.abs(aS) * vw + Math.abs(cS) * wrapH) / 2;
+  const halfH = (Math.abs(bS) * vw + Math.abs(dS) * wrapH) / 2;
+  const M = 16; // Rand
+  mx = Math.min(vw - halfW - M, Math.max(halfW + M, mx));
+  my = Math.min(window.innerHeight - halfH - M, Math.max(HEADER + halfH + M, my));
+  const cxS = mx;
+  const cyS = my - HEADER; // Wrap-Raum (y relativ zu HEADER)
+  // ZIEL: aufrechte Vollsektion (Identität), zentriert = Box-Mitte (vw/2, wrapH/2).
+  const cxE = vw / 2;
+  const cyE = wrapH / 2;
 
-  // e: 1 = natürliche Vollansicht (gelandet), 0 = klein an der Kachel (am Marquee).
-  // edge: 1 am Marquee-Ende, 0 an der Sektion — Glow, Ring & Anfangs-Neigung sind so
-  // beim Ablösen am stärksten und klingen zur Landung sanft aus (mirror für "out").
-  // Rotation UND Pop pivotieren um die Kachel-Mitte (C), nicht um den 0,0-Ursprung —
-  // sonst schwingt der weit vom Ursprung liegende Klon-Inhalt beim Neigen weit weg
-  // ("weit daneben"). So bleibt der Start exakt auf der angeklickten Kachel.
-  const apply = (e: number, pop = 0) => {
-    const edge = 1 - e; // 1 an der Kachel, 0 an der Sektion → Glow/Ring/Schatten am Kachel-Ende stark
+  // e: 0 = exakt auf der Kachel (am Marquee), 1 = aufrechte, bildschirmfüllende Sektion.
+  // GRÖSSE folgt e (wächst dem User entgegen), die ZENTRIERUNG folgt centerLag(e)
+  // (läuft hinterher) ⇒ "erst vor, dann zentrieren". Die Karte richtet sich dabei
+  // gerade auf (Basis → Identität) und sieht den User am Ende frontal an.
+  // pressScale: kurzer Druck-Effekt zu Beginn (Klon dippt deckungsgleich auf der Kachel
+  // ein, dann hebt der Flug ab) — liegt IM Klon, damit der erste Klick smooth & exakt ist.
+  const apply = (e: number, pressScale = 1) => {
+    const edge = 1 - e; // 1 an der Kachel, 0 an der Sektion → Glow/Ring/Schatten beim Ablösen stark
     const bow = Math.sin(e * Math.PI); // 0 an beiden Enden, 1 zur Flugmitte (Bogen + Mittenneigung)
-    // Affine vom Kachel-Parallelogramm (e=0) zur aufrechten Vollsektion (e=1), gleichmäßig.
-    const a = aS + (1 - aS) * e;
-    const b = bS + (0 - bS) * e;
-    const c = cS + (0 - cS) * e;
-    const d = dS + (1 - dS) * e;
-    const e_ = eS + (0 - eS) * e;
-    // Dezenter Bogen: hebt die Karte zur Flugmitte leicht an (0 an beiden Enden → exakte Enden).
-    const f_ = fS + (0 - fS) * e - bow * ARC * 0.25;
-    // Mittelpunkt der aktuellen Karte (Transform-Raum) = Pivot für Mittenneigung + Pop.
-    const cx = a * (vw / 2) + c * (wrapH / 2) + e_;
-    const cy = b * (vw / 2) + d * (wrapH / 2) + f_;
-    // Cinematische 3D-Neigung NUR zur Flugmitte (bow) — Start UND Ende bleiben deckungsgleich.
+    // ZENTRIERUNG FÜHRT, GRÖSSE FOLGT: Die Kachel fliegt zuerst (klein, in ihrer echten
+    // Kachel-Form) von ihrer Position zur Bildmitte = „zum User", und wächst ERST DANACH
+    // zur Vollsektion. Kritisch für RAND-Kacheln (z. B. Pricing rechts): mit der früheren
+    // verzögerten Zentrierung wuchs eine Randkachel AM RAND und lief oben/rechts aus dem Bild
+    // (= „massive Flug-Fehler"). Jetzt ist sie beim Wachsen längst mittig → bleibt im Bild.
+    const eCenter = 1 - Math.pow(1 - e, 1.7); // führt (früh zur Mitte)
+    const eShape = Math.pow(e, 1.7); // folgt (spät groß & flach)
+    const a = aS + (1 - aS) * eShape;
+    const b = bS * (1 - eShape);
+    const c = cS * (1 - eShape);
+    const d = dS + (1 - dS) * eShape;
+    // Aktuelle Karten-Mitte: gleitet (führend) von der Kachel-Mitte zur Bildmitte.
+    const cx = cxS + (cxE - cxS) * eCenter;
+    const cy = cyS + (cyE - cyS) * eCenter - bow * ARC * 0.25; // dezenter Bogen zur Flugmitte
+    // Top-Left der Box aus Mitte + Basis zurückrechnen (transform-origin:0 0).
+    const e_ = cx - (a * (vw / 2) + c * (wrapH / 2));
+    const f_ = cy - (b * (vw / 2) + d * (wrapH / 2));
+    // „ZUM USER" = sanftes Heranschwellen zur Flugmitte über UNIFORMEN Scale (popScale).
+    // KEIN translateZ mehr: ein Z-Schub auf die schräge Kachel-Matrix wurde von der
+    // Perspektive stark verzerrt. Uniformer Scale um die Karten-Mitte ist verzerrungsfrei
+    // und liest sich als „kommt dem Betrachter entgegen". 0 an beiden Enden (sin).
+    // Cinematische 3D-Neigung NUR zur Flugmitte (bow) — Start UND Ende deckungsgleich.
     const rx = 12 * tilt * bow;
     const ry = 5 * tilt * bow;
-    const popScale = 1 + pop + bow * 0.01; // Vorwärts-Pop + winziger Über-Schwung
+    const popScale = pressScale * (1 + 0.12 * Math.sin(Math.PI * e));
     wrap.style.transform =
       `perspective(${PERSPECTIVE}px) ` +
       `translate(${cx}px, ${cy}px) ` +
       `rotateX(${rx}deg) rotateY(${ry}deg) scale(${popScale}) ` +
       `translate(${-cx}px, ${-cy}px) ` +
       `matrix(${a}, ${b}, ${c}, ${d}, ${e_}, ${f_})`;
-    // Abgerundete Ecken am Marquee-Ende, laufen zur Sektion hin auf 0 aus.
-    const sc = ((Math.hypot(a, b) + Math.hypot(c, d)) / 2) * popScale; // mittlere Achs-Skalierung
-    // landFade: 1 fast den ganzen Flug, läuft in den letzten 10% auf 0 → am Lande-Punkt
-    // ist der Klon optisch RESTLOS deckungsgleich mit der echten Sektion (Ecken, Schatten).
+    // RÜCKFLUG: Den Klon AUSBLENDEN, BEVOR die hohe Sektion in die winzige, schräge Kachel
+    // gequetscht wird (extreme Scherung/Stauchung → Streifen/Spiegeltext). Wir verlassen die
+    // Sektion ohnehin und die Marquee kommt schon zurück → man sieht eine saubere, zurück-
+    // weichende Auflösung statt der Quetsch-Artefakte. Sichtbar (lesbar) bis e≈0.55, weg bei
+    // e≈0.3. Hinflug bleibt voll deckend (opacity 1).
+    wrap.style.opacity =
+      mode === "in" ? "1" : String(Math.max(0, Math.min(1, (e - 0.3) / 0.25)));
+    // Abgerundete Ecken am Kachel-Ende, laufen zur Sektion hin auf 0 aus.
+    const sc = ((Math.hypot(a, b) + Math.hypot(c, d)) / 2) * popScale;
     const landFade = e < 0.9 ? 1 : Math.max(0, (1 - e) / 0.1);
-    const screenR = 22 * landFade;
-    wrap.style.borderRadius = `${screenR / sc}px`;
-    // Blauer Glow (aufleuchten beim Ablösen → ausklingen zur Landung) + blauer Ring,
-    // der sich zur Sektion hin auflöst. Auch der Schlagschatten blendet zur Landung aus,
-    // damit beim Umschalten auf die schattenlose Live-Sektion NICHTS aufploppt.
+    wrap.style.borderRadius = `${(22 * landFade) / sc}px`;
+    // Blauer Glow (aufleuchten beim Ablösen → ausklingen zur Ankunft) + blauer Ring +
+    // starker mitwandernder Schlagschatten, der zur Landung restlos ausblendet.
     const glowBlur = 30 + 34 * edge;
     wrap.style.boxShadow =
       `0 40px 120px rgba(0,0,0,${(0.6 * landFade).toFixed(3)}),` +
       `0 0 ${glowBlur}px rgba(111,139,255,${(0.45 * edge).toFixed(3)}),` +
       `inset 0 0 0 ${(2 * edge).toFixed(2)}px rgba(111,139,255,${(0.6 * edge).toFixed(3)})`;
-    // Kachel-Bild & Klon-Sektion morphen GLEICHMÄSSIG ineinander: das Bild blendet über den
-    // ganzen Flug linear aus, während die Karte von Kachel- in Sektions-Form wächst.
-    if (tileEl) {
-      tileEl.style.opacity = String(Math.max(0, 1 - e));
-    }
   };
 
   const cleanup = () => {
     wrap.remove();
+    veil.remove();
     onDone();
   };
 
@@ -231,31 +234,28 @@ export function runSectionFlight({
   };
 
   const DUR = isMobile ? DURATION_MOBILE : DURATION_DESKTOP;
-  // Mechanismus-Vorlauf (nur Hinflug, ~0,8s): die Kachel löst sich sichtbar nach vorn aus
-  // der Reihe (translateZ-Ruck) und hält kurz, während die anderen Kacheln zurückweichen —
-  // DANN startet der eigentliche Flug (Frage 5/6).
-  const MECH = mode === "in" ? (isMobile ? 420 : 600) : 0; // 3D-Hervorheben (Frage 3)
-  const POP = isMobile ? 0.12 : 0.18; // betontes, zentriertes "nach vorn kommen" (Frage 2)
+  // Druck-Phase (nur Hinflug): der Klon liegt deckungsgleich auf der Kachel (e=0) und dippt
+  // kurz ein (scale → PRESS_FLOOR → 1), DANN startet der Schwebe-Flug. Da der Klon im selben
+  // Klick erscheint, ist der ERSTE Klick smooth — kein blindes Fenster, kein Drift.
+  const PRESS_MS = mode === "in" ? (isMobile ? 90 : 120) : 0;
+  const PRESS_FLOOR = 0.9; // tiefster Punkt des Eindrückens (deutlich, haptisch)
   const start = performance.now();
   const tick = (now: number) => {
     const elapsed = now - start;
-    // Phase 1: Ablöse-Ruck nach vorn (zentriert) + Halten, während die anderen weichen.
-    if (elapsed < MECH) {
-      const a = elapsed / MECH; // 0..1
-      apply(0, POP * (1 - Math.pow(1 - a, 3))); // weich nach vorn rucken
+    if (PRESS_MS > 0 && elapsed < PRESS_MS) {
+      const a = elapsed / PRESS_MS; // 0..1
+      const press = 1 - (1 - PRESS_FLOOR) * Math.sin(Math.PI * a); // 1 → 0.9 → 1 (rein & raus)
+      apply(0, press);
       requestAnimationFrame(tick);
       return;
     }
-    // Phase 2: der eigentliche Flug, weich rein & raus (Frage 18); der Ruck löst sich auf.
-    const t = Math.min((elapsed - MECH) / DUR, 1);
+    const t = Math.min((elapsed - PRESS_MS) / DUR, 1);
     const e = mode === "in" ? easeInOutCubic(t) : 1 - easeInOutCubic(t);
-    const pop = mode === "in" ? POP * (1 - t) : 0;
-    apply(e, pop);
+    apply(e);
     if (t < 1) {
       requestAnimationFrame(tick);
     } else {
-      // Den exakt deckungsgleichen End-Frame (keine Rotation, kein Schatten, kein Rahmen,
-      // Kachel-Bild komplett ausgeblendet) ERST PAINTEN lassen — und erst im nächsten Frame
+      // Den exakt deckungsgleichen End-Frame ERST PAINTEN lassen — und erst im nächsten Frame
       // auf die echte Sektion umschalten. So gibt es beim Übergang keinen 1-Frame-Sprung:
       // man landet „live" auf der Seite, ohne sichtbaren Übergangseffekt.
       requestAnimationFrame(finish);

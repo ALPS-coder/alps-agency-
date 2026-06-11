@@ -7,6 +7,7 @@
   "nav": {
     "services": "Leistungen",
     "work": "Arbeiten",
+    "beispiele": "Beispiele",
     "pricing": "Preise",
     "faq": "FAQ",
     "contact": "Kontakt",
@@ -61,9 +62,38 @@
     "view": "Ansehen",
     "placeholder_note": "Platzhalter — echte Projekte folgen.",
     "items": {
-      "one": { "title": "Lokales Handwerk", "category": "Website + Google-Profil" },
-      "two": { "title": "Gastronomie", "category": "30 Tage Sichtbarkeits-Boost" },
-      "three": { "title": "Dienstleister", "category": "Komplettpaket & Bewertungen" }
+      "one": {
+        "title": "Lokales Handwerk",
+        "category": "Website + Google-Profil"
+      },
+      "two": {
+        "title": "Gastronomie",
+        "category": "30 Tage Sichtbarkeits-Boost"
+      },
+      "three": {
+        "title": "Dienstleister",
+        "category": "Komplettpaket & Bewertungen"
+      }
+    }
+  },
+  "beispiele": {
+    "eyebrow": "Beispiele",
+    "title": "Beispiele aus der Praxis",
+    "subtitle": "Konkrete Einblicke in Ergebnisse, die wir für Kunden umgesetzt haben.",
+    "note": "Weitere Beispiele folgen in Kürze.",
+    "items": {
+      "one": {
+        "title": "Website-Relaunch",
+        "category": "Live-Beispiel"
+      },
+      "two": {
+        "title": "Lokale Sichtbarkeit",
+        "category": "Bald verfügbar"
+      },
+      "three": {
+        "title": "Marken-Auftritt",
+        "category": "Bald verfügbar"
+      }
     }
   },
   "pricing": {
@@ -160,10 +190,22 @@
     "title": "Kostenloses Erstgespräch sichern",
     "subtitle": "Erzähl uns kurz von deinem Vorhaben — wir melden uns innerhalb von 24 Stunden.",
     "fields": {
-      "name": { "label": "Name", "placeholder": "Vor- und Nachname" },
-      "email": { "label": "E-Mail", "placeholder": "name@beispiel.de" },
-      "phone": { "label": "Telefon", "placeholder": "+49 …" },
-      "industry": { "label": "Branche", "placeholder": "z. B. Gastronomie, Handwerk …" },
+      "name": {
+        "label": "Name",
+        "placeholder": "Vor- und Nachname"
+      },
+      "email": {
+        "label": "E-Mail",
+        "placeholder": "name@beispiel.de"
+      },
+      "phone": {
+        "label": "Telefon",
+        "placeholder": "+49 …"
+      },
+      "industry": {
+        "label": "Branche",
+        "placeholder": "z. B. Gastronomie, Handwerk …"
+      },
       "source": {
         "label": "Wie hast du uns gefunden?",
         "placeholder": "Bitte auswählen",
@@ -174,7 +216,10 @@
           "other": "Sonstiges"
         }
       },
-      "message": { "label": "Nachricht", "placeholder": "Worum geht es?" }
+      "message": {
+        "label": "Nachricht",
+        "placeholder": "Worum geht es?"
+      }
     },
     "submit": "Kostenloses Gespräch anfragen",
     "sending": "Wird gesendet …",

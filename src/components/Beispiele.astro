@@ -1,0 +1,133 @@
+---
+import { useTranslations, defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+const t = useTranslations(lang);
+
+// Galerie: erstes Item = echtes Live-Beispiel (Screenshot als WebP), weitere folgen
+// als dezente Platzhalter (eigener Verlauf), bis echte Beispiele ergänzt werden.
+const items = [
+  { key: 'one', image: '/beispiele/beispiel-1.webp' },
+  { key: 'two', from: '#1a3fff', to: '#2bb6ff' },
+  { key: 'three', from: '#3a2b8f', to: '#6d5bff' },
+] as const;
+---
+<section id="beispiele" class="section beispiele" aria-labelledby="beispiele-title">
+  <div class="section-inner">
+    <header class="sec-head">
+      <p class="eyebrow" data-reveal>{t('beispiele.eyebrow')}</p>
+      <h2 id="beispiele-title" class="h-section" data-reveal>{t('beispiele.title')}</h2>
+      <p class="sec-sub" data-reveal>{t('beispiele.subtitle')}</p>
+    </header>
+
+    <ul class="gallery-grid" role="list">
+      {items.map((item) => (
+        <li class="gallery-card glass" data-reveal>
+          <div class="gallery-thumb" aria-hidden="true">
+            {'image' in item ? (
+              <img src={item.image} alt="" loading="lazy" decoding="async" width={1200} height={908} />
+            ) : (
+              <div class="gallery-ph" style={`--from:${item.from};--to:${item.to};`}>
+                <svg viewBox="0 0 64 40" aria-hidden="true">
+                  <path d="M2 38 L22 8 L32 22 L42 4 L62 38 Z" fill="rgba(255,255,255,0.16)" />
+                </svg>
+              </div>
+            )}
+          </div>
+          <div class="gallery-body">
+            <span class="gallery-cat">{t(`beispiele.items.${item.key}.category`)}</span>
+            <h3 class="gallery-title">{t(`beispiele.items.${item.key}.title`)}</h3>
+          </div>
+        </li>
+      ))}
+    </ul>
+
+    <p class="gallery-note" data-reveal>{t('beispiele.note')}</p>
+  </div>
+</section>
+
+<style>
+  .sec-head { max-width: 46rem; margin-bottom: clamp(2.5rem, 5vw, 4rem); }
+  .sec-head .eyebrow { margin-bottom: 1rem; }
+  .sec-sub { margin-top: 1.1rem; color: var(--color-muted); font-size: clamp(1rem, 2vw, 1.15rem); }
+
+  .gallery-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .gallery-card {
+    overflow: hidden;
+    padding: 0;
+    transition: transform 0.35s ease, border-color 0.35s ease;
+  }
+  .gallery-card:hover { transform: translateY(-4px); border-color: rgba(77, 107, 255, 0.4); }
+
+  .gallery-thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-night, #0a1628);
+  }
+  .gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+    transition: transform 0.5s ease;
+  }
+  .gallery-card:hover .gallery-thumb img { transform: scale(1.04); }
+
+  .gallery-ph {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--from), var(--to));
+  }
+  .gallery-ph svg { width: 42%; height: auto; }
+
+  .gallery-body { padding: 1.3rem 1.5rem 1.5rem; }
+  .gallery-cat {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent-bright);
+  }
+  .gallery-title { font-size: 1.2rem; font-weight: 600; margin: 0.45rem 0 0; }
+
+  .gallery-note {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    opacity: 0.8;
+  }
+</style>
+
+<script>
+  import gsap from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const section = document.getElementById('beispiele');
+  const items = section?.querySelectorAll('[data-reveal]');
+  if (items && items.length) {
+    if (reduceMotion) {
+      gsap.set(items, { opacity: 1, y: 0 });
+    } else {
+      gsap.fromTo(
+        items,
+        { y: 36, opacity: 0 },
+        {
+          y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out',
+          scrollTrigger: { trigger: section, start: 'top 78%' },
+        }
+      );
+    }
+  }
+</script>

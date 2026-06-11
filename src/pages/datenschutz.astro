@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Datenschutz — Alps Agency" lockHero={false}>
+  <section class="legal">
+    <a href="/" class="legal-back">&larr; Zur&uuml;ck zur Startseite</a>
+    <h1>Datenschutzerkl&auml;rung</h1>
+
+    <p class="legal-note">
+      Platzhalter &mdash; bitte vor dem Livegang durch eine vollst&auml;ndige, auf das
+      tats&auml;chliche Tracking/Hosting abgestimmte Datenschutzerkl&auml;rung ersetzen
+      (z.&nbsp;B. via Generator oder Rechtsberatung).
+    </p>
+
+    <h2>1. Verantwortlicher</h2>
+    <p>
+      Verantwortlich f&uuml;r die Datenverarbeitung auf dieser Website ist der im
+      <a href="/impressum">Impressum</a> genannte Anbieter.
+    </p>
+
+    <h2>2. Allgemeine Hinweise</h2>
+    <p>
+      Die folgenden Hinweise geben einen &Uuml;berblick dar&uuml;ber, was mit Ihren
+      personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene
+      Daten sind alle Daten, mit denen Sie pers&ouml;nlich identifiziert werden k&ouml;nnen.
+    </p>
+
+    <h2>3. Hosting</h2>
+    <p>
+      Diese Website wird bei einem externen Dienstleister gehostet ([Hosting-Anbieter,
+      Anschrift]). Beim Aufruf werden technisch notwendige Server-Logdaten (z.&nbsp;B.
+      IP-Adresse, Datum/Uhrzeit, abgerufene Seite) verarbeitet.
+    </p>
+
+    <h2>4. Ihre Rechte</h2>
+    <p>
+      Sie haben jederzeit das Recht auf Auskunft, Berichtigung, L&ouml;schung,
+      Einschr&auml;nkung der Verarbeitung, Daten&uuml;bertragbarkeit sowie Widerspruch und
+      Beschwerde bei einer Aufsichtsbeh&ouml;rde. Wenden Sie sich dazu an die im Impressum
+      genannte Adresse.
+    </p>
+
+    <h2>5. Kontaktaufnahme</h2>
+    <p>
+      Wenn Sie uns per Formular, E-Mail oder Telefon kontaktieren, werden Ihre Angaben zur
+      Bearbeitung der Anfrage gespeichert (Rechtsgrundlage Art.&nbsp;6 Abs.&nbsp;1 lit.&nbsp;b
+      bzw. f DSGVO).
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .legal {
+    max-width: 48rem;
+    margin-inline: auto;
+    padding: clamp(6rem, 12vw, 9rem) clamp(1.25rem, 5vw, 3rem) clamp(4rem, 8vw, 6rem);
+    color: var(--color-muted);
+    line-height: 1.7;
+  }
+  .legal-back {
+    display: inline-block;
+    margin-bottom: 2.5rem;
+    color: var(--color-accent-bright);
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+  }
+  .legal-back:hover { color: #fff; }
+  .legal h1 {
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin-bottom: 1.5rem;
+  }
+  .legal h2 {
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin: 2.25rem 0 0.6rem;
+  }
+  .legal p { margin-bottom: 1rem; }
+  .legal a { color: var(--color-accent-bright); word-break: break-word; }
+  .legal-note {
+    padding: 0.9rem 1.1rem;
+    border-left: 3px solid var(--color-accent);
+    background: rgba(26, 63, 255, 0.08);
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-size: 0.9rem;
+  }
+</style>

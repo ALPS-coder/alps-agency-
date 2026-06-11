@@ -1,8 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { animate, motion, useMotionValue, useReducedMotion } from "motion/react";
 import { cn } from "@/lib/utils";
+
+// Weiche ease-in-out-Kurve (buttrig) für die Spalten-Bewegung. Modul-Ebene, damit
+// die ausgelagerte MarqueeColumn sie ebenfalls nutzen kann.
+const SMOOTH = [0.45, 0, 0.55, 1] as const;
 
 // Eine Kachel = Bild + Versatz (x/y), Tiefe (z) und leichte Drehung.
 type Tile = { image: string; dx: number; dy: number; dz: number; rot: number };
@@ -11,12 +15,11 @@ type Tile = { image: string; dx: number; dy: number; dz: number; rot: number };
 // (stabil, kein Springen) UND Server-/Client-Render identisch (kein Hydration-Flackern).
 const SEED = 1337;
 
-// Sicherer Versatz, so gewählt, dass sich Kacheln NIE überlappen (Vorrang vor Look):
-// Grundabstand ~40px (gap-10). Worst case = zwei Nachbarn schieben aufeinander zu (2·dx)
-// PLUS die Ecken der Drehung ragen heraus. Budget so gerechnet, dass ≥10px Spalt bleibt.
-// x hat etwas mehr Luft als y (vertikale Nachbarn verlieren mehr Platz an die Drehung).
-const J_DESKTOP = { x: 8, y: 6, z: 0, rot: 2 }; // z=0: flach, alle gleich groß
-const J_MOBILE = { x: 5, y: 4, z: 0, rot: 1.2 }; // ruhiger, aber genauso strikt
+// KEIN Zufalls-Versatz: alle Kacheln sitzen exakt symmetrisch im Raster mit identischem
+// Abstand (gap-10 = 40px, gleich in x und y), keine Mini-Drehung. Die Spalten-Bewegung
+// (Marquee) und der Klick-Flug bleiben davon unberührt.
+const J_DESKTOP = { x: 0, y: 0, z: 0, rot: 0 };
+const J_MOBILE = { x: 0, y: 0, z: 0, rot: 0 };
 
 // Kleiner, schneller Seed-PRNG (mulberry32) — reproduzierbare „Zufalls"-Werte.
 function mulberry32(seed: number) {
@@ -55,14 +58,19 @@ function buildTiles(
 export const ThreeDMarquee = ({
   images,
   className,
+  onTilePress,
   onTileClick,
   dimmed = false,
   frozen = false,
 }: {
   images: string[];
   className?: string;
-  // Liefert das Bild + die ECHTEN Bildschirm-Ecken der (3D-schrägen) Kachel
-  // (P0 oben-links, P1 oben-rechts, P3 unten-links) für den exakt deckungsgleichen Flug-Start.
+  // Wird SOFORT beim Klick gerufen (vor dem Flug). Rückgabe false = Klick ablehnen
+  // (z. B. läuft schon ein Flug / Bild ist keine Sektion) — dann passiert nichts.
+  onTilePress?: (image: string) => boolean;
+  // Liefert das Bild + die ECHTEN, SYNCHRON in Ruhelage gemessenen Bildschirm-Ecken der
+  // Kachel (P0 oben-links, P1 oben-rechts, P3 unten-links). Der Flug startet sofort hier —
+  // das Druck-Feedback liegt im Flug-Klon (deckungsgleich), kein blindes Drift-Fenster.
   onTileClick?: (
     image: string,
     quad: { x0: number; y0: number; x1: number; y1: number; x3: number; y3: number },
@@ -75,17 +83,23 @@ export const ThreeDMarquee = ({
   // Respektiert die System-Einstellung "Bewegung reduzieren" (Barrierefreiheit).
   // Greift NUR, wenn der Nutzer das aktiv aktiviert hat — sonst kein Effekt.
   const reduceMotion = useReducedMotion();
-  const still = reduceMotion || frozen;
 
   // Je Spalte ein EIGENES, ruhiges Tempo (statt nur 10s/15s im Wechsel) — wirkt
   // eleganter & smoother, der gegenläufige Versatz bleibt erhalten.
   const COL_DURATIONS = [13, 17, 15, 19]; // Sekunden, alle unterschiedlich
-  const SMOOTH = [0.45, 0, 0.55, 1] as const; // weiche ease-in-out-Kurve (buttrig)
+
+  // Welche Spalte gerade gehovert wird → diese Spalte bremst weich aus (kein Drift
+  // unter der Maus). Hover wird auf SPALTEN-Ebene erkannt, damit der Wechsel zwischen
+  // Kacheln derselben Spalte (über die Lücke) die Pause nicht kurz aufhebt.
+  const [hoverCol, setHoverCol] = useState<number | null>(null);
+  const onColEnter = useCallback((c: number) => setHoverCol(c), []);
+  const onColLeave = useCallback(() => setHoverCol(null), []);
 
   // Feste, überlappungsfreie Anordnung. Initial = Desktop-Muster (deterministisch ⇒
   // SSR und Client identisch, kein Flackern). Nach dem Mount: auf kleinen Schirmen das
   // ruhigere Mobile-Muster, bei „Bewegung reduzieren" das saubere Raster.
   const [tiles, setTiles] = useState<Tile[]>(() => buildTiles(images, J_DESKTOP));
+
   useEffect(() => {
     if (reduceMotion) {
       setTiles(images.map((image) => ({ image, dx: 0, dy: 0, dz: 0, rot: 0 })));
@@ -143,21 +157,15 @@ export const ThreeDMarquee = ({
             className="relative top-96 right-[50%] grid size-full origin-top-left grid-cols-4 gap-10 transform-3d"
           >
             {chunks.map((subarray, colIndex) => (
-              <motion.div
-                animate={still ? { y: 0 } : { y: colIndex % 2 === 0 ? 100 : -100 }}
-                transition={
-                  reduceMotion
-                    ? { duration: 0 }
-                    : frozen
-                      ? { duration: 0.6, ease: "easeOut" } // im Klick-Moment sanft einfrieren
-                      : {
-                          duration: COL_DURATIONS[colIndex],
-                          ease: SMOOTH,
-                          repeat: Infinity,
-                          repeatType: "reverse",
-                        }
-                }
+              <MarqueeColumn
                 key={colIndex + "marquee"}
+                colIndex={colIndex}
+                duration={COL_DURATIONS[colIndex]}
+                frozen={frozen}
+                reduceMotion={!!reduceMotion}
+                hovered={hoverCol === colIndex}
+                onColEnter={onColEnter}
+                onColLeave={onColLeave}
                 className="flex flex-col items-start gap-10 transform-3d"
               >
                 <GridLineVertical className="-left-4" offset="80px" />
@@ -172,30 +180,22 @@ export const ThreeDMarquee = ({
                   const pop = "brightness(1.18) contrast(1.12) saturate(1.08)";
                   // Die Berg-/Logo-Kachel (hero) bekommt einen spezielleren, aufregenderen Hover.
                   const isHero = image.includes("hero");
-                  // Alle Kacheln: Anheben + leichtes Vergrößern + blauer Glow.
-                  // Berg-Kachel: stärker vorgehoben, kräftigerer/größerer Glow + Mini-Kick-Pop.
+                  // Lift NUR über Transform (scale/y). KEIN filter:drop-shadow pro Frame mehr
+                  // (das war teuer → Ruckeln). Der Glow läuft als eigener Opacity-Layer (s.u.),
+                  // der Filter bleibt konstant = pop (wird gar nicht animiert).
                   const hover = isHero
-                    ? {
-                        y: -26,
-                        scale: 1.1,
-                        filter:
-                          "blur(0px) brightness(1.28) contrast(1.18) saturate(1.28) drop-shadow(0 14px 40px rgba(111,139,255,0.9))",
-                        opacity: 1,
-                      }
-                    : {
-                        y: -16,
-                        scale: 1.05,
-                        filter: `blur(0px) ${pop} drop-shadow(0 10px 26px rgba(111,139,255,0.55))`,
-                        opacity: 1,
-                      };
+                    ? { y: -22, scale: 1.08 }
+                    : { y: -14, scale: 1.05 };
+                  // Glow-Stärke je Kachel — eigener Layer hinter dem Bild, faded nur per Opacity.
+                  const glowShadow = isHero
+                    ? "0 20px 50px rgba(111,139,255,0.85), 0 0 30px rgba(159,180,255,0.6)"
+                    : "0 16px 36px rgba(111,139,255,0.5), 0 0 22px rgba(111,139,255,0.4)";
                   return (
                     <div
                       className="relative transform-3d"
                       style={{
-                        // Nur Zufalls-Versatz x/y + leichte Drehung — KEINE Tiefe (z=0),
+                        // Exakt symmetrisches Raster (dx/dy/rot = 0). KEINE Tiefe (z=0),
                         // damit alle Kacheln gleich groß bleiben und nichts überlappt.
-                        // Klick-Flug bleibt exakt: er misst den echten getBoundingClientRect
-                        // der Kachel beim Klick (inkl. Versatz).
                         transform: `translate3d(${tile.dx}px, ${tile.dy}px, 0) rotate(${tile.rot}deg)`,
                         transition: "transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
                       }}
@@ -212,7 +212,7 @@ export const ThreeDMarquee = ({
                           zuverlässig, auch während Bild + Spalte sich bewegen. */}
                       <motion.div
                         className={cn(
-                          "group relative",
+                          "group relative isolate",
                           onTileClick && "cursor-pointer",
                         )}
                         initial="rest"
@@ -222,10 +222,16 @@ export const ThreeDMarquee = ({
                         onClick={
                           onTileClick
                             ? (e) => {
-                                // Echte projizierte Ecken der 3D-schrägen Kachel messen:
-                                // Marker an die lokalen Ecken hängen → der Browser rechnet
-                                // alle Vorfahren-Transforms + Perspektive für uns aus.
+                                if (onTilePress && !onTilePress(image)) return;
                                 const host = e.currentTarget as HTMLElement;
+                                // SOFORT & SYNCHRON die echten projizierten Ecken der Kachel
+                                // in RUHELAGE messen (vor jeder Transform): winzige Marker an
+                                // die lokalen Ecken → der Browser rechnet alle Vorfahren-
+                                // Transforms + Perspektive exakt aus. Genau hier beginnt der
+                                // Flug — pixelgenau, bei JEDER Kachel gleich. KEIN setTimeout:
+                                // der Flug-Klon startet im selben Klick deckungsgleich auf der
+                                // Kachel (Druck-Feedback steckt im Klon), darum ist der ERSTE
+                                // Klick smooth — kein blindes 130ms-Fenster, kein Drift.
                                 const corner = (cx: string, cy: string) => {
                                   const m = document.createElement("div");
                                   m.style.cssText = `position:absolute;left:${cx};top:${cy};width:0;height:0;pointer-events:none;`;
@@ -242,8 +248,20 @@ export const ThreeDMarquee = ({
                             : undefined
                         }
                       >
+                        {/* Glow als eigener Layer HINTER dem Bild: es wird ausschließlich
+                            die Opacity animiert (GPU-günstig, butterweich) — statt teures
+                            filter:drop-shadow pro Frame, das spürbar ruckelte. */}
+                        <motion.div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 rounded-lg"
+                          style={{ zIndex: -1, boxShadow: glowShadow }}
+                          variants={{ rest: { opacity: 0 }, hover: { opacity: 1 } }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                        />
                         <motion.img
                           variants={{
+                            // Filter bleibt in rest UND hover identisch (= pop) → wird NICHT
+                            // animiert; nur scale/y (Transform) bewegen sich = flüssig.
                             rest: {
                               y: 0,
                               scale: 1,
@@ -254,14 +272,24 @@ export const ThreeDMarquee = ({
                             tap: onTileClick ? { scale: 0.97 } : {},
                           }}
                           transition={
+                            // Symmetrischer, kaum nachschwingender Spring: Anheben UND
+                            // Absenken gleich seidig — kein hartes Zurückschnappen.
                             isHero
-                              ? { type: "spring", stiffness: 320, damping: 16 }
-                              : { duration: 0.3, ease: "easeInOut" }
+                              ? { type: "spring", stiffness: 200, damping: 26, mass: 0.9 }
+                              : { type: "spring", stiffness: 180, damping: 24, mass: 0.8 }
                           }
                           src={image}
                           alt={`Image ${imageIndex + 1}`}
+                          // object-contain + dunkles Panel: die GANZE Sektion ist in der
+                          // Kachel sichtbar (object-cover hatte oben/unten abgeschnitten →
+                          // Sektion nicht komplett lesbar). object-top zeigt den Sektions-
+                          // Kopf zuerst; der Klick-Flug zoomt sie dann voll lesbar heran.
                           className={cn(
-                            "aspect-[970/700] rounded-lg object-cover shadow-xl shadow-black/40",
+                            // pointer-events-none = das (sich hebende/skalierende) Bild nimmt
+                            // NICHT am Hit-Testing teil. So kann allein der stillstehende
+                            // Wrapper den Hover halten → kein An-Aus-Flackern, wenn das Bild
+                            // beim Anheben über seinen Kasten hinausragt.
+                            "pointer-events-none aspect-[970/700] rounded-lg bg-[#070e1c] object-contain object-top shadow-xl shadow-black/40 transition-[box-shadow] duration-500 ease-out",
                             isHero
                               ? "ring-2 ring-[#6f8bff]/70 group-hover:ring-[3px] group-hover:ring-[#bcccff]"
                               : "ring-1 ring-[#6f8bff]/45 group-hover:ring-2 group-hover:ring-[#9fb4ff]/80",
@@ -273,12 +301,87 @@ export const ThreeDMarquee = ({
                     </div>
                   );
                 })}
-              </motion.div>
+              </MarqueeColumn>
             ))}
           </div>
         </div>
       </div>
     </div>
+  );
+};
+
+// Eine Marquee-Spalte: läuft als eigene, pausierbare Animation (statt deklarativ),
+// damit sie beim Hover WEICH ausbremsen (Geschwindigkeit → 0) und wieder anlaufen kann.
+// So driftet die gehoverte Kachel nicht mehr unter der Maus weg.
+const MarqueeColumn = ({
+  colIndex,
+  duration,
+  frozen,
+  reduceMotion,
+  hovered,
+  onColEnter,
+  onColLeave,
+  className,
+  children,
+}: {
+  colIndex: number;
+  duration: number;
+  frozen: boolean;
+  reduceMotion: boolean;
+  hovered: boolean;
+  onColEnter: (c: number) => void;
+  onColLeave: () => void;
+  className?: string;
+  children: React.ReactNode;
+}) => {
+  const target = colIndex % 2 === 0 ? 100 : -100;
+  const y = useMotionValue(0);
+  // hovered immer aktuell im Loop lesen, OHNE den Loop bei jedem Hover neu aufzusetzen.
+  const hoveredRef = useRef(hovered);
+  hoveredRef.current = hovered;
+
+  useEffect(() => {
+    if (reduceMotion) {
+      y.set(0);
+      return;
+    }
+    if (frozen) {
+      // im Klick-Moment sanft einfrieren (weich zu y:0); danach übernimmt der Flug.
+      const c = animate(y, 0, { duration: 0.6, ease: "easeOut" });
+      return () => c.stop();
+    }
+    // Selbst-getriebener, jederzeit pausierbarer Loop: y schwingt sinusförmig 0↔target
+    // (an den Endpunkten von selbst ausgebremst = weich). Ein Geschwindigkeits-Faktor
+    // gleitet exponentiell Richtung 0 (Hover = anhalten) bzw. 1 (loslassen = anlaufen)
+    // → butterweiches Ausrollen UND zuverlässiges Wiederanlaufen.
+    let raf = 0;
+    let last = performance.now();
+    let phase = 0; // 0..1 = ein voller Zyklus 0→target→0
+    let speed = 1; // gerampter Tempo-Faktor
+    const period = 2 * duration; // Sekunden pro vollem Zyklus
+    const TAU = 0.18; // Ramp-Glättung (s)
+    const frame = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const goal = hoveredRef.current ? 0 : 1;
+      speed += (goal - speed) * Math.min(1, dt / TAU);
+      phase = (phase + (dt / period) * speed) % 1;
+      y.set(target * 0.5 * (1 - Math.cos(2 * Math.PI * phase)));
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [frozen, reduceMotion, duration, target, y]);
+
+  return (
+    <motion.div
+      style={{ y }}
+      onHoverStart={() => onColEnter(colIndex)}
+      onHoverEnd={onColLeave}
+      className={className}
+    >
+      {children}
+    </motion.div>
   );
 };
 
@@ -309,7 +412,7 @@ const GridLineHorizontal = ({
         "[background-size:var(--width)_var(--height)]",
         "[mask:linear-gradient(to_left,var(--background)_var(--fade-stop),transparent),linear-gradient(to_right,var(--background)_var(--fade-stop),transparent),linear-gradient(black,black)]",
         "[mask-composite:exclude]",
-        "z-30",
+        "pointer-events-none z-30",
         "dark:bg-[linear-gradient(to_right,var(--color-dark),var(--color-dark)_50%,transparent_0,transparent)]",
         className,
       )}
@@ -344,7 +447,7 @@ const GridLineVertical = ({
         "[background-size:var(--width)_var(--height)]",
         "[mask:linear-gradient(to_top,var(--background)_var(--fade-stop),transparent),linear-gradient(to_bottom,var(--background)_var(--fade-stop),transparent),linear-gradient(black,black)]",
         "[mask-composite:exclude]",
-        "z-30",
+        "pointer-events-none z-30",
         "dark:bg-[linear-gradient(to_bottom,var(--color-dark),var(--color-dark)_50%,transparent_0,transparent)]",
         className,
       )}

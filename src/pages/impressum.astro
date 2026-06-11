@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="Impressum — Alps Agency" lockHero={false}>
+  <section class="legal">
+    <a href="/" class="legal-back">&larr; Zur&uuml;ck zur Startseite</a>
+    <h1>Impressum</h1>
+
+    <p class="legal-note">
+      Platzhalter &mdash; bitte vor dem Livegang mit den echten Angaben ersetzen
+      (Angaben gem&auml;&szlig; &sect; 5 DDG / &sect; 5 TMG).
+    </p>
+
+    <h2>Angaben gem&auml;&szlig; &sect; 5 DDG</h2>
+    <p>
+      Alps Agency<br />
+      [Vor- und Nachname / Firmenname]<br />
+      [Stra&szlig;e und Hausnummer]<br />
+      [PLZ Ort]
+    </p>
+
+    <h2>Kontakt</h2>
+    <p>
+      Telefon: [Telefonnummer]<br />
+      E-Mail: [E-Mail-Adresse]
+    </p>
+
+    <h2>Umsatzsteuer-ID</h2>
+    <p>
+      Umsatzsteuer-Identifikationsnummer gem&auml;&szlig; &sect; 27a Umsatzsteuergesetz:<br />
+      [USt-IdNr.]
+    </p>
+
+    <h2>Redaktionell verantwortlich</h2>
+    <p>
+      [Name]<br />
+      [Anschrift wie oben]
+    </p>
+
+    <h2>Streitschlichtung</h2>
+    <p>
+      Die Europ&auml;ische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS)
+      bereit:
+      <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr/</a>.
+      Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer
+      Verbraucherschlichtungsstelle teilzunehmen.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .legal {
+    max-width: 48rem;
+    margin-inline: auto;
+    padding: clamp(6rem, 12vw, 9rem) clamp(1.25rem, 5vw, 3rem) clamp(4rem, 8vw, 6rem);
+    color: var(--color-muted);
+    line-height: 1.7;
+  }
+  .legal-back {
+    display: inline-block;
+    margin-bottom: 2.5rem;
+    color: var(--color-accent-bright);
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+  }
+  .legal-back:hover { color: #fff; }
+  .legal h1 {
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin-bottom: 1.5rem;
+  }
+  .legal h2 {
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin: 2.25rem 0 0.6rem;
+  }
+  .legal p { margin-bottom: 1rem; }
+  .legal a { color: var(--color-accent-bright); word-break: break-word; }
+  .legal-note {
+    padding: 0.9rem 1.1rem;
+    border-left: 3px solid var(--color-accent);
+    background: rgba(26, 63, 255, 0.08);
+    border-radius: 0 0.5rem 0.5rem 0;
+    font-size: 0.9rem;
+  }
+</style>

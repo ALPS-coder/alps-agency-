@@ -11,6 +11,7 @@ const t = useTranslations(lang);
 const marqueeBase = [
   '/marquee/services.webp',
   '/marquee/work.webp',
+  '/marquee/beispiele.webp',
   '/marquee/pricing.webp',
   '/marquee/faq.webp',
   '/marquee/contact.webp',
@@ -33,9 +34,10 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
       <Image src={logo} alt="Alps Agency" width={240} height={240} loading="eager" />
     </div>
     <p class="eyebrow" data-reveal>{t('hero.badge')}</p>
-    <h1 class="h-hero hero-title">
-      <span class="line" data-reveal>{t('hero.title_pre')}</span>
-      <span class="line accent text-glow" data-reveal>{t('hero.title_accent')}</span>
+    <h1 class="h-hero hero-title" data-hero-title>
+      <span class="line" data-line="pre">{t('hero.title_pre')}</span>
+      <span class="line accent text-glow" data-line="accent">{t('hero.title_accent')}</span>
+      <span class="title-glare" aria-hidden="true"></span>
     </h1>
     <p class="hero-sub" data-reveal>{t('hero.subtitle')}</p>
     <div class="hero-cta" data-reveal>
@@ -80,13 +82,14 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
     transform-style: preserve-3d;
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
-    /* Rand-Fade / Vignette: Kacheln laufen zu allen Rändern weich aus
-       statt hart abzuschneiden — wirkt eingebettet statt „abgeschnitten". */
-    -webkit-mask-image: radial-gradient(125% 125% at 50% 42%, #000 52%, transparent 100%);
-    mask-image: radial-gradient(125% 125% at 50% 42%, #000 52%, transparent 100%);
+    /* Rand-Fade / Vignette: nur ein dezenter Ausklang an den Rändern — der Marquee
+       bleibt großflächig klar erkennbar (solider Kern bis 78%, sanft bis zum Rand). */
+    -webkit-mask-image: radial-gradient(135% 135% at 50% 42%, #000 78%, transparent 100%);
+    mask-image: radial-gradient(135% 135% at 50% 42%, #000 78%, transparent 100%);
   }
 
-  /* Verlauf — dunkler, damit der Inhalt über dem Marquee gut lesbar ist */
+  /* Verlauf — deutlich leichter, damit der Marquee klar erkennbar bleibt; links nur
+     so viel Abdunklung, dass der Text lesbar ist, rechts fast frei. */
   .hero-veil {
     position: absolute;
     inset: 0;
@@ -94,14 +97,14 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
     pointer-events: none;
     background:
       linear-gradient(to right,
-        rgba(6, 15, 28, 0.96) 0%,
-        rgba(8, 18, 34, 0.85) 34%,
-        rgba(10, 22, 40, 0.55) 68%,
-        rgba(10, 22, 40, 0.35) 100%),
+        rgba(6, 15, 28, 0.82) 0%,
+        rgba(8, 18, 34, 0.5) 32%,
+        rgba(10, 22, 40, 0.18) 60%,
+        rgba(10, 22, 40, 0.06) 100%),
       linear-gradient(to bottom,
-        rgba(6, 15, 28, 0.7) 0%,
-        rgba(10, 22, 40, 0.25) 24%,
-        rgba(10, 22, 40, 0.35) 60%,
+        rgba(6, 15, 28, 0.45) 0%,
+        rgba(10, 22, 40, 0.1) 24%,
+        rgba(10, 22, 40, 0.2) 60%,
         var(--color-night) 100%);
   }
 
@@ -113,6 +116,13 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
     max-width: 42rem;
     text-align: left;
     will-change: transform, opacity;
+    /* Klicks reichen durch den Text auf die Marquee-Kacheln dahinter durch — sonst sind
+       die Kacheln hinter Überschrift/Absatz NICHT anklickbar (Flug startet nicht). Nur die
+       wirklich interaktiven Elemente (CTA-Buttons) fangen Klicks wieder ab. */
+    pointer-events: none;
+  }
+  .hero-content .hero-cta a {
+    pointer-events: auto;
   }
 
   /* Während eine Kachel herausfliegt: Hero-Inhalt + Veil weich wegblenden */
@@ -138,17 +148,86 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
   .eyebrow { margin-bottom: 1.25rem; }
 
   .hero-title {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0.08em;
     margin: 0 0 1.6rem;
     font-weight: 700;
+    /* gemeinsame 3D-Bühne für den Flip-Reveal der Wörter */
+    perspective: 900px;
+  }
+
+  /* Diagonaler Licht-Glanz, der EINMAL über die ganze Headline wischt (Wow-Akzent).
+     screen-Blend = lichtet Text + Hintergrund auf, ohne etwas zu verdecken. */
+  .title-glare {
+    position: absolute;
+    inset: -12% -6%;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transform: translateX(-130%);
+    background: linear-gradient(105deg,
+      transparent 42%, rgba(199, 214, 255, 0.55) 50%, transparent 58%);
+    mix-blend-mode: screen;
+  }
+  .title-glare.sweep {
+    animation: title-glare 1.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  @keyframes title-glare {
+    0%   { transform: translateX(-130%); opacity: 0; }
+    18%  { opacity: 1; }
+    82%  { opacity: 1; }
+    100% { transform: translateX(130%); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .title-glare.sweep { animation: none; }
   }
   .hero-title .accent {
-    background: linear-gradient(120deg, #ffffff 0%, #9fb4ff 45%, #1a3fff 100%);
+    /* Breiterer Verlauf + background-size, damit ein Licht-Sweep durch den Text
+       wandern kann (background-position-Animation). */
+    background: linear-gradient(110deg,
+      #ffffff 0%, #c3d0ff 28%, #1a3fff 48%, #c3d0ff 68%, #ffffff 100%);
+    background-size: 220% 100%;
+    background-position: 50% 0;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+  /* Einmaliger Licht-Sweep nach dem Reveal … */
+  .hero-title .accent.lit {
+    animation: accent-sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  /* … danach dezentes „Atmen" des Verlaufs (Endlos, sehr langsam). */
+  .hero-title .accent.breathe {
+    animation: accent-breathe 7s ease-in-out infinite;
+  }
+  @keyframes accent-sweep {
+    0%   { background-position: 165% 0; }
+    100% { background-position: 50% 0; }
+  }
+  @keyframes accent-breathe {
+    0%, 100% { background-position: 44% 0; }
+    50%      { background-position: 64% 0; }
+  }
+
+  /* Wort-Masken für den „Schweben"-Reveal (JS wrappt die Wörter zur Laufzeit). */
+  .hero-title .word-mask {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    /* etwas Luft, damit blur/descender nicht abgeschnitten werden */
+    padding: 0.12em 0.04em;
+    margin: -0.12em -0.04em;
+  }
+  .hero-title .word-inner {
+    display: inline-block;
+    will-change: transform, opacity, filter;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-title .accent.lit,
+    .hero-title .accent.breathe { animation: none; }
   }
 
   .hero-sub {
@@ -222,19 +301,90 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hero = document.getElementById('hero');
 
-  /* Dezentes Fade-in (Logo → Text → CTA), failsafe sichtbar */
+  /* Wörter einer Zeile in Masken-Spans wrappen (für den „Schweben"-Reveal).
+     Whitespace bleibt als Textknoten erhalten. Gibt die inneren Spans zurück. */
+  function splitWords(line: HTMLElement) {
+    const text = line.textContent ?? '';
+    line.textContent = '';
+    const inners: HTMLElement[] = [];
+    for (const part of text.split(/(\s+)/)) {
+      if (part === '') continue;
+      if (/^\s+$/.test(part)) { line.appendChild(document.createTextNode(part)); continue; }
+      const mask = document.createElement('span');
+      mask.className = 'word-mask';
+      const inner = document.createElement('span');
+      inner.className = 'word-inner';
+      inner.textContent = part;
+      mask.appendChild(inner);
+      line.appendChild(mask);
+      inners.push(inner);
+    }
+    return inners;
+  }
+
+  /* Inszenierter Reveal: Logo/Eyebrow → Headline schwebt Wort für Wort herauf →
+     Sub/CTA faden nach → Licht-Sweep über den Akzent, danach dezentes Atmen. */
   function revealContent() {
-    const items = hero?.querySelectorAll('[data-reveal]');
-    if (!items || !items.length) return;
-    if (reduceMotion) { gsap.set(items, { opacity: 1, y: 0 }); return; }
-    gsap.fromTo(
-      items,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.9, stagger: 0.1, ease: 'power3.out', delay: 1.4 }
-    );
+    if (!hero) return;
+    const intro = hero.querySelectorAll<HTMLElement>('.hero-logo, .eyebrow');
+    const outro = hero.querySelectorAll<HTMLElement>('.hero-sub, .hero-cta, .hero-scroll');
+    const accent = hero.querySelector<HTMLElement>('.line.accent');
+    const preLine = hero.querySelector<HTMLElement>('.line[data-line="pre"]');
+
+    if (reduceMotion) {
+      gsap.set([...intro, ...outro], { opacity: 1, y: 0 });
+      return;
+    }
+
+    const preWords = preLine ? splitWords(preLine) : [];
+    const accentWords = accent ? splitWords(accent) : [];
+    const allWords = [...preWords, ...accentWords];
+    const glare = hero.querySelector<HTMLElement>('.title-glare');
+
+    // Wörter klappen aus der Tiefe nach oben in ihre Position (3D-Flip + blur),
+    // unten-zentrierter Pivot — passt zum 3D-Marquee dahinter.
+    gsap.set(allWords, { transformOrigin: '50% 100%' });
+
+    const tl = gsap.timeline({ delay: 0.9 });
+    tl.fromTo(intro,
+      { y: 24, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, stagger: 0.12, ease: 'power3.out' });
+    tl.fromTo(preWords,
+      { yPercent: 115, rotateX: -85, opacity: 0, filter: 'blur(10px)' },
+      { yPercent: 0, rotateX: 0, opacity: 1, filter: 'blur(0px)',
+        duration: 0.75, stagger: 0.08, ease: 'power3.out' },
+      '-=0.35');
+    tl.fromTo(accentWords,
+      { yPercent: 115, rotateX: -85, opacity: 0, filter: 'blur(12px)' },
+      { yPercent: 0, rotateX: 0, opacity: 1, filter: 'blur(0px)',
+        duration: 0.85, stagger: 0.09, ease: 'power3.out' },
+      '-=0.45');
+    tl.fromTo(outro,
+      { y: 26, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out' },
+      '-=0.5');
+    /* Endzustand HART festschreiben: alle Inline-Transforms/Filter entfernen, damit
+       die Headline garantiert komplett & gestochen scharf sichtbar stehen bleibt. */
+    tl.add(() => {
+      gsap.set(allWords, { clearProps: 'all' });
+      gsap.set([...intro, ...outro], { clearProps: 'transform' });
+    });
+    /* Licht-Glanz wischt einmal über die ganze Headline … */
+    tl.add(() => glare?.classList.add('sweep'), '-=0.05');
+    /* … und der Akzent bekommt seinen Sweep, danach das dezente Atmen. */
+    tl.add(() => {
+      accent?.classList.add('lit');
+      accent?.addEventListener('animationend', () => {
+        accent.classList.remove('lit');
+        accent.classList.add('breathe');
+      }, { once: true });
+    });
   }
   try { revealContent(); }
-  catch { hero?.querySelectorAll('[data-reveal]').forEach((el) => ((el as HTMLElement).style.opacity = '1')); }
+  catch {
+    hero?.querySelectorAll<HTMLElement>('.hero-logo, .eyebrow, .hero-sub, .hero-cta, .hero-scroll, .line')
+      .forEach((el) => (el.style.opacity = '1'));
+  }
 
   /* Hero faded beim Scrollen sanft weg + schiebt hoch */
   if (!reduceMotion && hero) {
@@ -262,6 +412,10 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
       const MAX = 7; // max. Neigung in Grad
       let raf = 0;
       const onMove = (e: MouseEvent) => {
+        /* Während des Kachel-Flugs NICHT kippen: die hervorgetretene Kachel wird nach
+           dem Pop vermessen (Flug-Start) — jede Parallax-Bewegung würde den Klon
+           daneben starten lassen. */
+        if (hero.classList.contains('flying')) return;
         const r = hero.getBoundingClientRect();
         const nx = (e.clientX - r.left) / r.width - 0.5;  // -0.5 … 0.5
         const ny = (e.clientY - r.top) / r.height - 0.5;
@@ -272,6 +426,7 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
         });
       };
       const onLeave = () => {
+        if (hero.classList.contains('flying')) return;
         if (raf) cancelAnimationFrame(raf);
         marquee.style.transform = ''; // zurück zum CSS-Ruhezustand (scale 1.06)
       };

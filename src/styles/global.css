@@ -35,6 +35,17 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     scrollbar-color: var(--color-accent) var(--color-night-deep);
+    /* Scrollbar-Platz immer reservieren → kein Layout-Sprung beim Sperren/Entsperren. */
+    scrollbar-gutter: stable;
+  }
+
+  /* Sektionen sind NUR über den 3D-Marquee-Flug erreichbar: solange gesperrt, sind alle
+     Sektionen außer dem Hero ausgeblendet. Dadurch besteht die Seite am Hero nur aus
+     Hero + Footer — man kann zum Footer (Impressum/Datenschutz, DE-Pflicht) runterscrollen,
+     erreicht aber KEINE Sektion ohne den Marquee-Flug. Der erste Kachel-/Nav-Klick
+     entsperrt (Sektionen erscheinen), zurück am Hero wird wieder gesperrt. */
+  html.section-locked main > :not(#hero) {
+    display: none;
   }
 
   body {
@@ -78,14 +89,53 @@
 
 /* -------------------------- Komponenten -------------------------- */
 @layer components {
-  /* Glassmorphism Card */
+  /* Glassmorphism Card — Premium: zarter Verlauf, innerer Lichtsaum, weiche Tiefe.
+     Eine Haarlinie aus Verlauf (::before, mask) ersetzt die flache 1px-Border und
+     leuchtet beim Hover royalblau auf. */
   .glass {
-    background-color: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 1rem;
+    position: relative;
+    isolation: isolate;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.022));
+    backdrop-filter: blur(16px) saturate(1.25);
+    -webkit-backdrop-filter: blur(16px) saturate(1.25);
+    border: 1px solid transparent;
+    border-radius: 1.15rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 22px 48px -30px rgba(2, 8, 20, 0.9);
+    transition: box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   }
+  /* Verlaufs-Haarlinie als Rahmen (mask = nur die Kante sichtbar) */
+  .glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.22),
+      rgba(255, 255, 255, 0.04) 32%,
+      rgba(77, 107, 255, 0.05) 68%,
+      rgba(77, 107, 255, 0.45)
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.7;
+    transition: opacity 0.45s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .glass:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 30px 60px -28px rgba(2, 8, 20, 0.95),
+      0 0 44px -14px rgba(77, 107, 255, 0.5);
+  }
+  .glass:hover::before { opacity: 1; }
 
   /* Sektions-Wrapper */
   .section {
@@ -96,8 +146,39 @@
     scroll-margin-top: 5rem; /* Offset für den fixen Header beim Anspringen */
   }
   .section-inner {
+    position: relative;
+    z-index: 1;
     max-width: 80rem;
     margin-inline: auto;
+  }
+
+  /* Ambient-Glow: ein großer, weicher royalblauer Lichtschein pro Sektion — gibt Tiefe
+     und „Premium"-Atmosphäre, ohne den Hintergrund zu überladen. Wechselt die Seite. */
+  main > .section::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: -6%;
+    width: clamp(22rem, 46vw, 44rem);
+    aspect-ratio: 1;
+    background: radial-gradient(
+      circle,
+      rgba(26, 63, 255, 0.16),
+      rgba(26, 63, 255, 0.05) 42%,
+      transparent 70%
+    );
+    filter: blur(36px);
+    pointer-events: none;
+  }
+  main > .section:nth-of-type(odd)::after { right: -8%; }
+  main > .section:nth-of-type(even)::after {
+    left: -8%;
+    background: radial-gradient(
+      circle,
+      rgba(77, 107, 255, 0.14),
+      rgba(77, 107, 255, 0.04) 42%,
+      transparent 70%
+    );
   }
 
   /* --- Sanfte Übergänge zwischen den Sektionen ---
@@ -131,23 +212,36 @@
     pointer-events: none;
   }
 
-  /* Eyebrow / Label über Headlines */
+  /* Eyebrow / Label über Headlines — als feine Glas-Pill mit leuchtendem Punkt */
   .eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
+    padding: 0.4rem 0.85rem 0.4rem 0.7rem;
+    border-radius: 999px;
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 500;
-    letter-spacing: 0.25em;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--color-accent-bright);
+    background: rgba(26, 63, 255, 0.08);
+    border: 1px solid rgba(77, 107, 255, 0.22);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
   }
   .eyebrow::before {
     content: "";
-    width: 1.75rem;
-    height: 1px;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
     background: var(--color-accent-bright);
+    box-shadow: 0 0 10px 1px rgba(77, 107, 255, 0.8);
+    animation: eyebrow-pulse 2.6s ease-in-out infinite;
+  }
+  @keyframes eyebrow-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.55; transform: scale(0.82); }
   }
 
   /* Primärer CTA-Button */
@@ -219,7 +313,14 @@
 
   /* Fluid-Headline Größen */
   .h-hero { font-size: clamp(2.6rem, 8vw, 6.5rem); }
-  .h-section { font-size: clamp(2rem, 5vw, 3.5rem); }
+  .h-section {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    /* Edler Verlauf Weiß → zartes Blau für mehr Tiefe in den Headlines */
+    background: linear-gradient(180deg, #ffffff 28%, #c2cdf2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 
   /* Radialer Verlauf für Grid-Masken */
   .mask-radial {

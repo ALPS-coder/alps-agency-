@@ -9,9 +9,11 @@ interface Props {
   title?: string;
   description?: string;
   lang?: Lang;
+  /** Hero-Scroll-Gate aktiv (Startseite). Rechtsseiten setzen false → normal scrollbar. */
+  lockHero?: boolean;
 }
 
-const { title, description, lang = defaultLang } = Astro.props;
+const { title, description, lang = defaultLang, lockHero = true } = Astro.props;
 const t = useTranslations(lang);
 
 const metaTitle = title ?? t('meta.title');
@@ -34,7 +36,12 @@ const orgSchema = {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script is:inline>document.documentElement.classList.add('js');</script>
+    <!-- Sofort sperren: Sektionen sind nur über den 3D-Marquee-Flug erreichbar (kein
+         Scrollen im Hero). Nur mit JS — ohne JS bleibt die Seite normal scrollbar.
+         Rechtsseiten (lockHero=false) setzen nur 'js' und bleiben frei scrollbar. -->
+    {lockHero
+      ? <script is:inline>document.documentElement.classList.add('js', 'section-locked');</script>
+      : <script is:inline>document.documentElement.classList.add('js');</script>}
 
     <title>{metaTitle}</title>
     <meta name="description" content={metaDesc} />
@@ -118,6 +125,76 @@ const orgSchema = {
           if (trg && section.contains(trg)) t.kill();
         });
       });
+    </script>
+
+    <script>
+      // -------- Scroll-Gate: Sektionen NUR über den 3D-Marquee-Flug --------
+      // Solange der Hero "gesperrt" ist (html.section-locked), kann man nicht in die
+      // Sektionen scrollen — man MUSS eine Marquee-Kachel klicken (Header-/CTA-Links
+      // lösen denselben Flug aus). In den Sektionen wird frei gescrollt; ganz oben am
+      // Hero (Button ODER Hochscrollen) sperrt es wieder.
+      const root = document.documentElement;
+      // Nur auf der Startseite aktiv. Rechtsseiten starten ohne 'section-locked' → inert.
+      if (root.classList.contains('section-locked')) {
+      const SECTION_IDS = new Set(['services', 'work', 'beispiele', 'pricing', 'faq', 'contact']);
+      let flying = false;
+      const isLocked = () => root.classList.contains('section-locked');
+      const lock = () => root.classList.add('section-locked');
+      const unlock = () => {
+        root.classList.remove('section-locked');
+        // Die Sektionen waren ausgeblendet (display:none) → ScrollTrigger-Positionen sind
+        // veraltet. Jetzt, da sie wieder im Layout sind, neu vermessen.
+        import('gsap/ScrollTrigger').then((m) => m.ScrollTrigger.refresh()).catch(() => {});
+      };
+
+      // Flug-Events aus MarqueeHero steuern die Sperre.
+      window.addEventListener('flight-start', (e) => {
+        flying = true;
+        if ((e as CustomEvent).detail?.mode === 'in') unlock(); // damit der Flug zum Ziel scrollen kann
+      });
+      window.addEventListener('flight-done', (e) => {
+        flying = false;
+        if ((e as CustomEvent).detail?.mode === 'out') {
+          window.scrollTo(0, 0);
+          lock(); // zurück am Hero → wieder sperren
+        }
+      });
+
+      // Hochscrollen bis ganz oben (Hero) → wieder sperren.
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (flying || isLocked()) return;
+          if (window.scrollY <= 2) {
+            window.scrollTo(0, 0);
+            lock();
+          }
+        },
+        { passive: true },
+      );
+
+      // Anker-Klicks (Header-Nav, CTA, Hero-Scroll, Footer) abfangen.
+      document.addEventListener('click', (ev) => {
+        const target = ev.target as Element | null;
+        const a = target?.closest?.('a[href^="#"]') as HTMLAnchorElement | null;
+        if (!a) return;
+        const id = (a.getAttribute('href') || '').slice(1);
+        if (id === 'top' || id === 'hero') {
+          ev.preventDefault();
+          if (!isLocked()) window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll-Listener sperrt bei 0
+          return;
+        }
+        if (!SECTION_IDS.has(id)) return; // andere Anker (z. B. #main) normal lassen
+        ev.preventDefault();
+        if (isLocked()) {
+          // Am Hero: denselben Flug auslösen wie ein Kachel-Klick.
+          if (!flying) window.dispatchEvent(new CustomEvent('request-fly', { detail: { id } }));
+        } else {
+          // In den Sektionen: einfach sanft hinscrollen.
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+      } // Ende Startseiten-Gate
     </script>
 
     <style>
