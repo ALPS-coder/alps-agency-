@@ -1,4 +1,6 @@
 ---
+import { Image } from 'astro:assets';
+import emblem from '../assets/alps-logo-symbol.png';
 import { useTranslations, defaultLang, type Lang } from '../i18n';
 const { lang = defaultLang } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
@@ -23,16 +25,7 @@ const waNumber = phone.replace(/[^\d]/g, '');
     <div class="footer-top">
       <div class="footer-brand">
         <a href="#top" class="brand" aria-label="Alps Agency — Startseite">
-          <svg class="brand-mark" viewBox="0 0 48 32" aria-hidden="true">
-            <defs>
-              <linearGradient id="footer-peak" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#eef2ff" />
-                <stop offset="0.55" stop-color="#9fb4ff" />
-                <stop offset="1" stop-color="#1a3fff" />
-              </linearGradient>
-            </defs>
-            <path d="M2 30 L17 6 L24 17 L31 4 L46 30 Z" fill="url(#footer-peak)" />
-          </svg>
+          <Image class="brand-mark" src={emblem} alt="" aria-hidden="true" width={132} height={61} loading="lazy" />
           <span class="brand-word"><strong>ALPS</strong><em>AGENCY</em></span>
         </a>
         <p class="footer-tagline">{t('footer.tagline')}</p>
@@ -97,7 +90,13 @@ const waNumber = phone.replace(/[^\d]/g, '');
   @media (min-width: 960px) { .footer-top { grid-template-columns: 2fr 1fr 1.3fr 1fr; } }
 
   .brand { display: inline-flex; align-items: center; gap: 0.65rem; }
-  .brand-mark { width: 2.4rem; height: auto; filter: drop-shadow(0 0 10px rgba(26, 63, 255, 0.45)); }
+  .brand-mark {
+    width: 3.4rem;
+    height: auto;
+    /* Hintergrund ist freigestellt (transparent) — Chrom steht mit vollem Kontrast da.
+       Nur ein hauchzarter Schein für Tiefe (kein Halo/Kasten). */
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+  }
   .brand-word { font-family: var(--font-display); display: flex; align-items: baseline; gap: 0.4rem; color: #fff; }
   .brand-word strong { font-weight: 700; font-size: 1.05rem; letter-spacing: 0.02em; }
   .brand-word em {

@@ -38,9 +38,10 @@ const orgSchema = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <!-- Sofort sperren: Sektionen sind nur über den 3D-Marquee-Flug erreichbar (kein
          Scrollen im Hero). Nur mit JS — ohne JS bleibt die Seite normal scrollbar.
+         Nur Desktop (≥768px): auf dem Handy bleibt die Seite normal/ruhig scrollbar.
          Rechtsseiten (lockHero=false) setzen nur 'js' und bleiben frei scrollbar. -->
     {lockHero
-      ? <script is:inline>document.documentElement.classList.add('js', 'section-locked');</script>
+      ? <script is:inline>document.documentElement.classList.add('js'); if (window.matchMedia('(min-width: 768px)').matches) document.documentElement.classList.add('section-locked');</script>
       : <script is:inline>document.documentElement.classList.add('js');</script>}
 
     <title>{metaTitle}</title>
@@ -136,7 +137,8 @@ const orgSchema = {
       const root = document.documentElement;
       // Nur auf der Startseite aktiv. Rechtsseiten starten ohne 'section-locked' → inert.
       if (root.classList.contains('section-locked')) {
-      const SECTION_IDS = new Set(['services', 'work', 'beispiele', 'pricing', 'faq', 'contact']);
+      // Beispiele bewusst NICHT dabei: es ist ein eigenes Overlay (kein Scroll-/Flug-Ziel).
+      const SECTION_IDS = new Set(['services', 'work', 'pricing', 'faq', 'contact']);
       let flying = false;
       const isLocked = () => root.classList.contains('section-locked');
       const lock = () => root.classList.add('section-locked');

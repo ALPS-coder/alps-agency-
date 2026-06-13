@@ -1,0 +1,178 @@
+---
+// ATEAM — Statistiken. Komplett aus echten Supabase-Daten (leads + projects) berechnet.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { createSupabaseServer } from '../../lib/supabase';
+
+export const prerender = false;
+
+const supabase = createSupabaseServer(Astro.cookies, Astro.request);
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return Astro.redirect('/admin/login');
+
+const { data: profile } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
+const displayName = profile?.full_name || user.email?.split('@')[0] || 'Team';
+const roleLabel = profile?.role === 'admin' ? 'Admin' : 'Mitarbeiter';
+
+const { data: leads } = await supabase.from('leads').select('status, source, created_at');
+const { data: projects } = await supabase.from('projects').select('status, price, progress');
+const L = leads ?? [];
+const P = projects ?? [];
+
+// ---- KPIs ----
+const total = L.length;
+const erledigt = L.filter((l) => l.status === 'erledigt').length;
+const offen = L.filter((l) => l.status !== 'erledigt').length;
+const conversion = total ? Math.round((erledigt / total) * 100) : 0;
+const activeProjects = P.filter((p) => p.status === 'in_arbeit' || p.status === 'review' || p.status === 'geplant').length;
+const pipeline = P.reduce((s, p) => s + Number(p.price ?? 0), 0);
+const fmtEur = (n: number) => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);
+
+const kpis = [
+  { tone: 'blue', label: 'Anfragen gesamt', value: String(total), icon: 'M4 5h16M4 12h16M4 19h10' },
+  { tone: 'green', label: 'Conversion', value: conversion + '%', icon: 'M3 17l6-6 4 4 8-8M21 7v6h-6' },
+  { tone: 'violet', label: 'Aktive Projekte', value: String(activeProjects), icon: 'M3 7h18v12H3zM3 7l2-3h14l2 3' },
+  { tone: 'amber', label: 'Pipeline-Wert', value: fmtEur(pipeline), icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
+];
+
+// ---- Verteilungen ----
+const bySource = (['google', 'referral', 'social', 'other'] as const).map((k) => ({
+  key: k, label: ({ google: 'Google', referral: 'Empfehlung', social: 'Social Media', other: 'Sonstiges' } as Record<string, string>)[k],
+  value: L.filter((l) => l.source === k).length,
+}));
+const byStatus = (['neu', 'offen', 'erledigt'] as const).map((k) => ({
+  key: k, label: ({ neu: 'Neu', offen: 'Offen', erledigt: 'Erledigt' } as Record<string, string>)[k],
+  value: L.filter((l) => l.status === k).length,
+}));
+const projStatus = (['geplant', 'in_arbeit', 'review', 'live', 'pausiert'] as const).map((k) => ({
+  key: k, label: ({ geplant: 'Geplant', in_arbeit: 'In Arbeit', review: 'Review', live: 'Live', pausiert: 'Pausiert' } as Record<string, string>)[k],
+  value: P.filter((p) => p.status === k).length,
+}));
+const maxSource = Math.max(1, ...bySource.map((s) => s.value));
+const maxStatus = Math.max(1, ...byStatus.map((s) => s.value));
+const maxProj = Math.max(1, ...projStatus.map((s) => s.value));
+
+// ---- Verlauf letzte 14 Tage ----
+const days: { label: string; value: number }[] = [];
+for (let i = 13; i >= 0; i--) {
+  const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+  const next = new Date(d); next.setDate(d.getDate() + 1);
+  const value = L.filter((l) => { const t = new Date(l.created_at); return t >= d && t < next; }).length;
+  days.push({ label: d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }), value });
+}
+const maxDay = Math.max(1, ...days.map((d) => d.value));
+---
+<AdminLayout title="ATEAM · Statistiken — Alps Agency" heading="Statistiken" subtitle="Kennzahlen aus Anfragen & Projekten" active="stats" displayName={displayName} roleLabel={roleLabel}>
+  <div class="stats">
+    {kpis.map((k, i) => (
+      <div class:list={['stat', k.tone]} style={`--i:${i + 1}`}>
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={k.icon} /></svg></div>
+        <div class="s-body"><span class="s-num" data-count-text={k.value}>{k.value}</span><span class="s-lbl">{k.label}</span></div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Verlauf -->
+  <div class="panel panel-pad reveal" style="--i:5">
+    <h2 class="section-h">Anfragen-Verlauf · letzte 14 Tage</h2>
+    <div class="vbars">
+      {days.map((d, i) => (
+        <div class="vbar" style={`--d:${i}`}>
+          <span class="vbar-val">{d.value > 0 ? d.value : ''}</span>
+          <i style={`height:${Math.round((d.value / maxDay) * 100)}%`}></i>
+          <span class="vbar-lbl">{d.label}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- Nach Quelle -->
+    <div class="panel panel-pad reveal" style="--i:6">
+      <h2 class="section-h">Anfragen nach Quelle</h2>
+      {bySource.map((s, i) => (
+        <div class="hbar-row">
+          <span class="hbar-lbl">{s.label}</span>
+          <div class="bar"><i class="blue" style={`width:${Math.round((s.value / maxSource) * 100)}%; animation-delay:${i * 90}ms`}></i></div>
+          <span class="hbar-num">{s.value}</span>
+        </div>
+      ))}
+    </div>
+
+    <!-- Nach Status -->
+    <div class="panel panel-pad reveal" style="--i:7">
+      <h2 class="section-h">Anfragen nach Status</h2>
+      {byStatus.map((s, i) => (
+        <div class="hbar-row">
+          <span class="hbar-lbl">{s.label}</span>
+          <div class="bar"><i class={s.key} style={`width:${Math.round((s.value / maxStatus) * 100)}%; animation-delay:${i * 90}ms`}></i></div>
+          <span class="hbar-num">{s.value}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Projekte nach Status -->
+  <div class="panel panel-pad reveal" style="--i:8">
+    <h2 class="section-h">Projekte nach Status</h2>
+    {projStatus.map((s, i) => (
+      <div class="hbar-row">
+        <span class="hbar-lbl">{s.label}</span>
+        <div class="bar"><i class={s.key} style={`width:${Math.round((s.value / maxProj) * 100)}%; animation-delay:${i * 90}ms`}></i></div>
+        <span class="hbar-num">{s.value}</span>
+      </div>
+    ))}
+  </div>
+
+  <script is:inline>
+    // KPI-Werte mit Zahl hochzählen (Suffix/Präfix wie %, € bleiben erhalten)
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll('[data-count-text]').forEach((el) => {
+      const full = el.getAttribute('data-count-text') || '';
+      const m = full.match(/[\d.]+/);
+      if (!m || reduce) return;
+      const target = parseFloat(m[0].replace('.', ''));
+      if (!target) return;
+      const dur = 900, start = performance.now();
+      const tick = (now) => {
+        const p = Math.min(1, (now - start) / dur);
+        const cur = Math.round((1 - Math.pow(1 - p, 3)) * target);
+        el.textContent = full.replace(m[0], cur.toLocaleString('de-DE'));
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      el.textContent = full.replace(m[0], '0');
+      requestAnimationFrame(tick);
+    });
+  </script>
+
+  <style>
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+    .panel { margin-top: 1rem; }
+    .stats + .panel { margin-top: 0; }
+
+    /* Horizontale Balken */
+    .hbar-row { display: grid; grid-template-columns: 7.5rem 1fr 2rem; align-items: center; gap: 0.8rem; margin-bottom: 0.7rem; }
+    .hbar-row:last-child { margin-bottom: 0; }
+    .hbar-lbl { font-size: 0.85rem; color: #b5c2e0; }
+    .hbar-num { font-size: 0.9rem; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+    .bar > i { display: block; height: 100%; border-radius: inherit; transform-origin: left; animation: grow 0.9s cubic-bezier(.2,.8,.3,1) both; }
+    .bar > i.blue, .bar > i.neu, .bar > i.geplant { background: linear-gradient(90deg, #2b54c8, #4d6bff); }
+    .bar > i.amber, .bar > i.offen, .bar > i.in_arbeit, .bar > i.review, .bar > i.pausiert { background: linear-gradient(90deg, #b8902a, #f5d34a); }
+    .bar > i.green, .bar > i.erledigt, .bar > i.live { background: linear-gradient(90deg, #1ea34f, #4ade80); }
+
+    /* Vertikale Balken (Verlauf) */
+    .vbars { display: grid; grid-template-columns: repeat(14, 1fr); gap: 0.4rem; align-items: end; height: 180px; padding-top: 1rem; }
+    .vbar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 0.35rem; }
+    .vbar > i { width: 100%; max-width: 1.6rem; min-height: 3px; border-radius: 360px 360px 4px 4px; background: linear-gradient(180deg, #5d7bff, #1a3fff); transform-origin: bottom; animation: growY 0.8s cubic-bezier(.2,.8,.3,1) both; animation-delay: calc(var(--d) * 50ms); box-shadow: 0 0 14px -2px rgba(77,107,255,0.5); }
+    .vbar:hover > i { filter: brightness(1.2); }
+    .vbar-val { font-size: 0.72rem; font-weight: 700; color: #c3d0ff; min-height: 0.9rem; }
+    .vbar-lbl { font-size: 0.6rem; color: #7e8db0; white-space: nowrap; transform: rotate(-45deg); transform-origin: center; margin-top: 0.4rem; }
+    @keyframes growY { from { transform: scaleY(0); } }
+
+    @media (max-width: 860px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .vbars { gap: 0.25rem; }
+      .vbar-lbl { font-size: 0.5rem; }
+    }
+    @media (prefers-reduced-motion: reduce) { .bar > i, .vbar > i { animation: none; } }
+  </style>
+</AdminLayout>

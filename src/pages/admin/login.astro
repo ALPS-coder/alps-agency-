@@ -1,0 +1,247 @@
+---
+// ATEAM — Admin-Login. Split-Layout: links Bergszene, rechts Login.
+// Echte Supabase-Auth (E-Mail + Passwort). Bei Erfolg → Weiterleitung zum Dashboard.
+import { Image } from 'astro:assets';
+import berg from '../../assets/alps-logo-symbol.png';
+import bergBg from '../../assets/alps-berg-bg.png';
+import { createSupabaseServer } from '../../lib/supabase';
+
+export const prerender = false;
+
+const supabase = createSupabaseServer(Astro.cookies, Astro.request);
+
+// Bereits eingeloggt? → direkt ins Dashboard.
+const { data: { user: current } } = await supabase.auth.getUser();
+if (current) return Astro.redirect('/admin/');
+
+let errorMsg = '';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const email = String(form.get('email') ?? '').trim();
+  const password = String(form.get('password') ?? '');
+
+  if (!email || !password) {
+    errorMsg = 'Bitte E-Mail und Passwort eingeben.';
+  } else {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      errorMsg = 'E-Mail oder Passwort ist falsch.';
+    } else {
+      return Astro.redirect('/admin/');
+    }
+  }
+}
+---
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>ATEAM · Login — Alps Agency</title>
+    <style is:global>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; }
+      body {
+        font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+        color: #fff;
+        background: #07142b;
+        -webkit-font-smoothing: antialiased;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="auth">
+      <!-- Linke Seite: Bergszene — großer Chrom-Berg über nahtlos ziehenden Wolken -->
+      <aside class="stage" aria-hidden="true">
+        <div class="glow"></div>
+        <div class="clouds clouds-back"></div>
+        <div class="mountains">
+          <Image src={bergBg} alt="" width={1320} height={610} />
+        </div>
+        <div class="clouds clouds-front"></div>
+        <div class="stage-cap">
+          <span class="kicker">ALPS · ATEAM</span>
+          <h2>Über den Wolken.</h2>
+          <p>Interner Arbeitsbereich für das ALPS-Agency-Team.</p>
+        </div>
+      </aside>
+
+      <!-- Rechte Seite: Login-Karte -->
+      <section class="panel">
+        <div class="card" aria-labelledby="auth-title">
+          <div class="brand">
+            <Image class="brand-mark" src={berg} alt="" aria-hidden="true" width={132} height={61} />
+            <span class="brand-word"><strong>ALPS</strong><em>AGENCY</em></span>
+          </div>
+
+          <h1 id="auth-title">Mitarbeiter-Login</h1>
+          <p class="sub">Interner Bereich · nur für ALPS-Agency-Team</p>
+
+          <form id="login-form" method="POST" novalidate>
+            <label class="field">
+              <span>E-Mail</span>
+              <input type="email" name="email" autocomplete="email" required
+                placeholder="vorname@alpsagency.de" />
+            </label>
+
+            <label class="field">
+              <span>Passwort</span>
+              <input type="password" name="password" autocomplete="current-password" required
+                placeholder="••••••••" />
+            </label>
+
+            {errorMsg && <p class="hint err">{errorMsg}</p>}
+
+            <button type="submit" class="submit">Anmelden</button>
+          </form>
+
+          <p class="foot">Zugang vergessen? Wende dich an den Admin.</p>
+        </div>
+      </section>
+    </main>
+
+    <script is:inline>
+      // Echtes Form-POST an Supabase (serverseitig). Hier nur Button-Feedback.
+      const form = document.getElementById('login-form');
+      form?.addEventListener('submit', () => {
+        const btn = form.querySelector('.submit');
+        if (btn) { btn.textContent = 'Wird angemeldet …'; btn.disabled = true; }
+      });
+    </script>
+
+    <style>
+      .auth {
+        min-height: 100svh;
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      /* ---------- Linke Bergszene ---------- */
+      .stage {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        background: radial-gradient(120% 90% at 50% -10%, #1e3f86 0%, #0c2150 40%, #07142b 82%);
+      }
+      .glow {
+        position: absolute; inset: 0;
+        background: radial-gradient(55% 45% at 50% 26%, rgba(77, 107, 255, 0.30), transparent 70%);
+        mix-blend-mode: screen;
+      }
+
+      /* Großer Chrom-Berg — Gipfel ragt frei in der Szene auf (keine Karte davor). */
+      .mountains {
+        position: absolute;
+        left: 50%;
+        bottom: 0;
+        width: min(115%, 1000px);
+        transform: translateX(-50%);
+        opacity: 0.96;
+        -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+        mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+        filter: drop-shadow(0 0 70px rgba(120, 150, 255, 0.55)) brightness(1.15);
+        animation: peak-float 14s ease-in-out infinite;
+      }
+      .mountains :global(img) { width: 100%; height: auto; display: block; }
+      @keyframes peak-float {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50%      { transform: translateX(-50%) translateY(-12px); }
+      }
+
+      /* Wolken: je Ebene exakt um EINE Kachelbreite verschoben → nahtloser Loop. */
+      .clouds { position: absolute; inset: -10% 0; background-repeat: repeat-x; background-position: 0 50%; will-change: background-position; }
+      .clouds-back {
+        background-image:
+          radial-gradient(70px 40px at 90px 58%, rgba(180, 205, 255, 0.28), transparent 70%),
+          radial-gradient(100px 52px at 300px 42%, rgba(150, 180, 255, 0.20), transparent 72%),
+          radial-gradient(80px 44px at 500px 64%, rgba(200, 220, 255, 0.24), transparent 70%);
+        background-size: 600px 100%;
+        animation: drift-back 70s linear infinite;
+        filter: blur(7px); opacity: 0.5;
+      }
+      .clouds-front {
+        background-image:
+          radial-gradient(95px 52px at 140px 56%, rgba(225, 236, 255, 0.40), transparent 70%),
+          radial-gradient(130px 66px at 430px 40%, rgba(195, 216, 255, 0.30), transparent 72%),
+          radial-gradient(80px 46px at 680px 62%, rgba(220, 232, 255, 0.34), transparent 70%);
+        background-size: 820px 100%;
+        animation: drift-front 44s linear infinite;
+        filter: blur(3px); opacity: 0.8;
+      }
+      @keyframes drift-back  { from { background-position: 0 50%; } to { background-position: -600px 50%; } }
+      @keyframes drift-front { from { background-position: 0 50%; } to { background-position: -820px 50%; } }
+
+      .stage-cap { position: absolute; left: clamp(1.5rem, 4vw, 3rem); bottom: clamp(1.5rem, 4vw, 3rem); z-index: 5; }
+      .stage-cap .kicker { font-size: 0.72rem; letter-spacing: 0.32em; text-transform: uppercase; color: #9fb4ff; }
+      .stage-cap h2 { margin: 0.4rem 0 0.3rem; font-size: clamp(1.6rem, 3.5vw, 2.4rem); }
+      .stage-cap p { margin: 0; color: #a9b8d4; font-size: 0.95rem; max-width: 22rem; }
+
+      @media (prefers-reduced-motion: reduce) { .clouds, .mountains { animation: none !important; } }
+
+      /* ---------- Rechte Login-Seite ---------- */
+      .panel { display: grid; place-items: center; padding: 2rem 1.5rem; background: #07142b; }
+
+      .card {
+        width: 100%;
+        max-width: 24rem;
+      }
+      .brand { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.6rem; }
+      .brand-mark { width: 3rem; height: auto; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5)); }
+      .brand-word { display: flex; align-items: baseline; gap: 0.4rem; }
+      .brand-word strong { font-weight: 700; font-size: 1.05rem; letter-spacing: 0.02em; }
+      .brand-word em { font-style: normal; font-weight: 500; font-size: 0.6rem; letter-spacing: 0.32em; text-transform: uppercase; color: #a9b8d4; }
+
+      h1 { margin: 0 0 0.35rem; font-size: clamp(1.5rem, 4vw, 1.9rem); font-weight: 700; }
+      .sub { margin: 0 0 1.8rem; color: #a9b8d4; font-size: 0.92rem; }
+
+      .field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
+      .field > span { font-size: 0.82rem; color: #a9b8d4; font-weight: 500; }
+      .field > span em { font-style: normal; opacity: 0.7; font-weight: 400; }
+      .field input {
+        width: 100%; padding: 0.85rem 1rem; border-radius: 0.7rem;
+        background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.14);
+        color: #fff; font: inherit; font-size: 1rem;
+        transition: border-color 0.25s ease, background 0.25s ease;
+      }
+      .field input::placeholder { color: rgba(169, 184, 212, 0.5); }
+      .field input:focus { outline: none; border-color: #4d6bff; background: rgba(26, 63, 255, 0.07); }
+
+      .submit {
+        width: 100%; margin-top: 0.4rem; padding: 0.95rem 1rem; border: 0; border-radius: 0.7rem;
+        cursor: pointer; font: inherit; font-weight: 600; font-size: 1.02rem; color: #fff;
+        background: linear-gradient(180deg, #2b54c8 0%, #1a3fff 100%);
+        box-shadow: 0 8px 26px -8px rgba(26, 63, 255, 0.6);
+        transition: transform 0.15s ease, box-shadow 0.3s ease, filter 0.2s ease;
+      }
+      .submit:hover { filter: brightness(1.08); box-shadow: 0 0 40px -6px rgba(26, 63, 255, 0.75); }
+      .submit:active { transform: translateY(1px); }
+      .submit:disabled { opacity: 0.8; cursor: default; }
+
+      .hint {
+        margin: 1rem 0 0; font-size: 0.85rem; color: #b9c6e6;
+        background: rgba(77, 107, 255, 0.1); border: 1px solid rgba(77, 107, 255, 0.25);
+        padding: 0.7rem 0.85rem; border-radius: 0.6rem;
+      }
+      .hint.err {
+        margin: 0 0 1rem; color: #ff8a94;
+        background: rgba(255, 93, 108, 0.1); border-color: rgba(255, 93, 108, 0.3);
+      }
+      .foot { margin: 1.6rem 0 0; text-align: center; font-size: 0.8rem; color: #7e8db0; }
+
+      /* ---------- Mobil: Bergszene als Banner oben, Karte darunter ---------- */
+      @media (max-width: 900px) {
+        .auth { grid-template-columns: 1fr; }
+        .stage { min-height: 40svh; }
+        .mountains { width: min(150%, 760px); }
+        .panel { padding: 2rem 1.25rem 2.6rem; }
+      }
+      @media (max-width: 480px) {
+        .stage { min-height: 32svh; }
+        .stage-cap h2 { font-size: 1.4rem; }
+      }
+    </style>
+  </body>
+</html>

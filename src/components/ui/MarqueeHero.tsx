@@ -14,9 +14,11 @@ type Quad = { x0: number; y0: number; x1: number; y1: number; x3: number; y3: nu
 export default function MarqueeHero({
   images,
   className,
+  backLabel = "Zurück zum Start",
 }: {
   images: string[];
   className?: string;
+  backLabel?: string;
 }) {
   const [flying, setFlying] = useState(false);
   const [showBack, setShowBack] = useState(false);
@@ -47,7 +49,15 @@ export default function MarqueeHero({
   // den Klick ab (läuft schon ein Flug / keine echte Sektion).
   const handleTilePress = (image: string) => {
     if (flyingRef.current) return false;
+    // Handy (<768px): der Marquee ist nur Deko — kein Klick-Flug wie auf dem Desktop.
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches)
+      return false;
     const stem = (image.split("/").pop() ?? "").replace(/\.\w+$/, "");
+    // Beispiele ist KEINE Flug-Sektion, sondern ein eigenes Overlay → öffnen statt fliegen.
+    if (stem === "beispiele") {
+      window.dispatchEvent(new CustomEvent("open-beispiele"));
+      return false; // kein Sektions-Flug
+    }
     if (!SECTIONS.has(stem)) return false;
     flyingRef.current = true;
     setFlying(true);
@@ -82,7 +92,8 @@ export default function MarqueeHero({
   const flyToId = (id: string) => {
     if (flyingRef.current || !SECTIONS.has(id)) return;
     const imgs = Array.from(
-      document.querySelectorAll<HTMLImageElement>(`img[src*="/marquee/${id}."]`),
+      // funktioniert für /marquee/<id>.webp wie auch für /marquee/<lang>/<id>.webp
+      document.querySelectorAll<HTMLImageElement>(`img[src*="/${id}.webp"]`),
     );
     const corner = (host: HTMLElement, cx: string, cy: string) => {
       const m = document.createElement("div");
@@ -166,9 +177,9 @@ export default function MarqueeHero({
             type="button"
             onClick={flyBack}
             className="fixed bottom-6 right-6 z-[9998] flex items-center gap-2 rounded-full border border-[#6f8bff]/40 bg-[#0b1424]/85 px-5 py-3 text-sm font-medium text-[#dbe4ff] shadow-xl shadow-black/40 backdrop-blur-md transition-all hover:border-[#9fb4ff] hover:bg-[#101c33] hover:shadow-2xl"
-            aria-label="Zurück zum Start"
+            aria-label={backLabel}
           >
-            <span aria-hidden="true">↑</span> Zurück zum Start
+            <span aria-hidden="true">↑</span> {backLabel}
           </button>,
           document.body,
         )}

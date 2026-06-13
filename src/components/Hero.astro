@@ -6,23 +6,27 @@ import { useTranslations, defaultLang, type Lang } from '../i18n';
 const { lang = defaultLang } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
 
-// Kacheln für den 3D-Marquee = Screenshots der eigenen Sektionen.
+// Kacheln für den 3D-Marquee = Screenshots der eigenen Sektionen, in der aktiven Sprache.
+// Deutsch liegt unter /marquee/, übrige Sprachen unter /marquee/<lang>/.
 // Mehrfach wiederholt, damit alle 4 Spalten gut gefüllt sind.
+const marqueeDir = lang === defaultLang ? '/marquee' : `/marquee/${lang}`;
+// Beispiele-Kachel öffnet das Beispiele-Overlay (kein Sektions-Flug). Erreichbar nur hier
+// im Marquee oder über den „Web Design"-Klick in den Referenzen.
 const marqueeBase = [
-  '/marquee/services.webp',
-  '/marquee/work.webp',
-  '/marquee/beispiele.webp',
-  '/marquee/pricing.webp',
-  '/marquee/faq.webp',
-  '/marquee/contact.webp',
-  '/marquee/hero.webp',
+  `${marqueeDir}/services.webp`,
+  `${marqueeDir}/work.webp`,
+  `${marqueeDir}/beispiele.webp`,
+  `${marqueeDir}/pricing.webp`,
+  `${marqueeDir}/faq.webp`,
+  `${marqueeDir}/contact.webp`,
+  `${marqueeDir}/hero.webp`,
 ];
 const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqueeBase.length]);
 ---
 <section id="hero" class="hero" aria-label={t('hero.title_pre') + ' ' + t('hero.title_accent')}>
   <!-- 3D-Marquee als bewegter Hero-Hintergrund (eigene Sektions-Screenshots) -->
   <div class="hero-bg" data-scene="bg" aria-hidden="true">
-    <MarqueeHero client:load images={marqueeImages} className="hero-marquee" />
+    <MarqueeHero client:load images={marqueeImages} className="hero-marquee" backLabel={t('hero.back')} />
   </div>
 
   <!-- Verlauf: links dunkel (Lesbarkeit), unten Übergang -->
@@ -41,15 +45,10 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
     </h1>
     <p class="hero-sub" data-reveal>{t('hero.subtitle')}</p>
     <div class="hero-cta" data-reveal>
-      <a href="#contact" class="btn-primary">{t('hero.cta_primary')}</a>
+      <a href="#contact" class="shiny-cta"><span>{t('hero.cta_primary')}</span></a>
       <a href="#work" class="btn-ghost">{t('hero.cta_secondary')}</a>
     </div>
   </div>
-
-  <a href="#services" class="hero-scroll" data-reveal aria-label={t('hero.scroll')}>
-    <span class="hero-scroll-label">{t('hero.scroll')}</span>
-    <span class="hero-scroll-line"><span class="hero-scroll-dot"></span></span>
-  </a>
 </section>
 
 <style>
@@ -127,8 +126,7 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
 
   /* Während eine Kachel herausfliegt: Hero-Inhalt + Veil weich wegblenden */
   .hero.flying .hero-content,
-  .hero.flying .hero-veil,
-  .hero.flying .hero-scroll {
+  .hero.flying .hero-veil {
     opacity: 0;
     transition: opacity 0.5s ease;
     pointer-events: none;
@@ -229,41 +227,57 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
 
   .hero-cta { display: flex; flex-wrap: wrap; gap: 1rem; }
 
-  /* Scroll-Indikator (linksbündig) */
-  .hero-scroll {
-    position: absolute;
-    z-index: 10;
-    bottom: 2rem;
-    left: clamp(1.25rem, 5vw, 5rem);
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    color: var(--color-muted);
-    font-family: var(--font-display);
-    font-size: 0.72rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
+  /* „Magischer" Umriss-Glow auf dem Sekundär-Button („Unsere Arbeiten").
+     Zeitgesteuert per JS: startet nach 35 s, leuchtet langsam auf, klingt
+     über ~4 s wieder aus — als wiederkehrender Loop (sanfter Klick-Anreiz).
+     Weiß-goldener „Feenstaub"-Schein auf Rand + innerem Saum. */
+  .hero-cta .btn-ghost.magic {
+    animation: hero-magic 4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: box-shadow, border-color;
   }
-  .hero-scroll-line {
-    width: 2.4rem;
-    height: 1.5px;
-    background: rgba(255, 255, 255, 0.2);
-    position: relative;
-    overflow: hidden;
-    border-radius: 2px;
+  @keyframes hero-magic {
+    0% {
+      box-shadow: 0 0 0 0 rgba(255, 232, 160, 0);
+      border-color: rgba(150, 175, 255, 0.32);
+    }
+    25% {
+      box-shadow:
+        0 0 12px 1px rgba(255, 236, 175, 0.35),
+        0 0 26px 4px rgba(255, 210, 120, 0.18),
+        inset 0 0 10px rgba(255, 240, 190, 0.18);
+      border-color: rgba(255, 240, 205, 0.7);
+    }
+    50% {
+      box-shadow:
+        0 0 22px 3px rgba(255, 240, 185, 0.62),
+        0 0 52px 9px rgba(255, 214, 130, 0.42),
+        inset 0 0 14px rgba(255, 244, 200, 0.3);
+      border-color: rgba(255, 247, 222, 0.96);
+    }
+    66% {
+      /* kurzes magisches Flackern, bevor es ausklingt */
+      box-shadow:
+        0 0 16px 2px rgba(255, 238, 180, 0.5),
+        0 0 40px 7px rgba(255, 214, 130, 0.3),
+        inset 0 0 11px rgba(255, 242, 195, 0.22);
+      border-color: rgba(255, 244, 214, 0.82);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 232, 160, 0);
+      border-color: rgba(150, 175, 255, 0.32);
+    }
   }
-  .hero-scroll-dot {
-    position: absolute;
-    top: 0; left: 0;
-    height: 100%;
-    width: 40%;
-    background: var(--color-accent-bright);
-    border-radius: 2px;
-    animation: scroll-dot 2s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    .hero-cta .btn-ghost.magic { animation: none; }
   }
-  @keyframes scroll-dot {
-    0% { transform: translateX(-100%); }
-    60%, 100% { transform: translateX(250%); }
+
+  /* Klick auf „Unsere Arbeiten": Button schrumpft smooth zusammen und verschwindet
+     (danach per JS auf display:none → er ist bis zum Reload weg). */
+  .hero-cta .btn-ghost.vanish {
+    transform: scale(0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.5s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.45s ease;
   }
 
   /* Mobile: kräftigerer Veil, Text gut lesbar über dem Berg */
@@ -277,9 +291,12 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
           var(--color-night) 100%);
     }
     .hero-content { max-width: none; }
+    /* Handy: 3D-Marquee bleibt als Deko sichtbar, ist aber NICHT interaktiv
+       (kein Kachel-Flug/Tap) — Touches gehen durch, normales Scrollen bleibt. */
+    .hero-bg { pointer-events: none; }
   }
   @media (max-width: 480px) {
-    .hero-cta .btn-primary, .hero-cta .btn-ghost { width: 100%; justify-content: center; }
+    .hero-cta .shiny-cta, .hero-cta .btn-ghost { width: 100%; justify-content: center; }
   }
 </style>
 
@@ -294,7 +311,7 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
   function revealContent() {
     if (!hero) return;
     const intro = hero.querySelectorAll<HTMLElement>('.hero-logo, .eyebrow');
-    const outro = hero.querySelectorAll<HTMLElement>('.hero-sub, .hero-cta, .hero-scroll');
+    const outro = hero.querySelectorAll<HTMLElement>('.hero-sub, .hero-cta');
     const lines = hero.querySelectorAll<HTMLElement>('.line');
     const accent = hero.querySelector<HTMLElement>('.line.accent');
     const glare = hero.querySelector<HTMLElement>('.title-glare');
@@ -333,7 +350,7 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
   }
   try { revealContent(); }
   catch {
-    hero?.querySelectorAll<HTMLElement>('.hero-logo, .eyebrow, .hero-sub, .hero-cta, .hero-scroll, .line')
+    hero?.querySelectorAll<HTMLElement>('.hero-logo, .eyebrow, .hero-sub, .hero-cta, .line')
       .forEach((el) => (el.style.opacity = '1'));
   }
 
@@ -354,6 +371,73 @@ const marqueeImages = Array.from({ length: 32 }, (_, i) => marqueeBase[i % marqu
       },
     );
     window.addEventListener('load', () => ScrollTrigger.refresh());
+  }
+
+  /* Sekundär-Button „Unsere Arbeiten":
+     (1) Loop-Glow ab 35 s Verweildauer (sanfter Klick-Anreiz).
+     (2) Klick → Navigation unterbinden, Button schrumpft smooth weg, dann leuchten
+         die Work-Kacheln im 3D-Marquee magisch auf (~5 s). Button bleibt bis Reload weg. */
+  {
+    const ghost = hero?.querySelector<HTMLElement>('.hero-cta .btn-ghost');
+    if (ghost) {
+      let magicStart = 0, magicEnd = 0, magicInterval = 0;
+
+      // (1) Loop-Glow — nur wenn Bewegung erlaubt ist.
+      if (!reduceMotion) {
+        const START_MS = 35000; // erst nach 35 s auf der Seite
+        const GLOW_MS = 4000;   // Dauer eines Aufleuchtens
+        const REST_MS = 10000;  // Ruhepause zwischen den Loops
+        const pulse = () => {
+          ghost.classList.remove('magic');
+          void ghost.offsetWidth;        // Reflow → Animation lässt sich neu starten
+          ghost.classList.add('magic');
+          magicEnd = window.setTimeout(() => ghost.classList.remove('magic'), GLOW_MS);
+        };
+        magicStart = window.setTimeout(() => {
+          pulse();
+          magicInterval = window.setInterval(pulse, GLOW_MS + REST_MS);
+        }, START_MS);
+      }
+
+      // (2) Klick-Verhalten.
+      const TILE_GLOW_MS = 5000;
+      const igniteWorkTiles = () => {
+        const imgs = document.querySelectorAll<HTMLImageElement>(
+          '.hero-marquee img[src*="work.webp"]',
+        );
+        imgs.forEach((img) => {
+          const wrap = img.closest('.group');
+          if (!wrap) return;
+          wrap.classList.remove('marquee-magic');
+          void (wrap as HTMLElement).offsetWidth; // Reflow → Neustart möglich
+          wrap.classList.add('marquee-magic');
+          window.setTimeout(() => wrap.classList.remove('marquee-magic'), TILE_GLOW_MS);
+        });
+      };
+
+      ghost.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();              // Scroll-Gate / request-fly NICHT auslösen
+        e.stopImmediatePropagation?.();
+        // Loop-Glow stoppen
+        clearTimeout(magicStart);
+        clearTimeout(magicEnd);
+        clearInterval(magicInterval);
+        ghost.classList.remove('magic');
+
+        if (reduceMotion) {
+          ghost.style.display = 'none';
+          igniteWorkTiles();
+          return;
+        }
+        // Button schrumpft + faded, danach ausblenden und die Magie auf die Kacheln „überspringen"
+        ghost.classList.add('vanish');
+        window.setTimeout(() => {
+          ghost.style.display = 'none';
+          igniteWorkTiles();
+        }, 500);
+      });
+    }
   }
 
   /* Maus-Parallax: der Marquee-Hintergrund kippt sanft mit der Maus (extra 3D-Tiefe) */

@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from './Hero.astro';
+import Services from './Services.astro';
+import Work from './Work.astro';
+import Beispiele from './Beispiele.astro';
+import Pricing from './Pricing.astro';
+import Faq from './Faq.astro';
+import Contact from './Contact.astro';
+import { defaultLang, type Lang } from '../i18n';
+const { lang = defaultLang } = Astro.props as { lang?: Lang };
+---
+<BaseLayout lang={lang}>
+  <Hero lang={lang} />
+  <Services lang={lang} />
+  <Work lang={lang} />
+  <Beispiele lang={lang} />
+  <Pricing lang={lang} />
+  <Faq lang={lang} />
+  <Contact lang={lang} />
+</BaseLayout>

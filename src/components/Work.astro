@@ -3,11 +3,11 @@ import { useTranslations, defaultLang, type Lang } from '../i18n';
 const { lang = defaultLang } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
 
-// Platzhalter-Projekte (echte folgen). Jeder Eintrag mit eigenem Verlauf.
+// Zwei Bereiche zur Auswahl: Web Design (verfügbar) führt zur Beispiele-Sektion,
+// AI Automation (coming soon) führt zum Kontakt.
 const items = [
-  { key: 'one', from: '#1a3fff', to: '#4d6bff' },
-  { key: 'two', from: '#3a2b8f', to: '#6d5bff' },
-  { key: 'three', from: '#0e3a6b', to: '#2bb6ff' },
+  { key: 'one', from: '#1a3fff', to: '#4d6bff', href: '#beispiele' },
+  { key: 'two', from: '#3a2b8f', to: '#6d5bff', href: '#contact' },
 ] as const;
 ---
 <section id="work" class="section work" aria-labelledby="work-title">
@@ -29,7 +29,7 @@ const items = [
           <div class="work-body">
             <span class="work-cat">{t(`work.items.${item.key}.category`)}</span>
             <h3 class="work-title">{t(`work.items.${item.key}.title`)}</h3>
-            <a href="#contact" class="work-link">
+            <a href={item.href} class="work-link" data-open-beispiele={item.key === 'one' ? '' : undefined}>
               {t('work.view')}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
@@ -51,9 +51,10 @@ const items = [
     display: grid;
     gap: 1.5rem;
     grid-template-columns: 1fr;
+    /* Zwei Karten: nicht über die volle Breite ziehen, sondern kompakt zentriert. */
+    max-width: 52rem;
   }
   @media (min-width: 640px) { .work-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 1024px) { .work-grid { grid-template-columns: repeat(3, 1fr); } }
 
   .work-card {
     overflow: hidden;

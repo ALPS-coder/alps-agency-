@@ -1,0 +1,245 @@
+{
+  "meta": {
+    "title": "Alps Agency — AI web dizajn i lokalna vidljivost na Googleu",
+    "description": "Alps Agency dovodi lokalne tvrtke na vrh: AI web dizajn, optimizacija Google profila i više recenzija — kako bi vas više kupaca pronašlo i rezerviralo.",
+    "og_alt": "Alps Agency — planinski vrh iznad oblaka"
+  },
+  "nav": {
+    "services": "Usluge",
+    "work": "Radovi",
+    "beispiele": "Primjeri",
+    "pricing": "Cijene",
+    "faq": "Česta pitanja",
+    "contact": "Kontakt",
+    "cta": "Besplatni razgovor",
+    "skip": "Preskoči na sadržaj",
+    "menu_open": "Otvori izbornik",
+    "menu_close": "Zatvori izbornik"
+  },
+  "loading": {
+    "label": "Učitavanje Alps Agency"
+  },
+  "hero": {
+    "badge": "AI web dizajn · Automatizacija · Rast",
+    "title_pre": "Više kupaca.",
+    "title_accent": "Manje truda.",
+    "subtitle": "Moderan AI web dizajn susreće pametnu automatizaciju — kako bi vas online pronašli, dobili više upita i rasli predvidivo.",
+    "cta_primary": "Besplatni početni razgovor",
+    "cta_secondary": "Naši radovi",
+    "scroll": "Pomakni",
+    "back": "Natrag na početak"
+  },
+  "services": {
+    "eyebrow": "Usluge",
+    "title": "Sve za vašu digitalnu vidljivost",
+    "subtitle": "Moderna web stranica, pametna automatizacija — vaš digitalni nastup iz jedne ruke.",
+    "items": {
+      "boost": {
+        "title": "30 dana porasta vidljivosti",
+        "desc": "Veći doseg u vašem lokalnom Google pretraživanju — i više upita iz vaše regije."
+      },
+      "profile": {
+        "title": "Optimizacija profila",
+        "desc": "Vaš Google profil potpuno optimiziran kako bi vas kupci u blizini prvi pronašli."
+      },
+      "posts": {
+        "title": "Objavljivanje Google objava",
+        "desc": "Redovite objave održavaju vaš profil aktivnim i jačaju vašu lokalnu vidljivost."
+      },
+      "webdesign": {
+        "title": "AI web dizajn",
+        "desc": "Moderne, brze web stranice oblikovane uz AI — prilagođene baš vašem brendu."
+      },
+      "reviews": {
+        "title": "Prikupljanje i odgovaranje na recenzije",
+        "desc": "Više pravih recenzija i profesionalni odgovori jačaju vaše povjerenje."
+      }
+    }
+  },
+  "work": {
+    "eyebrow": "Reference",
+    "title": "Naša rješenja",
+    "subtitle": "Izbor projekata koje smo učinili vidljivima.",
+    "view": "Pogledaj",
+    "placeholder_note": "Rezervirano mjesto — pravi projekti uskoro slijede.",
+    "items": {
+      "one": {
+        "title": "Web Design",
+        "category": "Dostupno"
+      },
+      "two": {
+        "title": "AI Automation",
+        "category": "Uskoro"
+      }
+    }
+  },
+  "beispiele": {
+    "eyebrow": "Primjeri",
+    "title": "Primjeri iz prakse",
+    "subtitle": "Konkretni uvidi u rezultate koje smo ostvarili za klijente.",
+    "note": "Više primjera uskoro slijedi.",
+    "back": "Natrag",
+    "items": {
+      "one": {
+        "title": "Redizajn web stranice",
+        "category": "Primjer uživo"
+      },
+      "two": {
+        "title": "Lokalna vidljivost",
+        "category": "Uskoro dostupno"
+      },
+      "three": {
+        "title": "Nastup brenda",
+        "category": "Uskoro dostupno"
+      }
+    }
+  },
+  "pricing": {
+    "eyebrow": "Paketi i cijene",
+    "title": "Transparentni paketi",
+    "subtitle": "Jasno izračunljivo, bez skrivenih troškova. Uvijek započinjete besplatnim početnim razgovorom.",
+    "popular": "Najpopularniji izbor",
+    "from": "od",
+    "items": {
+      "free": {
+        "name": "Besplatni početni razgovor",
+        "price": "0 €",
+        "period": "bez obveze",
+        "features": [
+          "Savjetodavni razgovor",
+          "Razmjena informacija",
+          "Prva procjena",
+          "Individualna preporuka"
+        ],
+        "cta": "Rezerviraj termin"
+      },
+      "starter": {
+        "name": "Starter",
+        "price": "1.500 €",
+        "period": "jednokratno",
+        "features": [
+          "Optimizacija profila",
+          "30 dana porasta vidljivosti",
+          "4 Google objave / mjesec",
+          "Osnovno izvješćivanje"
+        ],
+        "cta": "Odaberi paket"
+      },
+      "professional": {
+        "name": "Professional",
+        "price": "2.400 €",
+        "period": "jednokratno",
+        "features": [
+          "Sve iz Startera",
+          "AI web stranica (jedna stranica)",
+          "Upravljanje recenzijama",
+          "Tjedne objave",
+          "Prioritetna podrška"
+        ],
+        "cta": "Odaberi paket"
+      },
+      "premium": {
+        "name": "Premium",
+        "price": "Na upit",
+        "period": "individualno",
+        "features": [
+          "Sve iz Professionala",
+          "Prilagođena web stranica s više stranica",
+          "Kontinuirana podrška",
+          "Mjesečni strateški pozivi"
+        ],
+        "cta": "Pošalji upit"
+      }
+    }
+  },
+  "faq": {
+    "eyebrow": "Česta pitanja",
+    "title": "Često postavljana pitanja",
+    "subtitle": "Što tvrtke najčešće zanima prije suradnje s nama.",
+    "items": {
+      "q1": {
+        "q": "Hoće li mi ovo doista donijeti nove kupce?",
+        "a": "Iskreno: lijepa web stranica sama po sebi ne donosi kupce. Bitno je da vas pronađu i da se posjetitelji pretvore u upite. Upravo za to gradimo temelj — vidljivost na Googleu, nastup koji uvjerava i automatsko praćenje kako nijedan upit ne bi propao. Ako nismo uvjereni da će vam se to mjerljivo isplatiti, otvoreno ćemo vam to reći već na prvom razgovoru."
+      },
+      "q2": {
+        "q": "Koliko truda to traži od mene — i koliko brzo ide?",
+        "a": "Vrlo malo. Vi nam date nekoliko osnova poput logotipa i ključnih podataka, a ostalo preuzimamo mi: tekstove, dizajn i tehniku. Zahvaljujući izradi uz AI ide brzo — mnoge su stranice gotove za manje od dva tjedna, a prvi učinci na vidljivost često se vide ubrzo nakon toga."
+      },
+      "q3": {
+        "q": "Koliko to košta — i ima li skrivenih troškova?",
+        "a": "Nema skrivenih troškova ni neugodnih iznenađenja. U pravilu plaćate jednokratno za svoj projekt; održavanje i briga su opcionalni, ako ih želite. Što je točno za vas smisleno, dogovaramo na besplatnom prvom razgovoru — plaćate samo ono što vam doista koristi."
+      },
+      "q4": {
+        "q": "Je li web stranica moja — i vežem li se dugoročno?",
+        "a": "Da, vaša web stranica pripada vama. Radimo bez vezujućih ugovora: jedina je obveza opcionalno trajno održavanje — a ono se može otkazati u svako doba. Ostajete jer su rezultati dobri, a ne zbog klauzule."
+      },
+      "q5": {
+        "q": "Jesu li moji podaci i podaci mojih kupaca sigurni?",
+        "a": "Da. Radimo u potpunosti u skladu s GDPR-om — što je nužno osobito za ordinacije i osjetljive djelatnosti. Vaši podaci i podaci vaših kupaca kod nas su sigurni i koriste se samo za ono čemu su namijenjeni."
+      },
+      "q6": {
+        "q": "Zašto Alps Agency — i što riskiram?",
+        "a": "Spajamo stvarni AI s iskrenim, osobnim marketingom: brzo do objave, transparentno i neovisno o lokaciji na više jezika. O vama se uvijek brine osoba, a ne bot. Vaš rizik: nikakav — prvi je razgovor besplatan i neobvezujuć. Upoznajte nas i odlučite poslije, bez žurbe."
+      }
+    }
+  },
+  "contact": {
+    "eyebrow": "Kontakt",
+    "title": "Rezervirajte besplatni razgovor",
+    "subtitle": "Ukratko nam ispričajte o svom projektu — javljamo se u roku od 24 sata.",
+    "fields": {
+      "name": {
+        "label": "Ime",
+        "placeholder": "Ime i prezime"
+      },
+      "email": {
+        "label": "E-pošta",
+        "placeholder": "ime@primjer.com"
+      },
+      "phone": {
+        "label": "Telefon",
+        "placeholder": "+49 …"
+      },
+      "industry": {
+        "label": "Djelatnost",
+        "placeholder": "npr. ugostiteljstvo, obrt …"
+      },
+      "source": {
+        "label": "Kako ste nas pronašli?",
+        "placeholder": "Molimo odaberite",
+        "options": {
+          "google": "Google pretraživanje",
+          "referral": "Preporuka",
+          "social": "Društvene mreže",
+          "other": "Ostalo"
+        }
+      },
+      "message": {
+        "label": "Poruka",
+        "placeholder": "O čemu se radi?"
+      }
+    },
+    "submit": "Zatraži besplatni razgovor",
+    "sending": "Šalje se …",
+    "success_title": "Hvala! Zaprimili smo vaš upit.",
+    "success_text": "Javljamo vam se u roku od 24 sata.",
+    "errors": {
+      "required": "Ovo polje je obavezno.",
+      "email": "Unesite valjanu adresu e-pošte.",
+      "phone": "Unesite valjani telefonski broj."
+    }
+  },
+  "footer": {
+    "tagline": "AI web dizajn i lokalna vidljivost na Googleu za tvrtke koje žele rasti.",
+    "nav_title": "Navigacija",
+    "contact_title": "Kontakt",
+    "legal_title": "Pravne informacije",
+    "email": "hallo@alpsagency.de",
+    "phone": "+49 000 0000000",
+    "whatsapp": "Pošalji poruku na WhatsApp",
+    "imprint": "Impressum",
+    "privacy": "Privatnost",
+    "rights": "Sva prava pridržana.",
+    "placeholder_note": "Kontaktni podaci su rezervirano mjesto — molimo zamijenite."
+  }
+}

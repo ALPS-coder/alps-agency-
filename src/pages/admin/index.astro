@@ -1,0 +1,195 @@
+---
+// ATEAM — Anfragen/Leads. Echte Daten aus Supabase.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { createSupabaseServer } from '../../lib/supabase';
+
+export const prerender = false;
+
+const supabase = createSupabaseServer(Astro.cookies, Astro.request);
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return Astro.redirect('/admin/login');
+
+const { data: profile } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
+const displayName = profile?.full_name || user.email?.split('@')[0] || 'Team';
+const roleLabel = profile?.role === 'admin' ? 'Admin' : 'Mitarbeiter';
+
+type Status = 'neu' | 'offen' | 'erledigt';
+interface Lead { id: string; name: string; email: string; phone: string; industry: string; source: string; message: string; status: Status; assignee: string; date: string; notes: string; }
+
+const { data: rows, error: leadsError } = await supabase
+  .from('leads')
+  .select('id, name, email, phone, industry, source, message, status, assignee, notes, created_at')
+  .order('created_at', { ascending: false });
+if (leadsError) console.error('[admin] Leads laden fehlgeschlagen:', leadsError.message);
+
+const leads: Lead[] = (rows ?? []).map((r) => ({
+  id: r.id, name: r.name, email: r.email, phone: r.phone ?? '', industry: r.industry ?? '',
+  source: r.source ?? '', message: r.message ?? '', status: r.status as Status,
+  assignee: r.assignee ?? '', date: r.created_at, notes: r.notes ?? '',
+}));
+
+const counts = {
+  neu: leads.filter((l) => l.status === 'neu').length,
+  offen: leads.filter((l) => l.status === 'offen').length,
+  erledigt: leads.filter((l) => l.status === 'erledigt').length,
+  gesamt: leads.length,
+};
+
+const stats = [
+  { key: 'neu', label: 'Neu', value: counts.neu, icon: 'M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0' },
+  { key: 'offen', label: 'Offen', value: counts.offen, icon: 'M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+  { key: 'erledigt', label: 'Erledigt', value: counts.erledigt, icon: 'M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+  { key: 'gesamt', label: 'Gesamt', value: counts.gesamt, icon: 'M22 12h-6l-2 3h-4l-2-3H2M5 5h14l3 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z' },
+];
+
+const fmtDate = (iso: string) => new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+const sourceLabel: Record<string, string> = { google: 'Google', referral: 'Empfehlung', social: 'Social Media', other: 'Sonstiges' };
+const statusLabel: Record<Status, string> = { neu: 'Neu', offen: 'Offen', erledigt: 'Erledigt' };
+const initials = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+---
+<AdminLayout title="ATEAM · Anfragen — Alps Agency" heading="Anfragen" subtitle="Eingehende Kontaktformular-Anfragen verwalten" active="leads" displayName={displayName} roleLabel={roleLabel}>
+  <div class="stats">
+    {stats.map((s, i) => (
+      <div class:list={['stat', s.key]} style={`--i:${i + 1}`}>
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={s.icon} /></svg></div>
+        <div class="s-body"><span class="s-num" data-count={s.value}>0</span><span class="s-lbl">{s.label}</span></div>
+      </div>
+    ))}
+  </div>
+
+  <div class="filters reveal" style="--i:5" role="tablist">
+    <button class="chip active" data-filter="alle">Alle</button>
+    <button class="chip" data-filter="neu">Neu</button>
+    <button class="chip" data-filter="offen">Offen</button>
+    <button class="chip" data-filter="erledigt">Erledigt</button>
+  </div>
+
+  <div class="table-wrap reveal" style="--i:6">
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Kontakt</th><th>Branche</th><th>Quelle</th><th>Eingang</th><th>Zugewiesen</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {leads.map((l, i) => (
+          <tr class="row" data-id={l.id} data-status={l.status} data-lead={JSON.stringify(l)} style={`--r:${i}`} tabindex="0">
+            <td class="td-name"><span class="av">{initials(l.name)}</span>{l.name}</td>
+            <td class="td-stack"><span>{l.email}</span><small>{l.phone}</small></td>
+            <td>{l.industry}</td>
+            <td>{sourceLabel[l.source] ?? l.source}</td>
+            <td>{fmtDate(l.date)}</td>
+            <td class="td-assignee" set:html={l.assignee || '<span class="muted">—</span>'}></td>
+            <td><span class:list={['badge', l.status, { pulse: l.status === 'neu' }]}>{statusLabel[l.status]}</span></td>
+          </tr>
+        ))}
+        {leads.length === 0 && (
+          <tr><td colspan="7" class="empty">Noch keine Anfragen — neue Kontaktformular-Einträge erscheinen hier automatisch.</td></tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Detail-Drawer -->
+  <div class="drawer-backdrop" data-backdrop hidden></div>
+  <aside class="drawer" data-drawer hidden aria-label="Anfrage-Details">
+    <button class="drawer-close" data-close aria-label="Schließen">×</button>
+    <h2 data-d-name></h2>
+    <span class="badge" data-d-badge></span>
+    <dl class="d-grid">
+      <dt>E-Mail</dt><dd><a data-d-email></a></dd>
+      <dt>Telefon</dt><dd data-d-phone></dd>
+      <dt>Branche</dt><dd data-d-industry></dd>
+      <dt>Quelle</dt><dd data-d-source></dd>
+      <dt>Eingang</dt><dd data-d-date></dd>
+    </dl>
+    <h3>Nachricht</h3>
+    <p class="d-msg" data-d-message></p>
+    <h3>Bearbeitung</h3>
+    <label class="d-field"><span>Status</span>
+      <select data-d-status><option value="neu">Neu</option><option value="offen">Offen</option><option value="erledigt">Erledigt</option></select>
+    </label>
+    <label class="d-field"><span>Zugewiesen an</span>
+      <select data-d-assignee><option value="">— niemand —</option><option value="José">José</option><option value="Lea">Lea</option><option value="Tim">Tim</option></select>
+    </label>
+    <label class="d-field"><span>Notizen</span>
+      <textarea data-d-notes rows="4" placeholder="Interne Notiz hinzufügen …"></textarea>
+    </label>
+    <button class="btn d-save" data-save><span>Speichern</span></button>
+  </aside>
+
+  <script is:inline>
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const drawer = document.querySelector('[data-drawer]');
+    const backdrop = document.querySelector('[data-backdrop]');
+    const statusLabel = { neu: 'Neu', offen: 'Offen', erledigt: 'Erledigt' };
+    const sourceLabel = { google: 'Google', referral: 'Empfehlung', social: 'Social Media', other: 'Sonstiges' };
+    const fmt = (iso) => new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    const countUp = (el) => {
+      const target = +el.dataset.count || 0;
+      if (reduce || target === 0) { el.textContent = String(target); return; }
+      const dur = 900, start = performance.now();
+      const tick = (now) => { const p = Math.min(1, (now - start) / dur); el.textContent = String(Math.round((1 - Math.pow(1 - p, 3)) * target)); if (p < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    };
+    document.querySelectorAll('.s-num').forEach(countUp);
+
+    let activeLead = null;
+    const open = (l) => {
+      activeLead = l;
+      const set = (sel, val) => { const el = drawer.querySelector(sel); if (el) el.textContent = val; };
+      set('[data-d-name]', l.name);
+      const badge = drawer.querySelector('[data-d-badge]');
+      badge.textContent = statusLabel[l.status]; badge.className = 'badge ' + l.status;
+      const mail = drawer.querySelector('[data-d-email]'); mail.textContent = l.email; mail.href = 'mailto:' + l.email;
+      set('[data-d-phone]', l.phone); set('[data-d-industry]', l.industry);
+      set('[data-d-source]', sourceLabel[l.source] ?? l.source); set('[data-d-date]', fmt(l.date)); set('[data-d-message]', l.message);
+      drawer.querySelector('[data-d-status]').value = l.status;
+      drawer.querySelector('[data-d-assignee]').value = l.assignee || '';
+      drawer.querySelector('[data-d-notes]').value = l.notes || '';
+      drawer.hidden = false; backdrop.hidden = false;
+      requestAnimationFrame(() => { drawer.classList.add('show'); backdrop.classList.add('show'); });
+    };
+    const close = () => { drawer.classList.remove('show'); backdrop.classList.remove('show'); setTimeout(() => { drawer.hidden = true; backdrop.hidden = true; }, 280); };
+
+    document.querySelectorAll('.row').forEach((row) => {
+      const raw = row.getAttribute('data-lead'); if (!raw) return;
+      const data = JSON.parse(raw);
+      row.addEventListener('click', () => open(data));
+      row.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(data); });
+    });
+    drawer.querySelector('[data-close]').addEventListener('click', close);
+    backdrop.addEventListener('click', close);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    drawer.querySelector('[data-save]').addEventListener('click', async () => {
+      if (!activeLead) return;
+      const btn = drawer.querySelector('[data-save]'); const lbl = btn.querySelector('span');
+      const status = drawer.querySelector('[data-d-status]').value;
+      const assignee = drawer.querySelector('[data-d-assignee]').value;
+      const notes = drawer.querySelector('[data-d-notes]').value;
+      btn.disabled = true; lbl.textContent = 'Speichern …';
+      try {
+        const res = await fetch('/api/leads/' + activeLead.id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status, assignee, notes }) });
+        if (!res.ok) throw new Error('save failed');
+        activeLead.status = status; activeLead.assignee = assignee; activeLead.notes = notes;
+        const row = document.querySelector('.row[data-id="' + activeLead.id + '"]');
+        if (row) {
+          row.setAttribute('data-status', status); row.setAttribute('data-lead', JSON.stringify(activeLead));
+          const badge = row.querySelector('.badge'); if (badge) { badge.textContent = statusLabel[status]; badge.className = 'badge ' + status + (status === 'neu' ? ' pulse' : ''); }
+          const cell = row.querySelector('.td-assignee'); if (cell) cell.innerHTML = assignee || '<span class="muted">—</span>';
+          row.classList.remove('flash'); void row.offsetWidth; row.classList.add('flash');
+        }
+        btn.classList.add('ok'); lbl.textContent = 'Gespeichert ✓';
+        setTimeout(() => { lbl.textContent = 'Speichern'; btn.disabled = false; btn.classList.remove('ok'); }, 1500);
+      } catch { lbl.textContent = 'Fehler — erneut versuchen'; btn.disabled = false; }
+    });
+
+    document.querySelectorAll('.chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+        chip.classList.add('active');
+        const f = chip.getAttribute('data-filter');
+        document.querySelectorAll('.row').forEach((row) => { row.classList.toggle('hide', !(f === 'alle' || row.getAttribute('data-status') === f)); });
+      });
+    });
+  </script>
+</AdminLayout>

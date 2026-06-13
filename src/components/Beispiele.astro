@@ -11,41 +11,117 @@ const items = [
   { key: 'three', from: '#3a2b8f', to: '#6d5bff' },
 ] as const;
 ---
-<section id="beispiele" class="section beispiele" aria-labelledby="beispiele-title">
-  <div class="section-inner">
-    <header class="sec-head">
-      <p class="eyebrow" data-reveal>{t('beispiele.eyebrow')}</p>
-      <h2 id="beispiele-title" class="h-section" data-reveal>{t('beispiele.title')}</h2>
-      <p class="sec-sub" data-reveal>{t('beispiele.subtitle')}</p>
-    </header>
+{/* Beispiele liegt als eigene Vollbild-Overlay-Ansicht AUSSERHALB des Scroll-Flusses:
+    beim normalen Runterscrollen unerreichbar. Geöffnet wird es nur über die 3D-Marquee-
+    Kachel „Beispiele" oder den „Web Design"-Klick in den Referenzen. Verlassen per
+    Zurück-Button oder Klick auf einen Navigations-Link. */}
+<div
+  id="beispiele-overlay"
+  class="beispiele-overlay"
+  hidden
+  aria-hidden="true"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="beispiele-title"
+>
+  <div class="beispiele-scroll">
+    <section id="beispiele" class="section beispiele" aria-labelledby="beispiele-title">
+      <div class="section-inner">
+        <header class="sec-head">
+          <p class="eyebrow">{t('beispiele.eyebrow')}</p>
+          <h2 id="beispiele-title" class="h-section">{t('beispiele.title')}</h2>
+          <p class="sec-sub">{t('beispiele.subtitle')}</p>
+        </header>
 
-    <ul class="gallery-grid" role="list">
-      {items.map((item) => (
-        <li class="gallery-card glass" data-reveal>
-          <div class="gallery-thumb" aria-hidden="true">
-            {'image' in item ? (
-              <img src={item.image} alt="" loading="lazy" decoding="async" width={1200} height={908} />
-            ) : (
-              <div class="gallery-ph" style={`--from:${item.from};--to:${item.to};`}>
-                <svg viewBox="0 0 64 40" aria-hidden="true">
-                  <path d="M2 38 L22 8 L32 22 L42 4 L62 38 Z" fill="rgba(255,255,255,0.16)" />
-                </svg>
+        <ul class="gallery-grid" role="list">
+          {items.map((item) => (
+            <li class="gallery-card glass">
+              <div class="gallery-thumb" aria-hidden="true">
+                {'image' in item ? (
+                  <img src={item.image} alt="" loading="lazy" decoding="async" width={1200} height={908} />
+                ) : (
+                  <div class="gallery-ph" style={`--from:${item.from};--to:${item.to};`}>
+                    <svg viewBox="0 0 64 40" aria-hidden="true">
+                      <path d="M2 38 L22 8 L32 22 L42 4 L62 38 Z" fill="rgba(255,255,255,0.16)" />
+                    </svg>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div class="gallery-body">
-            <span class="gallery-cat">{t(`beispiele.items.${item.key}.category`)}</span>
-            <h3 class="gallery-title">{t(`beispiele.items.${item.key}.title`)}</h3>
-          </div>
-        </li>
-      ))}
-    </ul>
+              <div class="gallery-body">
+                <span class="gallery-cat">{t(`beispiele.items.${item.key}.category`)}</span>
+                <h3 class="gallery-title">{t(`beispiele.items.${item.key}.title`)}</h3>
+              </div>
+            </li>
+          ))}
+        </ul>
 
-    <p class="gallery-note" data-reveal>{t('beispiele.note')}</p>
+        <p class="gallery-note">{t('beispiele.note')}</p>
+      </div>
+    </section>
   </div>
-</section>
+
+  <button type="button" class="beispiele-back" aria-label={t('beispiele.back')}>
+    <span aria-hidden="true">←</span> {t('beispiele.back')}
+  </button>
+</div>
 
 <style>
+  /* ---- Overlay-Hülle: deckt die ganze Seite ab, unter dem Header (z-50) ---- */
+  .beispiele-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(26, 63, 255, 0.12), transparent 60%),
+      var(--color-night, #0a1628);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .beispiele-overlay.is-open { opacity: 1; }
+  .beispiele-overlay[hidden] { display: none; }
+
+  .beispiele-scroll {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-top: clamp(4.5rem, 10vh, 6.5rem); /* Platz für den fixierten Header */
+  }
+
+  /* ---- Zurück-Button (unten rechts, wie beim Marquee-Flug) ---- */
+  .beispiele-back {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 46;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid rgba(111, 139, 255, 0.4);
+    background: rgba(11, 20, 36, 0.85);
+    color: #dbe4ff;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 0.9rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+  }
+  .beispiele-back:hover { border-color: #9fb4ff; background: #101c33; transform: translateY(-2px); }
+
+  /* Sanftes Einblenden der Karten beim Öffnen */
+  .beispiele-overlay .gallery-card {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .beispiele-overlay.is-open .gallery-card { opacity: 1; transform: none; }
+  .beispiele-overlay.is-open .gallery-card:nth-child(2) { transition-delay: 0.08s; }
+  .beispiele-overlay.is-open .gallery-card:nth-child(3) { transition-delay: 0.16s; }
+
   .sec-head { max-width: 46rem; margin-bottom: clamp(2.5rem, 5vw, 4rem); }
   .sec-head .eyebrow { margin-bottom: 1rem; }
   .sec-sub { margin-top: 1.1rem; color: var(--color-muted); font-size: clamp(1rem, 2vw, 1.15rem); }
@@ -61,9 +137,8 @@ const items = [
   .gallery-card {
     overflow: hidden;
     padding: 0;
-    transition: transform 0.35s ease, border-color 0.35s ease;
   }
-  .gallery-card:hover { transform: translateY(-4px); border-color: rgba(77, 107, 255, 0.4); }
+  .gallery-card:hover { border-color: rgba(77, 107, 255, 0.4); }
 
   .gallery-thumb {
     position: relative;
@@ -106,28 +181,56 @@ const items = [
     color: var(--color-muted);
     opacity: 0.8;
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .beispiele-overlay,
+    .beispiele-overlay .gallery-card { transition: none; }
+  }
 </style>
 
 <script>
-  import gsap from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
-  gsap.registerPlugin(ScrollTrigger);
+  // Overlay-Steuerung: öffnen über 'open-beispiele'-Event (Marquee-Kachel) oder
+  // [data-open-beispiele]-Klick (Web Design). Schließen über Zurück-Button, ESC
+  // oder Klick auf einen Header-/Navigations-Link.
+  const overlay = document.getElementById('beispiele-overlay') as HTMLElement | null;
+  if (overlay) {
+    const root = document.documentElement;
+    const scroller = overlay.querySelector<HTMLElement>('.beispiele-scroll');
+    let open = false;
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const section = document.getElementById('beispiele');
-  const items = section?.querySelectorAll('[data-reveal]');
-  if (items && items.length) {
-    if (reduceMotion) {
-      gsap.set(items, { opacity: 1, y: 0 });
-    } else {
-      gsap.fromTo(
-        items,
-        { y: 36, opacity: 0 },
-        {
-          y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out',
-          scrollTrigger: { trigger: section, start: 'top 78%' },
-        }
-      );
-    }
+    const show = () => {
+      if (open) return;
+      open = true;
+      overlay.hidden = false;
+      overlay.setAttribute('aria-hidden', 'false');
+      root.classList.add('beispiele-open');
+      if (scroller) scroller.scrollTop = 0;
+      requestAnimationFrame(() => overlay.classList.add('is-open'));
+    };
+
+    const hide = () => {
+      if (!open) return;
+      open = false;
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      root.classList.remove('beispiele-open');
+      // Nach dem Ausblenden komplett aus dem Layout nehmen (sonst fängt die unsichtbare
+      // Hülle Klicks ab). Timeout statt transitionend → robust auch bei reduzierter Bewegung.
+      window.setTimeout(() => { if (!open) overlay.hidden = true; }, 420);
+    };
+
+    window.addEventListener('open-beispiele', show);
+    overlay.querySelector('.beispiele-back')?.addEventListener('click', hide);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
+
+    // „Web Design" (und ggf. weitere Auslöser) öffnen das Overlay.
+    document.querySelectorAll('[data-open-beispiele]').forEach((el) =>
+      el.addEventListener('click', (e) => { e.preventDefault(); show(); }),
+    );
+
+    // Klick auf einen Header-/Navi-Link verlässt Beispiele (die Navigation läuft darunter).
+    document.querySelectorAll('#site-header a').forEach((a) =>
+      a.addEventListener('click', () => hide()),
+    );
   }
 </script>

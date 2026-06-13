@@ -1,0 +1,171 @@
+---
+// ATEAM — Website-Inhalte (CMS). Editierbare Textblöcke je Sprache (de/en/th/hr),
+// gespeichert in public.site_content. Sprach-Tabs schalten die Werte um.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { createSupabaseServer } from '../../lib/supabase';
+
+export const prerender = false;
+
+const supabase = createSupabaseServer(Astro.cookies, Astro.request);
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return Astro.redirect('/admin/login');
+
+const { data: profile } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
+const displayName = profile?.full_name || user.email?.split('@')[0] || 'Team';
+const roleLabel = profile?.role === 'admin' ? 'Admin' : 'Mitarbeiter';
+
+const { data: contentRaw } = await supabase
+  .from('site_content').select('section, key, lang, label, value, multiline, sort')
+  .order('sort', { ascending: true });
+const rows = contentRaw ?? [];
+
+const LANGS = [
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'th', label: 'ไทย', flag: '🇹🇭' },
+  { code: 'hr', label: 'Hrvatski', flag: '🇭🇷' },
+];
+
+const sectionLabels: Record<string, string> = { hero: 'Hero / Startbereich', pricing: 'Preise', contact: 'Kontakt / CTA' };
+
+// Gruppieren: section → key → { label, multiline, values{lang:value} }
+type Block = { key: string; label: string; multiline: boolean; values: Record<string, string> };
+const sections = new Map<string, Map<string, Block>>();
+for (const r of rows) {
+  if (!sections.has(r.section)) sections.set(r.section, new Map());
+  const keys = sections.get(r.section)!;
+  if (!keys.has(r.key)) keys.set(r.key, { key: r.key, label: r.label || r.key, multiline: !!r.multiline, values: {} });
+  keys.get(r.key)!.values[r.lang] = r.value ?? '';
+}
+const sectionList = [...sections.entries()].map(([section, keys]) => ({ section, blocks: [...keys.values()] }));
+
+// Vollständige Map für den Client (Sprachumschaltung)
+const contentMap: Record<string, Record<string, Record<string, string>>> = {};
+for (const { section, blocks } of sectionList) {
+  contentMap[section] = {};
+  for (const b of blocks) contentMap[section][b.key] = { de: '', en: '', th: '', hr: '', ...b.values };
+}
+---
+<AdminLayout title="ATEAM · Website-Inhalte — Alps Agency" heading="Website-Inhalte" subtitle="Texte der öffentlichen Website in allen vier Sprachen pflegen" active="cms" displayName={displayName} roleLabel={roleLabel}>
+  <div class="cms-note reveal" style="--i:1">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16v-4M12 8h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+    <p>Änderungen werden in Supabase gespeichert. Das Einspeisen in die Live-Seite wird im nächsten Schritt verdrahtet — hier pflegst du schon jetzt zentral alle Texte.</p>
+  </div>
+
+  <!-- Sprach-Tabs -->
+  <div class="filters lang-tabs reveal" style="--i:2" role="tablist">
+    {LANGS.map((l, i) => (
+      <button class:list={['chip', { active: i === 0 }]} data-lang={l.code}><span class="flag">{l.flag}</span>{l.label}</button>
+    ))}
+  </div>
+
+  {sectionList.map(({ section, blocks }, si) => (
+    <div class="panel panel-pad block reveal" style={`--i:${3 + si}`}>
+      <h2 class="section-h">{sectionLabels[section] ?? section}</h2>
+      {blocks.map((b) => (
+        <label class="cms-field" data-section={section} data-key={b.key}>
+          <span>{b.label}</span>
+          {b.multiline
+            ? <textarea rows="2" data-input>{b.values.de ?? ''}</textarea>
+            : <input type="text" data-input value={b.values.de ?? ''} />}
+        </label>
+      ))}
+    </div>
+  ))}
+
+  {sectionList.length === 0 && <div class="panel panel-pad"><p class="empty">Noch keine Inhalte hinterlegt.</p></div>}
+
+  <!-- Sticky Speichern-Leiste -->
+  <div class="save-bar" data-save-bar hidden>
+    <span data-dirty-count>0 Änderungen</span>
+    <button class="btn" data-save-all><span>Änderungen speichern</span></button>
+  </div>
+
+  <script is:inline define:vars={{ contentMap }}>
+    const content = contentMap;
+    let currentLang = 'de';
+    const dirty = new Map(); // "section|key|lang" -> value
+    const saveBar = document.querySelector('[data-save-bar]');
+    const dirtyCount = document.querySelector('[data-dirty-count]');
+
+    const updateBar = () => {
+      const n = dirty.size;
+      saveBar.hidden = n === 0;
+      dirtyCount.textContent = n === 1 ? '1 Änderung' : n + ' Änderungen';
+    };
+
+    const fields = [...document.querySelectorAll('.cms-field')];
+    const renderLang = (lang) => {
+      currentLang = lang;
+      fields.forEach((f) => {
+        const s = f.dataset.section, k = f.dataset.key;
+        const input = f.querySelector('[data-input]');
+        const key = `${s}|${k}|${lang}`;
+        input.value = dirty.has(key) ? dirty.get(key) : (content[s]?.[k]?.[lang] ?? '');
+      });
+    };
+
+    fields.forEach((f) => {
+      const s = f.dataset.section, k = f.dataset.key;
+      const input = f.querySelector('[data-input]');
+      input.addEventListener('input', () => {
+        const key = `${s}|${k}|${currentLang}`;
+        const orig = content[s]?.[k]?.[currentLang] ?? '';
+        if (input.value === orig) dirty.delete(key); else dirty.set(key, input.value);
+        f.classList.toggle('changed', dirty.has(key));
+        updateBar();
+      });
+    });
+
+    document.querySelectorAll('[data-lang]').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('[data-lang]').forEach((t) => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderLang(tab.dataset.lang);
+        // „changed"-Markierung pro Sprache aktualisieren
+        fields.forEach((f) => {
+          const key = `${f.dataset.section}|${f.dataset.key}|${tab.dataset.lang}`;
+          f.classList.toggle('changed', dirty.has(key));
+        });
+      });
+    });
+
+    document.querySelector('[data-save-all]').addEventListener('click', async () => {
+      if (dirty.size === 0) return;
+      const btn = document.querySelector('[data-save-all]'); const lbl = btn.querySelector('span');
+      const updates = [...dirty.entries()].map(([key, value]) => { const [section, k, lang] = key.split('|'); return { section, key: k, lang, value }; });
+      btn.disabled = true; lbl.textContent = 'Speichern …';
+      try {
+        const res = await fetch('/api/cms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ updates }) });
+        if (!res.ok) throw new Error('save failed');
+        // Originalwerte aktualisieren, dirty leeren
+        updates.forEach((u) => { if (!content[u.section]) content[u.section] = {}; if (!content[u.section][u.key]) content[u.section][u.key] = {}; content[u.section][u.key][u.lang] = u.value; });
+        dirty.clear();
+        document.querySelectorAll('.cms-field.changed').forEach((f) => f.classList.remove('changed'));
+        btn.classList.add('ok'); lbl.textContent = 'Gespeichert ✓';
+        setTimeout(() => { btn.classList.remove('ok'); btn.disabled = false; lbl.textContent = 'Änderungen speichern'; updateBar(); }, 1400);
+      } catch {
+        btn.disabled = false; lbl.textContent = 'Fehler — erneut versuchen';
+      }
+    });
+  </script>
+
+  <style>
+    .cms-note { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.9rem 1.1rem; margin-bottom: 1.2rem; border-radius: 0.9rem; background: rgba(77,107,255,0.08); border: 1px solid rgba(77,107,255,0.22); }
+    .cms-note svg { width: 1.2rem; height: 1.2rem; flex-shrink: 0; color: #9fb4ff; margin-top: 0.1rem; }
+    .cms-note p { margin: 0; font-size: 0.88rem; color: #b5c2e0; line-height: 1.5; }
+    .lang-tabs .flag { margin-right: 0.4rem; }
+    .block { margin-bottom: 1.2rem; }
+    .cms-field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; position: relative; }
+    .cms-field:last-child { margin-bottom: 0; }
+    .cms-field > span { font-size: 0.82rem; color: #a9b8d4; font-weight: 500; }
+    .cms-field [data-input] { font: inherit; font-size: 0.95rem; color: #fff; padding: 0.7rem 0.85rem; border-radius: 0.6rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); resize: vertical; transition: border-color 0.2s ease, background 0.2s ease; }
+    .cms-field [data-input]:focus { outline: none; border-color: #4d6bff; background: rgba(26,63,255,0.08); }
+    .cms-field.changed [data-input] { border-color: #f5d34a; background: rgba(245,200,66,0.07); }
+    .cms-field.changed > span::after { content: '● geändert'; margin-left: 0.5rem; font-size: 0.7rem; color: #f5d34a; }
+
+    .save-bar { position: sticky; bottom: 1rem; margin-top: 1.4rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.8rem 1rem 0.8rem 1.3rem; border-radius: 0.9rem; background: rgba(12,26,50,0.92); border: 1px solid rgba(140,170,255,0.25); box-shadow: 0 16px 40px -16px rgba(0,0,0,0.8); backdrop-filter: blur(12px); animation: rise 0.3s ease both; }
+    .save-bar span { font-size: 0.88rem; color: #c3d0ff; font-weight: 600; }
+    @media (prefers-reduced-motion: reduce) { .save-bar { animation: none; } }
+  </style>
+</AdminLayout>

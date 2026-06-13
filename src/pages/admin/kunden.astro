@@ -1,0 +1,281 @@
+---
+// ATEAM — Kunden & Projekte. Echte Daten + Anlegen/Bearbeiten via API.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { createSupabaseServer } from '../../lib/supabase';
+
+export const prerender = false;
+
+const supabase = createSupabaseServer(Astro.cookies, Astro.request);
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return Astro.redirect('/admin/login');
+
+const { data: profile } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
+const displayName = profile?.full_name || user.email?.split('@')[0] || 'Team';
+const roleLabel = profile?.role === 'admin' ? 'Admin' : 'Mitarbeiter';
+
+const { data: customersRaw } = await supabase
+  .from('customers').select('id, name, company, email, phone, industry, status, notes, created_at')
+  .order('created_at', { ascending: false });
+const { data: projectsRaw } = await supabase
+  .from('projects').select('id, title, customer_id, package, status, progress, price, deadline, notes, created_at, customers(name)')
+  .order('created_at', { ascending: false });
+
+const customers = customersRaw ?? [];
+const projects = projectsRaw ?? [];
+const projCount = (cid: string) => projects.filter((p) => p.customer_id === cid).length;
+
+const kpis = [
+  { tone: 'blue', label: 'Kunden gesamt', value: customers.length, icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2' },
+  { tone: 'green', label: 'Aktive Kunden', value: customers.filter((c) => c.status === 'aktiv').length, icon: 'M20 6 9 17l-5-5' },
+  { tone: 'violet', label: 'Projekte gesamt', value: projects.length, icon: 'M3 7h18v12H3zM3 7l2-3h14l2 3' },
+  { tone: 'amber', label: 'Laufende Projekte', value: projects.filter((p) => ['geplant', 'in_arbeit', 'review'].includes(p.status)).length, icon: 'M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' },
+];
+
+const initials = (n: string) => (n || '?').split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+const fmtEur = (n: number | null) => n == null ? '—' : new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(Number(n));
+const cStatus: Record<string, string> = { interessent: 'Interessent', aktiv: 'Aktiv', pausiert: 'Pausiert', abgeschlossen: 'Abgeschlossen' };
+const pStatus: Record<string, string> = { geplant: 'Geplant', in_arbeit: 'In Arbeit', review: 'Review', live: 'Live', pausiert: 'Pausiert' };
+const pkgLabel: Record<string, string> = { starter: 'Starter', business: 'Business', premium: 'Premium' };
+
+const customerOptions = customers.map((c) => ({ id: c.id, name: c.name }));
+---
+<AdminLayout title="ATEAM · Kunden & Projekte — Alps Agency" heading="Kunden & Projekte" subtitle="Kundenstamm und laufende Projekte verwalten" active="kunden" displayName={displayName} roleLabel={roleLabel}>
+  <div class="stats">
+    {kpis.map((k, i) => (
+      <div class:list={['stat', k.tone]} style={`--i:${i + 1}`}>
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={k.icon} /></svg></div>
+        <div class="s-body"><span class="s-num" data-count={k.value}>0</span><span class="s-lbl">{k.label}</span></div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Kunden -->
+  <div class="block reveal" style="--i:5">
+    <div class="block-head">
+      <h2 class="section-h">Kunden</h2>
+      <button class="btn" data-new-customer><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Neuer Kunde</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Kontakt</th><th>Branche</th><th>Projekte</th><th>Seit</th><th>Status</th></tr></thead>
+        <tbody>
+          {customers.map((c, i) => (
+            <tr class="row" data-customer={JSON.stringify(c)} style={`--r:${i}`} tabindex="0">
+              <td class="td-name"><span class="av">{initials(c.name)}</span><span class="td-stack"><span>{c.name}</span><small>{c.company}</small></span></td>
+              <td class="td-stack"><span>{c.email || '—'}</span><small>{c.phone}</small></td>
+              <td>{c.industry || '—'}</td>
+              <td>{projCount(c.id)}</td>
+              <td>{fmtDate(c.created_at)}</td>
+              <td><span class:list={['badge', c.status]}>{cStatus[c.status]}</span></td>
+            </tr>
+          ))}
+          {customers.length === 0 && <tr><td colspan="6" class="empty">Noch keine Kunden — lege den ersten an.</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Projekte -->
+  <div class="block reveal" style="--i:6">
+    <div class="block-head">
+      <h2 class="section-h">Projekte</h2>
+      <button class="btn" data-new-project><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Neues Projekt</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Projekt</th><th>Kunde</th><th>Paket</th><th>Fortschritt</th><th>Preis</th><th>Deadline</th><th>Status</th></tr></thead>
+        <tbody>
+          {projects.map((p, i) => (
+            <tr class="row" data-project={JSON.stringify({ ...p, customers: undefined })} style={`--r:${i}`} tabindex="0">
+              <td class="td-name">{p.title}</td>
+              <td>{(p.customers as any)?.name ?? '—'}</td>
+              <td>{p.package ? pkgLabel[p.package] : '—'}</td>
+              <td class="td-prog"><div class="bar"><i style={`width:${p.progress}%`}></i></div><span>{p.progress}%</span></td>
+              <td>{fmtEur(p.price)}</td>
+              <td>{p.deadline ? new Date(p.deadline).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '—'}</td>
+              <td><span class:list={['badge', p.status]}>{pStatus[p.status]}</span></td>
+            </tr>
+          ))}
+          {projects.length === 0 && <tr><td colspan="7" class="empty">Noch keine Projekte angelegt.</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Kunden-Drawer -->
+  <div class="drawer-backdrop" data-backdrop hidden></div>
+  <aside class="drawer" data-customer-drawer hidden aria-label="Kunde bearbeiten">
+    <button class="drawer-close" data-close aria-label="Schließen">×</button>
+    <h2 data-c-title>Neuer Kunde</h2>
+    <input type="hidden" data-c-id />
+    <label class="d-field"><span>Name *</span><input data-c-name placeholder="Vor- und Nachname" /></label>
+    <div class="d-row">
+      <label class="d-field"><span>Firma</span><input data-c-company /></label>
+      <label class="d-field"><span>Branche</span><input data-c-industry /></label>
+    </div>
+    <div class="d-row">
+      <label class="d-field"><span>E-Mail</span><input data-c-email type="email" /></label>
+      <label class="d-field"><span>Telefon</span><input data-c-phone /></label>
+    </div>
+    <label class="d-field"><span>Status</span>
+      <select data-c-status><option value="interessent">Interessent</option><option value="aktiv">Aktiv</option><option value="pausiert">Pausiert</option><option value="abgeschlossen">Abgeschlossen</option></select>
+    </label>
+    <label class="d-field"><span>Notizen</span><textarea data-c-notes rows="3"></textarea></label>
+    <p class="form-err" data-c-err hidden></p>
+    <button class="btn d-save" data-c-save><span>Speichern</span></button>
+  </aside>
+
+  <!-- Projekt-Drawer -->
+  <aside class="drawer" data-project-drawer hidden aria-label="Projekt bearbeiten">
+    <button class="drawer-close" data-close aria-label="Schließen">×</button>
+    <h2 data-p-title>Neues Projekt</h2>
+    <input type="hidden" data-p-id />
+    <label class="d-field"><span>Titel *</span><input data-p-ptitle placeholder="z. B. Website + Buchung" /></label>
+    <label class="d-field"><span>Kunde</span>
+      <select data-p-customer>
+        <option value="">— kein Kunde —</option>
+        {customerOptions.map((c) => <option value={c.id}>{c.name}</option>)}
+      </select>
+    </label>
+    <div class="d-row">
+      <label class="d-field"><span>Paket</span>
+        <select data-p-package><option value="">—</option><option value="starter">Starter</option><option value="business">Business</option><option value="premium">Premium</option></select>
+      </label>
+      <label class="d-field"><span>Status</span>
+        <select data-p-status><option value="geplant">Geplant</option><option value="in_arbeit">In Arbeit</option><option value="review">Review</option><option value="live">Live</option><option value="pausiert">Pausiert</option></select>
+      </label>
+    </div>
+    <label class="d-field"><span>Fortschritt: <b data-p-progval>0</b>%</span><input type="range" min="0" max="100" step="5" data-p-progress /></label>
+    <div class="d-row">
+      <label class="d-field"><span>Preis (€)</span><input data-p-price type="number" min="0" step="10" /></label>
+      <label class="d-field"><span>Deadline</span><input data-p-deadline type="date" /></label>
+    </div>
+    <label class="d-field"><span>Notizen</span><textarea data-p-notes rows="3"></textarea></label>
+    <p class="form-err" data-p-err hidden></p>
+    <button class="btn d-save" data-p-save><span>Speichern</span></button>
+  </aside>
+
+  <script is:inline>
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const backdrop = document.querySelector('[data-backdrop]');
+    const cDrawer = document.querySelector('[data-customer-drawer]');
+    const pDrawer = document.querySelector('[data-project-drawer]');
+
+    document.querySelectorAll('.s-num').forEach((el) => {
+      const t = +el.dataset.count || 0;
+      if (reduce || t === 0) { el.textContent = String(t); return; }
+      const dur = 900, s = performance.now();
+      const tick = (n) => { const p = Math.min(1, (n - s) / dur); el.textContent = String(Math.round((1 - Math.pow(1 - p, 3)) * t)); if (p < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    });
+
+    const openDrawer = (d) => { backdrop.hidden = false; d.hidden = false; requestAnimationFrame(() => { backdrop.classList.add('show'); d.classList.add('show'); }); };
+    const closeAll = () => {
+      backdrop.classList.remove('show');
+      [cDrawer, pDrawer].forEach((d) => d.classList.remove('show'));
+      setTimeout(() => { backdrop.hidden = true; cDrawer.hidden = true; pDrawer.hidden = true; }, 280);
+    };
+    backdrop.addEventListener('click', closeAll);
+    document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', closeAll));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+
+    const v = (sel) => cDrawer.querySelector(sel);
+    const fillCustomer = (c) => {
+      v('[data-c-id]').value = c?.id || '';
+      v('[data-c-name]').value = c?.name || '';
+      v('[data-c-company]').value = c?.company || '';
+      v('[data-c-industry]').value = c?.industry || '';
+      v('[data-c-email]').value = c?.email || '';
+      v('[data-c-phone]').value = c?.phone || '';
+      v('[data-c-status]').value = c?.status || 'interessent';
+      v('[data-c-notes]').value = c?.notes || '';
+      v('[data-c-title]').textContent = c ? c.name : 'Neuer Kunde';
+      v('[data-c-err]').hidden = true;
+      openDrawer(cDrawer);
+    };
+
+    const pv = (sel) => pDrawer.querySelector(sel);
+    const setProg = (val) => { pv('[data-p-progress]').value = val; pv('[data-p-progval]').textContent = val; };
+    const fillProject = (p) => {
+      pv('[data-p-id]').value = p?.id || '';
+      pv('[data-p-ptitle]').value = p?.title || '';
+      pv('[data-p-customer]').value = p?.customer_id || '';
+      pv('[data-p-package]').value = p?.package || '';
+      pv('[data-p-status]').value = p?.status || 'geplant';
+      setProg(p?.progress ?? 0);
+      pv('[data-p-price]').value = p?.price ?? '';
+      pv('[data-p-deadline]').value = p?.deadline || '';
+      pv('[data-p-notes]').value = p?.notes || '';
+      pv('[data-p-title]').textContent = p ? p.title : 'Neues Projekt';
+      pv('[data-p-err]').hidden = true;
+      openDrawer(pDrawer);
+    };
+    pDrawer.querySelector('[data-p-progress]').addEventListener('input', (e) => pv('[data-p-progval]').textContent = e.target.value);
+
+    document.querySelector('[data-new-customer]').addEventListener('click', () => fillCustomer(null));
+    document.querySelector('[data-new-project]').addEventListener('click', () => fillProject(null));
+    document.querySelectorAll('[data-customer]').forEach((row) => {
+      const data = JSON.parse(row.getAttribute('data-customer'));
+      row.addEventListener('click', () => fillCustomer(data));
+      row.addEventListener('keydown', (e) => { if (e.key === 'Enter') fillCustomer(data); });
+    });
+    document.querySelectorAll('[data-project]').forEach((row) => {
+      const data = JSON.parse(row.getAttribute('data-project'));
+      row.addEventListener('click', () => fillProject(data));
+      row.addEventListener('keydown', (e) => { if (e.key === 'Enter') fillProject(data); });
+    });
+
+    const save = async (btn, errEl, id, base, payload) => {
+      const lbl = btn.querySelector('span');
+      btn.disabled = true; lbl.textContent = 'Speichern …'; errEl.hidden = true;
+      try {
+        const res = await fetch(id ? `${base}/${id}` : base, {
+          method: id ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Fehler');
+        btn.classList.add('ok'); lbl.textContent = 'Gespeichert ✓';
+        setTimeout(() => location.reload(), 600);
+      } catch (e) {
+        btn.disabled = false; lbl.textContent = 'Speichern';
+        errEl.textContent = e.message || 'Speichern fehlgeschlagen.'; errEl.hidden = false;
+      }
+    };
+
+    cDrawer.querySelector('[data-c-save]').addEventListener('click', () => {
+      const name = v('[data-c-name]').value.trim();
+      const err = v('[data-c-err]');
+      if (!name) { err.textContent = 'Name ist erforderlich.'; err.hidden = false; return; }
+      save(v('[data-c-save]'), err, v('[data-c-id]').value, '/api/customers', {
+        name, company: v('[data-c-company]').value, industry: v('[data-c-industry]').value,
+        email: v('[data-c-email]').value, phone: v('[data-c-phone]').value,
+        status: v('[data-c-status]').value, notes: v('[data-c-notes]').value,
+      });
+    });
+
+    pDrawer.querySelector('[data-p-save]').addEventListener('click', () => {
+      const title = pv('[data-p-ptitle]').value.trim();
+      const err = pv('[data-p-err]');
+      if (!title) { err.textContent = 'Titel ist erforderlich.'; err.hidden = false; return; }
+      save(pv('[data-p-save]'), err, pv('[data-p-id]').value, '/api/projects', {
+        title, customer_id: pv('[data-p-customer]').value, package: pv('[data-p-package]').value,
+        status: pv('[data-p-status]').value, progress: pv('[data-p-progress]').value,
+        price: pv('[data-p-price]').value, deadline: pv('[data-p-deadline]').value, notes: pv('[data-p-notes]').value,
+      });
+    });
+  </script>
+
+  <style>
+    .block { margin-bottom: 1.6rem; }
+    .block-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.8rem; }
+    .block-head .section-h { margin: 0; }
+    .td-prog { display: flex; align-items: center; gap: 0.6rem; min-width: 9rem; }
+    .td-prog .bar { flex: 1; }
+    .td-prog span { font-size: 0.8rem; color: #b5c2e0; font-variant-numeric: tabular-nums; min-width: 2.4rem; text-align: right; }
+    .form-err { margin: 0 0 0.8rem; font-size: 0.85rem; color: #ff8a94; background: rgba(255,93,108,0.1); border: 1px solid rgba(255,93,108,0.3); padding: 0.6rem 0.8rem; border-radius: 0.55rem; }
+    input[type="range"] { accent-color: #4d6bff; padding: 0; background: transparent; border: 0; }
+  </style>
+</AdminLayout>

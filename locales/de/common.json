@@ -20,59 +20,56 @@
     "label": "Alps Agency wird geladen"
   },
   "hero": {
-    "badge": "KI-Webdesign · Google-Sichtbarkeit",
-    "title_pre": "Wir bringen dein Business",
-    "title_accent": "an die Spitze.",
-    "subtitle": "Alps Agency verbindet KI-gestütztes Webdesign mit lokaler Google-Sichtbarkeit — damit dich mehr Kunden finden, dir vertrauen und bei dir buchen.",
+    "badge": "KI-Webdesign · Automatisierung · Wachstum",
+    "title_pre": "Mehr Kunden.",
+    "title_accent": "Weniger Aufwand.",
+    "subtitle": "Modernes KI-Webdesign trifft smarte Automatisierung — damit Sie online gefunden werden, mehr Anfragen gewinnen und planbar wachsen.",
     "cta_primary": "Kostenloses Erstgespräch",
     "cta_secondary": "Unsere Arbeiten",
-    "scroll": "Scrollen"
+    "scroll": "Scrollen",
+    "back": "Zurück zum Start"
   },
   "services": {
     "eyebrow": "Leistungen",
-    "title": "Alles für deine digitale Sichtbarkeit",
-    "subtitle": "Von der Google-Optimierung bis zur fertigen Website — wir kümmern uns um deinen kompletten Auftritt.",
+    "title": "Alles für Ihre digitale Sichtbarkeit",
+    "subtitle": "Moderne Website, smarte Automatisierung — Ihr digitaler Auftritt aus einer Hand.",
     "items": {
       "boost": {
         "title": "30 Tage Sichtbarkeits-Boost",
-        "desc": "In nur 30 Tagen messbar mehr Reichweite in der lokalen Google-Suche."
+        "desc": "Mehr Reichweite in Ihrer lokalen Google-Suche — und mehr Anfragen aus der Region."
       },
       "profile": {
         "title": "Profiloptimierung",
-        "desc": "Dein Google-Unternehmensprofil vollständig optimiert für maximale Auffindbarkeit."
+        "desc": "Ihr Google-Profil rundum optimiert, damit Kunden vor Ort Sie zuerst finden."
       },
       "posts": {
         "title": "Google Beiträge veröffentlichen",
-        "desc": "Regelmäßige Beiträge halten dein Profil aktiv und relevant für den Algorithmus."
+        "desc": "Regelmäßige Beiträge halten Ihr Profil aktiv und stärken Ihre lokale Sichtbarkeit."
       },
       "webdesign": {
         "title": "AI Webdesign",
-        "desc": "Moderne, schnelle Websites mit KI gestaltet — individuell auf deine Marke abgestimmt."
+        "desc": "Moderne, schnelle Websites mit KI gestaltet — individuell auf Ihre Marke abgestimmt."
       },
       "reviews": {
         "title": "Bewertungen sammeln & beantworten",
-        "desc": "Mehr echte Bewertungen und professionelle Antworten stärken dein Vertrauen."
+        "desc": "Mehr echte Bewertungen und professionelle Antworten stärken Ihr Vertrauen."
       }
     }
   },
   "work": {
     "eyebrow": "Referenzen",
-    "title": "Unsere Arbeiten",
+    "title": "Unsere Lösungen",
     "subtitle": "Ein Auszug aus Projekten, die wir sichtbar gemacht haben.",
     "view": "Ansehen",
     "placeholder_note": "Platzhalter — echte Projekte folgen.",
     "items": {
       "one": {
-        "title": "Lokales Handwerk",
-        "category": "Website + Google-Profil"
+        "title": "Web Design",
+        "category": "Verfügbar"
       },
       "two": {
-        "title": "Gastronomie",
-        "category": "30 Tage Sichtbarkeits-Boost"
-      },
-      "three": {
-        "title": "Dienstleister",
-        "category": "Komplettpaket & Bewertungen"
+        "title": "AI Automation",
+        "category": "Coming Soon"
       }
     }
   },
@@ -81,6 +78,7 @@
     "title": "Beispiele aus der Praxis",
     "subtitle": "Konkrete Einblicke in Ergebnisse, die wir für Kunden umgesetzt haben.",
     "note": "Weitere Beispiele folgen in Kürze.",
+    "back": "Zurück",
     "items": {
       "one": {
         "title": "Website-Relaunch",
@@ -160,28 +158,28 @@
     "subtitle": "Was Unternehmen vor der Zusammenarbeit am häufigsten beschäftigt.",
     "items": {
       "q1": {
-        "q": "Warum hat die bisherige Agentur nicht funktioniert?",
-        "a": "Oft fehlt eine klare Strategie und ehrliche Kommunikation. Viele Agenturen liefern Standardlösungen ohne lokalen Fokus. Wir analysieren zuerst deine Ausgangslage und setzen nur Maßnahmen um, die messbar Kunden bringen."
+        "q": "Bringt mir das wirklich neue Kunden?",
+        "a": "Ehrlich gesagt: Eine schöne Website allein bringt keine Kunden. Entscheidend ist, dass Sie gefunden werden und aus Besuchern Anfragen werden. Genau dafür bauen wir das Fundament — sichtbar bei Google, ein Auftritt, der überzeugt, und automatisierte Nachverfolgung, damit keine Anfrage verloren geht. Sind wir nicht überzeugt, dass es Ihnen messbar etwas bringt, sagen wir Ihnen das im Erstgespräch offen."
       },
       "q2": {
-        "q": "Welche Probleme gab es bisher?",
-        "a": "Typisch sind ein unvollständiges Google-Profil, eine veraltete Website und fehlende Bewertungen. Genau diese Hebel optimieren wir gezielt und sichtbar."
+        "q": "Wie viel Aufwand habe ich — und wie schnell geht es?",
+        "a": "Sehr wenig. Sie liefern uns ein paar Basics wie Logo und Eckdaten, den Rest übernehmen wir: Texte, Design und Technik. Dank KI-gestütztem Aufbau geht das schnell — viele Websites stehen in unter zwei Wochen, erste Effekte bei der Sichtbarkeit zeigen sich oft kurz danach."
       },
       "q3": {
-        "q": "Was wurde bisher versucht?",
-        "a": "Häufig wurden Anzeigen geschaltet, ohne die Basis zu optimieren. Werbung verpufft, wenn Profil und Website nicht überzeugen — wir bauen erst das Fundament."
+        "q": "Was kostet das — und gibt es versteckte Kosten?",
+        "a": "Keine versteckten Kosten, keine bösen Überraschungen. In der Regel zahlen Sie einmalig für Ihr Projekt; Pflege und Wartung sind optional, wenn Sie sie wünschen. Was genau für Sie sinnvoll ist, besprechen wir im kostenlosen Erstgespräch — Sie zahlen nur für das, was Ihnen wirklich nützt."
       },
       "q4": {
-        "q": "Welche Ziele wurden nicht erreicht?",
-        "a": "Meist bleiben konstante Anfragen und Sichtbarkeit in der lokalen Suche aus. Wir definieren klare, realistische Ziele und machen den Fortschritt transparent messbar."
+        "q": "Gehört die Website mir — und binde ich mich langfristig?",
+        "a": "Ja, Ihre Website gehört Ihnen. Wir arbeiten ohne Knebelverträge: Eine Bindung gibt es höchstens, wenn Sie laufende Wartung möchten — und die ist jederzeit kündbar. Sie bleiben, weil die Ergebnisse stimmen, nicht wegen einer Klausel."
       },
       "q5": {
-        "q": "Wie lange dauert ein Projekt?",
-        "a": "Der Sichtbarkeits-Boost zeigt erste Effekte in rund 30 Tagen. Eine komplette Website ist je nach Umfang in 2–4 Wochen startklar."
+        "q": "Sind meine Daten und die meiner Kunden sicher?",
+        "a": "Ja. Wir arbeiten DSGVO-konform — gerade für Praxen und sensible Branchen ein Muss. Ihre Daten und die Ihrer Kunden sind bei uns sicher und werden nur für das genutzt, wofür sie gedacht sind."
       },
       "q6": {
-        "q": "Was macht Alps Agency anders?",
-        "a": "Wir kombinieren KI-gestütztes Design mit echtem lokalem Marketing — ehrlich, messbar und persönlich betreut. Kein Baukasten, keine leeren Versprechen."
+        "q": "Warum Alps Agency — und was riskiere ich?",
+        "a": "Wir verbinden echten KI-Einsatz mit ehrlichem, persönlichem Marketing: schnell live, transparent und ortsunabhängig in mehreren Sprachen. Betreut werden Sie immer persönlich, nicht von einem Bot. Ihr Risiko dabei: keines — das Erstgespräch ist kostenlos und unverbindlich. Lernen Sie uns kennen und entscheiden Sie danach in Ruhe."
       }
     }
   },

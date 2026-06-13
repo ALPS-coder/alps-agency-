@@ -1,11 +1,18 @@
 import de from '../../locales/de/common.json';
 import en from '../../locales/en/common.json';
+import th from '../../locales/th/common.json';
+import hr from '../../locales/hr/common.json';
 
-export const languages = { de: 'Deutsch', en: 'English' } as const;
+export const languages = {
+  de: 'Deutsch',
+  en: 'English',
+  th: 'ไทย',
+  hr: 'Hrvatski',
+} as const;
 export const defaultLang: Lang = 'de';
 export type Lang = keyof typeof languages;
 
-const dictionaries: Record<Lang, unknown> = { de, en };
+const dictionaries: Record<Lang, unknown> = { de, en, th, hr };
 
 function resolve(dict: unknown, key: string): unknown {
   return key.split('.').reduce<unknown>((acc, part) => {

@@ -1,11 +1,19 @@
 ---
-import { useTranslations, defaultLang, type Lang } from '../i18n';
+import { Image } from 'astro:assets';
+import logoEmblem from '../assets/alps-emblem.png';
+import { useTranslations, languages, defaultLang, type Lang } from '../i18n';
 const { lang = defaultLang } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
+const langLinks = (Object.keys(languages) as Lang[]).map((code) => ({
+  code,
+  label: languages[code],
+  href: code === defaultLang ? '/' : `/${code}/`,
+  current: code === lang,
+}));
+const currentLangLabel = languages[lang];
 const links = [
   { href: '#services', label: t('nav.services') },
   { href: '#work', label: t('nav.work') },
-  { href: '#beispiele', label: t('nav.beispiele') },
   { href: '#pricing', label: t('nav.pricing') },
   { href: '#faq', label: t('nav.faq') },
   { href: '#contact', label: t('nav.contact') },
@@ -13,16 +21,15 @@ const links = [
 ---
 <header id="site-header" class="site-header">
   <a href="#top" class="brand" aria-label="Alps Agency — Startseite">
-    <svg class="brand-mark" viewBox="0 0 48 32" aria-hidden="true">
-      <defs>
-        <linearGradient id="brand-peak" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#eef2ff" />
-          <stop offset="0.55" stop-color="#9fb4ff" />
-          <stop offset="1" stop-color="#1a3fff" />
-        </linearGradient>
-      </defs>
-      <path d="M2 30 L17 6 L24 17 L31 4 L46 30 Z" fill="url(#brand-peak)" />
-    </svg>
+    <span class="brand-mark">
+      <Image src={logoEmblem} alt="" aria-hidden="true" class="brand-emblem" width={140} height={73} loading="eager" />
+      {/* „Jarvis"-Augenorb, zentriert im Berg: Ringe atmen, Pupille folgt der Maus */}
+      <span class="brand-eye" aria-hidden="true">
+        <span class="eye-ring eye-ring-outer"></span>
+        <span class="eye-ring eye-ring-inner"></span>
+        <span class="eye-pupil"></span>
+      </span>
+    </span>
     <span class="brand-word"><strong>ALPS</strong><em>AGENCY</em></span>
   </a>
 
@@ -31,7 +38,24 @@ const links = [
   </nav>
 
   <div class="header-actions">
-    <a href="#contact" class="btn-primary btn-sm">{t('nav.cta')}</a>
+    <details class="lang-switch">
+      <summary aria-label="Sprache wählen">
+        <svg class="lang-globe" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"></path>
+        </svg>
+        <span class="lang-current">{currentLangLabel}</span>
+        <svg class="lang-caret" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>
+      </summary>
+      <ul class="lang-menu glass">
+        {langLinks.map((l) => (
+          <li>
+            <a href={l.href} class={l.current ? 'lang-option is-current' : 'lang-option'} hreflang={l.code} lang={l.code}>{l.label}</a>
+          </li>
+        ))}
+      </ul>
+    </details>
+    <a href="#contact" class="shiny-cta shiny-sm"><span>{t('nav.cta')}</span></a>
     <button
       id="menu-toggle"
       class="menu-toggle"
@@ -45,7 +69,12 @@ const links = [
 
   <nav id="mobile-nav" class="nav-mobile glass" aria-label="Mobile Navigation" hidden>
     {links.map((l) => <a href={l.href} class="nav-link-mobile">{l.label}</a>)}
-    <a href="#contact" class="btn-primary">{t('nav.cta')}</a>
+    <div class="lang-mobile">
+      {langLinks.map((l) => (
+        <a href={l.href} class={l.current ? 'lang-mobile-option is-current' : 'lang-mobile-option'} hreflang={l.code} lang={l.code}>{l.label}</a>
+      ))}
+    </div>
+    <a href="#contact" class="shiny-cta shiny-sm"><span>{t('nav.cta')}</span></a>
   </nav>
 </header>
 
@@ -70,25 +99,89 @@ const links = [
     -webkit-backdrop-filter: blur(12px);
     border-bottom-color: rgba(255, 255, 255, 0.08);
   }
-  .brand { display: inline-flex; align-items: center; gap: 0.65rem; }
-  .brand-mark {
-    width: 2.4rem;
-    height: auto;
-    filter: drop-shadow(0 0 10px rgba(26, 63, 255, 0.45));
+  .brand { display: inline-flex; align-items: center; gap: 0.55rem; }
+  .brand-mark { position: relative; display: inline-flex; }
+  /* Echtes metallisches Berg-Emblem (aus dem HiRes-Logo sauber freigestellt, transparent). */
+  .brand-emblem {
+    height: clamp(26px, 3.4vw, 36px);
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 1px 5px rgba(0, 0, 0, 0.5));
   }
+
+  /* ---- „Jarvis"-Augenorb, klein & subtil, zentriert im Berg-Symbol ---- */
+  .brand-eye {
+    position: absolute;
+    left: 54%; /* leicht nach rechts versetzt */
+    top: 90%; /* knapp unter dem Berg, kurz bevor es ihn berührt */
+    width: clamp(15px, 2.2vw, 21px);
+    height: clamp(15px, 2.2vw, 21px);
+    transform: translate(-50%, -50%);
+    pointer-events: none; /* blockiert den Logo-Klick nicht */
+    --eye-accent: #4d6bff;
+    --eye-accent-bright: #9fb4ff;
+  }
+  .eye-ring {
+    position: absolute;
+    left: 50%; top: 50%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border: 1.5px solid var(--eye-accent);
+  }
+  .eye-ring-outer {
+    width: 100%; height: 100%;
+    animation: eye-breathe 3.2s ease-in-out infinite;
+  }
+  .eye-ring-inner {
+    width: 62%; height: 62%;
+    border-width: 1px;
+    animation: eye-breathe 3.2s ease-in-out infinite 0.5s;
+  }
+  .eye-pupil {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 26%; height: 26%;
+    border-radius: 50%;
+    background: radial-gradient(circle, #e6edff 0%, var(--eye-accent-bright) 38%, var(--eye-accent) 100%);
+    box-shadow: 0 0 6px 1px rgba(77, 107, 255, 0.9);
+    transform: translate(calc(-50% + var(--px, 0px)), calc(-50% + var(--py, 0px)));
+    transition: transform 0.18s ease-out, box-shadow 0.25s ease, background 0.25s ease;
+  }
+  /* Maus über einem Erstgespräch-Button → Pupille leuchtet rot */
+  .brand-eye.eye-alert .eye-pupil {
+    background: radial-gradient(circle, #ffe1e1 0%, #ff6b6b 38%, #e01e1e 100%);
+    box-shadow: 0 0 8px 1px rgba(255, 60, 60, 0.95);
+  }
+  @keyframes eye-breathe {
+    0%, 100% { box-shadow: 0 0 5px rgba(26, 63, 255, 0.5), inset 0 0 3px rgba(77, 107, 255, 0.4); opacity: 0.8; }
+    50%      { box-shadow: 0 0 11px rgba(77, 107, 255, 0.9), inset 0 0 6px rgba(120, 150, 255, 0.7); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .eye-ring-outer, .eye-ring-inner { animation: none; }
+    .eye-pupil { transition: none; }
+  }
+  /* „ALPS AGENCY" als gestochen scharfer Text in der Website-Schrift, dezent metallisch. */
   .brand-word {
     font-family: var(--font-display);
     display: flex;
     align-items: baseline;
     gap: 0.4rem;
-    color: #fff;
+    line-height: 1;
   }
-  .brand-word strong { font-weight: 700; font-size: 1.05rem; letter-spacing: 0.02em; }
+  .brand-word strong {
+    font-weight: 700;
+    font-size: 1.12rem;
+    letter-spacing: 0.04em;
+    background: linear-gradient(180deg, #ffffff 30%, #b9c6ef 74%, #8ea3e0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
   .brand-word em {
     font-style: normal;
     font-weight: 500;
-    font-size: 0.62rem;
-    letter-spacing: 0.32em;
+    font-size: 0.6rem;
+    letter-spacing: 0.34em;
     text-transform: uppercase;
     color: var(--color-muted);
   }
@@ -117,6 +210,72 @@ const links = [
 
   .header-actions { display: flex; align-items: center; gap: 0.75rem; }
   .btn-sm { padding: 0.6rem 1.1rem; font-size: 0.9rem; }
+
+  /* ---- Sprach-Switcher (Desktop, Dropdown via <details>) ---- */
+  .lang-switch { position: relative; display: none; }
+  .lang-switch summary {
+    list-style: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.6rem;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--color-muted);
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .lang-switch summary::-webkit-details-marker { display: none; }
+  .lang-switch summary:hover { color: #fff; border-color: rgba(255, 255, 255, 0.28); }
+  .lang-globe { opacity: 0.85; }
+  .lang-caret { transition: transform 0.2s ease; opacity: 0.7; }
+  .lang-switch[open] .lang-caret { transform: rotate(180deg); }
+  .lang-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    min-width: 9rem;
+    margin: 0;
+    padding: 0.4rem;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    border-radius: 0.7rem;
+    z-index: 60;
+  }
+  .lang-option {
+    display: block;
+    padding: 0.5rem 0.7rem;
+    border-radius: 0.45rem;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    color: var(--color-muted);
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .lang-option:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+  .lang-option.is-current { color: #fff; background: rgba(77, 107, 255, 0.18); }
+
+  /* ---- Sprach-Switcher (Mobile) ---- */
+  .lang-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .lang-mobile-option {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.92rem;
+    color: var(--color-muted);
+  }
+  .lang-mobile-option.is-current { color: #fff; border-color: var(--color-accent-bright); background: rgba(77, 107, 255, 0.18); }
 
   .menu-toggle {
     display: inline-flex;
@@ -161,6 +320,7 @@ const links = [
 
   @media (min-width: 768px) {
     .nav-desktop { display: flex; }
+    .lang-switch { display: block; }
     .menu-toggle { display: none; }
     .nav-mobile { display: none !important; }
   }
@@ -170,6 +330,14 @@ const links = [
   const header = document.getElementById('site-header');
   const toggle = document.getElementById('menu-toggle');
   const mobileNav = document.getElementById('mobile-nav');
+
+  // Sprach-Dropdown bei Klick außerhalb schließen
+  const langSwitch = document.querySelector<HTMLDetailsElement>('.lang-switch');
+  if (langSwitch) {
+    document.addEventListener('click', (e) => {
+      if (langSwitch.open && !langSwitch.contains(e.target as Node)) langSwitch.open = false;
+    });
+  }
 
   const onScroll = () => header?.classList.toggle('is-scrolled', window.scrollY > 40);
   onScroll();
@@ -182,5 +350,51 @@ const links = [
     };
     toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
     mobileNav.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => setOpen(false)));
+  }
+
+  /* „Jarvis"-Auge: die Pupille blickt immer Richtung Maus (ganze Seite). Der Header ist
+     fixed → Augen-Mittelpunkt ist konstant, nur bei resize/scroll neu vermessen. */
+  const eye = document.querySelector<HTMLElement>('.brand-eye');
+  const pupil = eye?.querySelector<HTMLElement>('.eye-pupil');
+  if (eye && pupil) {
+    let cx = 0, cy = 0, maxR = 3, lastX = 0, lastY = 0, raf = 0;
+    const measure = () => {
+      const r = eye.getBoundingClientRect();
+      cx = r.left + r.width / 2;
+      cy = r.top + r.height / 2;
+      maxR = Math.max(2.5, r.width * 0.18); // Pupille bleibt im inneren Ring
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, { passive: true });
+    const update = () => {
+      raf = 0;
+      /* Echtes Blicken: Vektor vom Augen-Mittelpunkt zur Maus. Die Pupille wandert genau
+         in diese Richtung. Nah an der Maus zentriert sie, ab ~140px sitzt sie voll am Rand
+         (in den inneren Ring gekappt) und „schaut" den Cursor direkt an. */
+      const dx = lastX - cx;
+      const dy = lastY - cy;
+      const dist = Math.hypot(dx, dy) || 1;
+      const reach = Math.min(1, dist / 140); // sanfter Ramp: nah = wenig, fern = volle Auslenkung
+      const px = (dx / dist) * maxR * reach;
+      const py = (dy / dist) * maxR * reach;
+      pupil.style.setProperty('--px', px.toFixed(2) + 'px');
+      pupil.style.setProperty('--py', py.toFixed(2) + 'px');
+    };
+    window.addEventListener('mousemove', (e) => {
+      lastX = e.clientX; lastY = e.clientY;
+      if (!raf) raf = requestAnimationFrame(update);
+    }, { passive: true });
+    // Maus verlässt das Fenster → Pupille sanft zurück in die Mitte
+    document.addEventListener('mouseleave', () => {
+      pupil.style.setProperty('--px', '0px');
+      pupil.style.setProperty('--py', '0px');
+    });
+
+    // Maus über einem Erstgespräch-Button (.shiny-cta) → Pupille wird rot, sonst normal.
+    document.querySelectorAll('.shiny-cta').forEach((btn) => {
+      btn.addEventListener('mouseenter', () => eye.classList.add('eye-alert'));
+      btn.addEventListener('mouseleave', () => eye.classList.remove('eye-alert'));
+    });
   }
 </script>

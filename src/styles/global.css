@@ -25,6 +25,16 @@
   --shadow-glow-soft: 0 0 60px -10px rgba(26, 63, 255, 0.3);
 }
 
+/* ---- Shiny-CTA: animierbare Custom-Properties (müssen top-level stehen) ---- */
+@property --shiny-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@property --shiny-angle-offset { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@property --shiny-percent { syntax: "<percentage>"; initial-value: 5%; inherits: false; }
+@property --shiny-shine { syntax: "<color>"; initial-value: #c3d0ff; inherits: false; }
+
+@keyframes shiny-angle   { to { --shiny-angle: 360deg; } }
+@keyframes shiny-shimmer { to { rotate: 360deg; } }
+@keyframes shiny-breathe { from, to { scale: 1; } 50% { scale: 1.2; } }
+
 /* ----------------------------- Base ----------------------------- */
 @layer base {
   :root {
@@ -44,8 +54,13 @@
      Hero + Footer — man kann zum Footer (Impressum/Datenschutz, DE-Pflicht) runterscrollen,
      erreicht aber KEINE Sektion ohne den Marquee-Flug. Der erste Kachel-/Nav-Klick
      entsperrt (Sektionen erscheinen), zurück am Hero wird wieder gesperrt. */
-  html.section-locked main > :not(#hero) {
+  html.section-locked main > :not(#hero):not(#beispiele-overlay) {
     display: none;
+  }
+
+  /* Beispiele-Overlay offen → Hintergrund-Seite nicht mitscrollen. */
+  html.beispiele-open body {
+    overflow: hidden;
   }
 
   body {
@@ -279,8 +294,8 @@
     font-family: var(--font-display);
     font-weight: 500;
     color: var(--color-ink);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(150, 175, 255, 0.32);
+    background: rgba(26, 63, 255, 0.06);
     transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
   }
   .btn-ghost:hover {
@@ -288,6 +303,182 @@
     background: rgba(26, 63, 255, 0.08);
     transform: translateY(-2px);
   }
+
+  /* ----------------------------------------------------------------
+     Shiny-CTA „Erstgespräch" — rotierender Conic-Gradient-Rand-Schein,
+     aufgedeckte Punkt-Textur, innerer Shimmer + atmender Glow beim Hover.
+     Originalgetreuer Nachbau der Vorlage, Farben aufs ALPS-Schema gemappt.
+     (@property/@keyframes liegen top-level, s. oben unter @theme.)
+     ---------------------------------------------------------------- */
+  .shiny-cta {
+    --shiny-bg: var(--color-night);
+    --shiny-bg-subtle: var(--color-night-soft);
+    --shiny-fg: #fff;
+    --shiny-highlight: var(--color-accent);
+    --shiny-highlight-subtle: var(--color-accent-bright);
+    --shiny-anim: shiny-angle linear infinite;
+    --shiny-duration: 3s;
+    --shiny-shadow-size: 2px;
+    --shiny-percent: 8%; /* etwas breiterer Rand-Schein im Ruhezustand */
+    --shiny-transition: 800ms cubic-bezier(0.25, 1, 0.5, 1);
+
+    isolation: isolate;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    outline-offset: 4px;
+    padding: 1.05rem 2.3rem;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    line-height: 1.2;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 360px;
+    color: var(--shiny-fg);
+    /* Body leicht royal-blau gefüllt (statt fast-schwarz), damit der Button im
+       Ruhezustand klar als CTA erkennbar ist — bleibt aber dezent. */
+    background:
+      linear-gradient(180deg, #1c3d86 0%, #0f2150 100%) padding-box,
+      conic-gradient(
+        from calc(var(--shiny-angle) - var(--shiny-angle-offset)),
+        transparent,
+        var(--shiny-highlight) var(--shiny-percent),
+        var(--shiny-shine) calc(var(--shiny-percent) * 2),
+        var(--shiny-highlight) calc(var(--shiny-percent) * 3),
+        transparent calc(var(--shiny-percent) * 4)
+      ) border-box;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 0 1px rgba(120, 150, 255, 0.25),
+      0 8px 30px -10px rgba(26, 63, 255, 0.5); /* sanfter Ruhe-Glow → fällt mehr auf */
+    transition: var(--shiny-transition), box-shadow 0.4s ease;
+    transition-property: --shiny-angle-offset, --shiny-percent, --shiny-shine, box-shadow;
+  }
+  .shiny-cta::before,
+  .shiny-cta::after,
+  .shiny-cta span::before {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: 50%;
+    translate: -50% -50%;
+    z-index: -1;
+  }
+  .shiny-cta:active { translate: 0 1px; }
+
+  /* Punkt-Textur */
+  .shiny-cta::before {
+    --size: calc(100% - var(--shiny-shadow-size) * 3);
+    --position: 2px;
+    --space: calc(var(--position) * 2);
+    width: var(--size);
+    height: var(--size);
+    background: radial-gradient(
+      circle at var(--position) var(--position),
+      #fff calc(var(--position) / 4), transparent 0
+    ) padding-box;
+    background-size: var(--space) var(--space);
+    background-repeat: space;
+    mask-image: conic-gradient(
+      from calc(var(--shiny-angle) + 45deg),
+      #000, transparent 10% 90%, #000
+    );
+    border-radius: inherit;
+    opacity: 0.4;
+    z-index: -1;
+  }
+  /* Innerer Shimmer */
+  .shiny-cta::after {
+    --shiny-anim: shiny-shimmer linear infinite;
+    width: 100%;
+    aspect-ratio: 1;
+    background: linear-gradient(-50deg, transparent, var(--shiny-highlight), transparent);
+    mask-image: radial-gradient(circle at bottom, transparent 40%, #000);
+    opacity: 0.6;
+  }
+  .shiny-cta span { z-index: 1; position: relative; }
+  /* Der innere „atmende" Glow erzeugte beim Hover ein bläuliches, eckiges Kästchen
+     (rechteckiges Element mit Inset-Schatten) — bewusst deaktiviert. */
+  .shiny-cta span::before { display: none; }
+  .shiny-cta,
+  .shiny-cta::before,
+  .shiny-cta::after {
+    animation: var(--shiny-anim) var(--shiny-duration),
+      var(--shiny-anim) calc(var(--shiny-duration) / 0.4) reverse paused;
+    animation-composition: add;
+  }
+  .shiny-cta:is(:hover, :focus-visible) {
+    --shiny-percent: 20%;
+    --shiny-angle-offset: 95deg;
+    --shiny-shine: var(--shiny-highlight-subtle);
+    --shiny-duration: 1.8s; /* Rand-Schein läuft beim Hover etwas schneller (Ruhe: 3s) */
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16),
+      inset 0 0 0 1px rgba(120, 150, 255, 0.4),
+      0 0 50px -6px rgba(26, 63, 255, 0.7); /* Glow zieht beim Hover an */
+  }
+  .shiny-cta:is(:hover, :focus-visible),
+  .shiny-cta:is(:hover, :focus-visible)::before,
+  .shiny-cta:is(:hover, :focus-visible)::after { animation-play-state: running; }
+
+  /* Kompakte Variante für die Header-Navigation */
+  .shiny-cta.shiny-sm { padding: 0.7rem 1.5rem; font-size: 0.92rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shiny-cta, .shiny-cta::before, .shiny-cta::after,
+    .shiny-cta span::before { animation: none; }
+  }
+}
+
+/* ----------------------------------------------------------------
+   „Magie" auf den Work-Kacheln im 3D-Marquee — wird per JS getriggert,
+   wenn der „Unsere Arbeiten"-Button geklickt wird (zeigt dem User, wo die
+   Arbeiten im Marquee liegen). Weiß-goldener Umriss-Schein, der ~5 s sanft
+   aufkommt, leicht flackert und wieder ausklingt. Dezent, magisch.
+   Liegt top-level (nicht in @layer/scoped), da die Kacheln im React-Marquee
+   gerendert werden. Glow sitzt auf dem stillstehenden .group-Wrapper, damit
+   weder der Tailwind-Ring des Bildes noch der Framer-Filter gestört wird. */
+.hero-marquee .group.marquee-magic {
+  border-radius: 0.5rem; /* deckt sich mit rounded-lg der Kachel */
+  animation: marquee-tile-magic 5s ease-in-out;
+}
+@keyframes marquee-tile-magic {
+  0% {
+    box-shadow:
+      0 0 0 1px rgba(111, 139, 255, 0.45),
+      0 0 0 0 rgba(255, 236, 170, 0);
+  }
+  18% {
+    box-shadow:
+      0 0 0 1.5px rgba(255, 240, 200, 0.7),
+      0 0 14px 2px rgba(255, 238, 180, 0.45),
+      0 0 34px 6px rgba(255, 210, 120, 0.26);
+  }
+  48% {
+    box-shadow:
+      0 0 0 1.5px rgba(255, 246, 220, 0.92),
+      0 0 22px 3px rgba(255, 242, 190, 0.6),
+      0 0 50px 9px rgba(255, 214, 130, 0.38);
+  }
+  66% {
+    /* kurzes magisches Flackern vor dem Ausklang */
+    box-shadow:
+      0 0 0 1.5px rgba(255, 244, 214, 0.78),
+      0 0 16px 2px rgba(255, 238, 180, 0.5),
+      0 0 40px 7px rgba(255, 210, 120, 0.3);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(111, 139, 255, 0.45),
+      0 0 0 0 rgba(255, 236, 170, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-marquee .group.marquee-magic { animation: none; }
 }
 
 /* --------------------------- Utilities --------------------------- */

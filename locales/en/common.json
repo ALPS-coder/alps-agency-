@@ -26,7 +26,8 @@
     "subtitle": "Alps Agency combines AI-powered web design with local Google visibility — so more customers find you, trust you and book with you.",
     "cta_primary": "Free initial consultation",
     "cta_secondary": "Our work",
-    "scroll": "Scroll"
+    "scroll": "Scroll",
+    "back": "Back to start"
   },
   "services": {
     "eyebrow": "Services",
@@ -57,22 +58,18 @@
   },
   "work": {
     "eyebrow": "Work",
-    "title": "Our Work",
+    "title": "Our Solutions",
     "subtitle": "A selection of projects we have made visible.",
     "view": "View",
     "placeholder_note": "Placeholder — real projects coming soon.",
     "items": {
       "one": {
-        "title": "Local Trades",
-        "category": "Website + Google Profile"
+        "title": "Web Design",
+        "category": "Available"
       },
       "two": {
-        "title": "Hospitality",
-        "category": "30-Day Visibility Boost"
-      },
-      "three": {
-        "title": "Service Provider",
-        "category": "Full package & reviews"
+        "title": "AI Automation",
+        "category": "Coming Soon"
       }
     }
   },
@@ -81,6 +78,7 @@
     "title": "Examples from Practice",
     "subtitle": "Concrete insights into results we delivered for our clients.",
     "note": "More examples coming soon.",
+    "back": "Back",
     "items": {
       "one": {
         "title": "Website Relaunch",
@@ -160,28 +158,28 @@
     "subtitle": "What businesses most often wonder before working with us.",
     "items": {
       "q1": {
-        "q": "Why didn't the previous agency work out?",
-        "a": "Often there is no clear strategy and honest communication. Many agencies deliver standard solutions without local focus. We analyze your starting point first and only implement measures that measurably bring customers."
+        "q": "Will this really bring me new customers?",
+        "a": "Honestly: a nice website alone won't bring customers. What matters is that you get found and that visitors turn into inquiries. That's exactly what we build the foundation for — visible on Google, an appearance that convinces, and automated follow-up so no inquiry slips away. If we're not convinced it will measurably pay off for you, we'll tell you openly in the first call."
       },
       "q2": {
-        "q": "What problems were there?",
-        "a": "Typical issues are an incomplete Google profile, an outdated website and missing reviews. These are exactly the levers we optimize, visibly."
+        "q": "How much effort is it for me — and how fast does it go?",
+        "a": "Very little. You give us a few basics like your logo and key details, and we handle the rest: copy, design and tech. Thanks to AI-powered production it's fast — many websites are live in under two weeks, with first visibility effects often showing shortly after."
       },
       "q3": {
-        "q": "What has been tried so far?",
-        "a": "Often ads were run without optimizing the basics. Advertising fizzles out when profile and website don't convince — we build the foundation first."
+        "q": "What does it cost — and are there hidden fees?",
+        "a": "No hidden fees, no nasty surprises. As a rule you pay once for your project; maintenance and care are optional if you want them. Exactly what makes sense for you we discuss in the free first call — you only pay for what genuinely benefits you."
       },
       "q4": {
-        "q": "Which goals were not achieved?",
-        "a": "Usually consistent inquiries and local search visibility are missing. We define clear, realistic goals and make progress transparently measurable."
+        "q": "Do I own the website — and am I tied in long-term?",
+        "a": "Yes, your website belongs to you. We work without lock-in contracts: the only commitment is optional ongoing maintenance — and that's cancellable anytime. You stay because the results are right, not because of a clause."
       },
       "q5": {
-        "q": "How long does a project take?",
-        "a": "The visibility boost shows first effects in around 30 days. A complete website is ready in 2–4 weeks depending on scope."
+        "q": "Are my data and my customers' data safe?",
+        "a": "Yes. We work in full GDPR compliance — a must especially for practices and sensitive industries. Your data and your customers' data are safe with us and are only used for what they're meant for."
       },
       "q6": {
-        "q": "What makes Alps Agency different?",
-        "a": "We combine AI-powered design with real local marketing — honest, measurable and personally managed. No page builder, no empty promises."
+        "q": "Why Alps Agency — and what's my risk?",
+        "a": "We combine real AI with honest, personal marketing: fast to launch, transparent and location-independent in several languages. You're always looked after personally, not by a bot. Your risk: none — the first call is free and non-binding. Get to know us and decide afterwards at your own pace."
       }
     }
   },

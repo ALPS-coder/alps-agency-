@@ -67,7 +67,7 @@ const sourceOptions = ['google', 'referral', 'social', 'other'] as const;
         <span class="field-err" data-err></span>
       </div>
 
-      <button type="submit" class="btn-primary contact-submit">
+      <button type="submit" class="shiny-cta contact-submit">
         <span class="cs-label">{t('contact.submit')}</span>
         <span class="cs-sending" hidden>{t('contact.sending')}</span>
       </button>
@@ -152,7 +152,7 @@ const sourceOptions = ['google', 'referral', 'social', 'other'] as const;
   }
   .field-err:empty { display: none; }
 
-  .contact-submit { margin-top: 0.5rem; width: 100%; }
+  .contact-submit { margin-top: 0.5rem; width: 100%; border-radius: 0.9rem; }
   .contact-submit[aria-busy="true"] { opacity: 0.7; pointer-events: none; }
 
   .contact-success {
@@ -213,7 +213,7 @@ const sourceOptions = ['google', 'referral', 'social', 'other'] as const;
       return ok;
     };
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       // Honeypot: Bot hat das Feld gefüllt → still abbrechen
       if ((form.elements.namedItem('company') as HTMLInputElement | null)?.value) return;
@@ -228,15 +228,31 @@ const sourceOptions = ['google', 'referral', 'social', 'other'] as const;
       btn.setAttribute('aria-busy', 'true');
       label.hidden = true; sending.hidden = false;
 
-      // TODO: an echtes Backend/Formspree/Supabase anbinden.
-      // Aktuell: visuelle Bestätigung (kein Versand-Endpunkt vorhanden).
-      window.setTimeout(() => {
+      const get = (n: string) => (form.elements.namedItem(n) as HTMLInputElement | null)?.value.trim() ?? '';
+      const lang = document.documentElement.getAttribute('lang') || 'de';
+
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: get('name'), email: get('email'), phone: get('phone'),
+            industry: get('industry'), source: get('source'), message: get('message'),
+            company: get('company'), lang,
+          }),
+        });
+        if (!res.ok) throw new Error('send failed');
+
         const success = form.querySelector('.contact-success') as HTMLElement;
         form.querySelectorAll('.field, .field-row, .contact-submit').forEach((el) => ((el as HTMLElement).style.display = 'none'));
         success.hidden = false;
         if (!reduceMotion) gsap.fromTo(success, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' });
         success.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
-      }, 700);
+      } catch {
+        btn.setAttribute('aria-busy', 'false');
+        label.hidden = false; sending.hidden = true;
+        setErr('message', 'Senden fehlgeschlagen. Bitte später erneut versuchen.');
+      }
     });
 
     // Fehler beim Tippen wieder lösen

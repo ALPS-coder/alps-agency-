@@ -1,0 +1,14 @@
+---
+import HomeSections from '../../components/HomeSections.astro';
+import { languages, defaultLang, type Lang } from '../../i18n';
+
+export function getStaticPaths() {
+  // Deutsch liegt auf der Root „/" — hier nur die übrigen Sprachen.
+  return Object.keys(languages)
+    .filter((l) => l !== defaultLang)
+    .map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: Lang };
+---
+<HomeSections lang={lang} />
