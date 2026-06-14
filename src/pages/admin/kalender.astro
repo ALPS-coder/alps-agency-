@@ -1,0 +1,433 @@
+---
+// ATEAM — Team-Kalender. Gemeinsame Supabase-Tabelle `events`, von allen
+// angemeldeten Mitarbeitern bearbeitbar, Änderungen live für alle (Realtime).
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { requireAdmin } from '../../lib/supabase';
+
+export const prerender = false;
+
+const { supabase, displayName, roleLabel, redirect } = await requireAdmin(Astro.cookies, Astro.request);
+if (redirect) return Astro.redirect(redirect);
+
+// Daten für die Dropdowns + Session-Tokens für den Browser-Realtime-Client
+const [{ data: customers }, { data: profiles }, { data: { session } }] = await Promise.all([
+  supabase.from('customers').select('id, name, company').order('name'),
+  supabase.from('profiles').select('full_name').order('full_name'),
+  supabase.auth.getSession(),
+]);
+
+const members = (profiles ?? [])
+  .map((p) => (p.full_name || '').trim())
+  .filter(Boolean);
+if (members.length === 0) members.push(displayName);
+
+const custOptions = (customers ?? []).map((c) => ({
+  id: c.id,
+  label: c.company ? `${c.name} · ${c.company}` : c.name,
+}));
+
+// An den Browser übergeben (Supabase-Config + Session + Stammdaten)
+const clientData = {
+  url: import.meta.env.PUBLIC_SUPABASE_URL,
+  key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+  access_token: session?.access_token ?? '',
+  refresh_token: session?.refresh_token ?? '',
+  members,
+  customers: custOptions,
+  me: displayName,
+  country: 'AT', // Feiertage Österreich
+};
+---
+<AdminLayout title="ATEAM · Kalender — Alps Agency" heading="Team-Kalender" subtitle="Gemeinsame Termine — Änderungen erscheinen live bei allen" active="kalender" displayName={displayName} roleLabel={roleLabel}>
+  <script type="application/json" id="cal-data" set:html={JSON.stringify(clientData)}></script>
+
+  <div class="cal-bar reveal" style="--i:1">
+    <div class="cal-when">
+      <button class="nav-btn" data-prev aria-label="Vorheriger Monat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <h2 class="cal-title" data-title>—</h2>
+      <button class="nav-btn" data-next aria-label="Nächster Monat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button class="chip" data-today>Heute</button>
+    </div>
+    <div class="cal-right">
+      <span class="live"><span class="live-dot" data-live-dot></span><span data-live-label>verbinde…</span></span>
+      <button class="btn" data-new><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>Neuer Termin</span></button>
+    </div>
+  </div>
+
+  <div class="cal-panel reveal" style="--i:2">
+    <div class="weekdays">
+      <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+    </div>
+    <div class="grid" data-grid></div>
+  </div>
+
+  <!-- Termin-Drawer -->
+  <div class="drawer-backdrop" data-backdrop hidden></div>
+  <aside class="drawer" data-drawer hidden aria-label="Termin">
+    <button class="drawer-close" data-close aria-label="Schließen">×</button>
+    <h2 data-d-heading>Neuer Termin</h2>
+
+    <label class="d-field"><span>Titel</span>
+      <input type="text" data-f-title placeholder="z. B. Kunden-Meeting" />
+    </label>
+
+    <label class="d-check"><input type="checkbox" data-f-allday /> <span>Ganztägig</span></label>
+
+    <div class="d-row">
+      <label class="d-field"><span>Datum</span><input type="date" data-f-date /></label>
+      <label class="d-field" data-time-from><span>Von</span><input type="time" data-f-from value="09:00" /></label>
+      <label class="d-field" data-time-to><span>Bis</span><input type="time" data-f-to value="10:00" /></label>
+    </div>
+
+    <div class="d-row">
+      <label class="d-field"><span>Zugewiesen an</span>
+        <select data-f-assignee><option value="">— niemand —</option></select>
+      </label>
+      <label class="d-field"><span>Kunde (optional)</span>
+        <select data-f-customer><option value="">— kein Kunde —</option></select>
+      </label>
+    </div>
+
+    <div class="d-field"><span>Farbe</span>
+      <div class="swatches" data-swatches>
+        <button type="button" class="sw ev-blue" data-color="blue" aria-label="Blau"></button>
+        <button type="button" class="sw ev-green" data-color="green" aria-label="Grün"></button>
+        <button type="button" class="sw ev-amber" data-color="amber" aria-label="Gelb"></button>
+        <button type="button" class="sw ev-violet" data-color="violet" aria-label="Violett"></button>
+        <button type="button" class="sw ev-red" data-color="red" aria-label="Rot"></button>
+        <button type="button" class="sw ev-grey" data-color="grey" aria-label="Grau"></button>
+      </div>
+    </div>
+
+    <label class="d-field"><span>Notiz</span>
+      <textarea data-f-notes rows="3" placeholder="Details …"></textarea>
+    </label>
+
+    <p class="d-err" data-d-err hidden></p>
+
+    <div class="d-actions">
+      <button class="btn d-save" data-save><span>Speichern</span></button>
+      <button class="btn ghost d-del" data-del hidden><span>Löschen</span></button>
+    </div>
+    <p class="d-meta" data-d-meta></p>
+  </aside>
+
+  <script>
+    import { createClient } from '@supabase/supabase-js';
+
+    const cfg = JSON.parse(document.getElementById('cal-data').textContent);
+    const supabase = createClient(cfg.url, cfg.key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: 'Bearer ' + cfg.access_token } },
+    });
+    if (cfg.access_token) supabase.realtime.setAuth(cfg.access_token);
+
+    const $ = (s, r = document) => r.querySelector(s);
+    const grid = $('[data-grid]');
+    const titleEl = $('[data-title]');
+    const drawer = $('[data-drawer]');
+    const backdrop = $('[data-backdrop]');
+    const liveDot = $('[data-live-dot]');
+    const liveLabel = $('[data-live-label]');
+
+    const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateKey = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const keyOfIso = (iso) => dateKey(new Date(iso));
+    const hhmm = (iso) => { const d = new Date(iso); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+
+    let view = new Date(); view.setDate(1);
+    let events = [];
+    let editing = null;
+    let color = 'blue';
+
+    // ---- Feiertage (Österreich), inkl. beweglicher Oster-Termine ----
+    function easterSunday(y) {
+      const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
+      const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31), day = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(y, month - 1, day);
+    }
+    const addDays = (dt, n) => { const x = new Date(dt); x.setDate(x.getDate() + n); return x; };
+    const holidayCache = {};
+    function holidays(year) {
+      if (holidayCache[year]) return holidayCache[year];
+      const E = easterSunday(year);
+      const list = {
+        [`${year}-01-01`]: 'Neujahr',
+        [`${year}-01-06`]: 'Heilige Drei Könige',
+        [dateKey(addDays(E, 1))]: 'Ostermontag',
+        [`${year}-05-01`]: 'Staatsfeiertag',
+        [dateKey(addDays(E, 39))]: 'Christi Himmelfahrt',
+        [dateKey(addDays(E, 50))]: 'Pfingstmontag',
+        [dateKey(addDays(E, 60))]: 'Fronleichnam',
+        [`${year}-08-15`]: 'Mariä Himmelfahrt',
+        [`${year}-10-26`]: 'Nationalfeiertag',
+        [`${year}-11-01`]: 'Allerheiligen',
+        [`${year}-12-08`]: 'Mariä Empfängnis',
+        [`${year}-12-25`]: 'Christtag',
+        [`${year}-12-26`]: 'Stefanitag',
+      };
+      holidayCache[year] = list;
+      return list;
+    }
+
+    // ---- Dropdowns füllen ----
+    const aSel = $('[data-f-assignee]');
+    cfg.members.forEach((m) => { const o = document.createElement('option'); o.value = m; o.textContent = m; aSel.appendChild(o); });
+    const cSel = $('[data-f-customer]');
+    cfg.customers.forEach((c) => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.label; cSel.appendChild(o); });
+    const custName = (id) => (cfg.customers.find((c) => c.id === id) || {}).label || '';
+
+    // ---- Monatsraster zeichnen ----
+    function render() {
+      titleEl.textContent = `${MONTHS[view.getMonth()]} ${view.getFullYear()}`;
+      grid.innerHTML = '';
+      const first = new Date(view.getFullYear(), view.getMonth(), 1);
+      const offset = (first.getDay() + 6) % 7; // Montag = 0
+      const start = new Date(first); start.setDate(1 - offset);
+      const todayKey = dateKey(new Date());
+
+      // Events nach Tag gruppieren
+      const byDay = {};
+      for (const ev of events) { (byDay[keyOfIso(ev.start_at)] ||= []).push(ev); }
+      for (const k in byDay) byDay[k].sort((a,b) => a.start_at.localeCompare(b.start_at));
+
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start); d.setDate(start.getDate() + i);
+        const k = dateKey(d);
+        const dow = (d.getDay() + 6) % 7;        // 5,6 = Sa,So
+        const holiday = holidays(d.getFullYear())[k];
+        const cell = document.createElement('div');
+        cell.className = 'day'
+          + (d.getMonth() !== view.getMonth() ? ' other' : '')
+          + (k === todayKey ? ' today' : '')
+          + (dow >= 5 ? ' weekend' : '')
+          + (holiday ? ' holiday' : '');
+        cell.dataset.date = k;
+
+        const head = document.createElement('div'); head.className = 'day-head';
+        const num = document.createElement('span'); num.className = 'num'; num.textContent = d.getDate();
+        head.appendChild(num);
+        if (holiday) { const h = document.createElement('span'); h.className = 'hol-dot'; h.title = holiday; head.appendChild(h); }
+        cell.appendChild(head);
+
+        if (holiday) { const hl = document.createElement('span'); hl.className = 'hol-label'; hl.textContent = holiday; hl.title = holiday; cell.appendChild(hl); }
+
+        const list = document.createElement('div'); list.className = 'day-events';
+        (byDay[k] || []).forEach((ev) => list.appendChild(chip(ev)));
+        cell.appendChild(list);
+
+        cell.addEventListener('click', () => openCreate(k));
+        grid.appendChild(cell);
+      }
+    }
+
+    function chip(ev) {
+      const c = document.createElement('button');
+      c.className = `event ev-${ev.color || 'blue'}`;
+      const t = ev.all_day ? '' : hhmm(ev.start_at) + ' ';
+      c.innerHTML = `<b>${t}</b>${escapeHtml(ev.title)}`;
+      c.title = ev.title + (ev.assignee ? ` · ${ev.assignee}` : '');
+      c.addEventListener('click', (e) => { e.stopPropagation(); openEdit(ev); });
+      return c;
+    }
+    const escapeHtml = (s) => (s||'').replace(/[&<>"]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+    // ---- Drawer ----
+    function setColor(c) { color = c; document.querySelectorAll('.sw').forEach((b) => b.classList.toggle('active', b.dataset.color === c)); }
+    function toggleTimes() { const all = $('[data-f-allday]').checked; $('[data-time-from]').style.display = all ? 'none' : ''; $('[data-time-to]').style.display = all ? 'none' : ''; }
+
+    function openCreate(k) {
+      editing = null;
+      $('[data-d-heading]').textContent = 'Neuer Termin';
+      $('[data-f-title]').value = '';
+      $('[data-f-allday]').checked = false;
+      $('[data-f-date]').value = k || dateKey(new Date());
+      $('[data-f-from]').value = '09:00';
+      $('[data-f-to]').value = '10:00';
+      $('[data-f-assignee]').value = '';
+      $('[data-f-customer]').value = '';
+      $('[data-f-notes]').value = '';
+      setColor('blue'); toggleTimes();
+      $('[data-del]').hidden = true;
+      $('[data-d-meta]').textContent = '';
+      showDrawer();
+    }
+
+    function openEdit(ev) {
+      editing = ev.id;
+      $('[data-d-heading]').textContent = 'Termin bearbeiten';
+      $('[data-f-title]').value = ev.title || '';
+      $('[data-f-allday]').checked = !!ev.all_day;
+      $('[data-f-date]').value = keyOfIso(ev.start_at);
+      $('[data-f-from]').value = ev.all_day ? '09:00' : hhmm(ev.start_at);
+      $('[data-f-to]').value = ev.end_at ? hhmm(ev.end_at) : (ev.all_day ? '10:00' : hhmm(ev.start_at));
+      $('[data-f-assignee]').value = ev.assignee || '';
+      $('[data-f-customer]').value = ev.customer_id || '';
+      $('[data-f-notes]').value = ev.description || '';
+      setColor(ev.color || 'blue'); toggleTimes();
+      $('[data-del]').hidden = false;
+      $('[data-d-meta]').textContent = '';
+      showDrawer();
+    }
+
+    function showDrawer() {
+      $('[data-d-err]').hidden = true;
+      drawer.hidden = false; backdrop.hidden = false;
+      requestAnimationFrame(() => { drawer.classList.add('show'); backdrop.classList.add('show'); });
+      setTimeout(() => $('[data-f-title]').focus(), 60);
+    }
+    function closeDrawer() { drawer.classList.remove('show'); backdrop.classList.remove('show'); setTimeout(() => { drawer.hidden = true; backdrop.hidden = true; }, 260); }
+
+    function buildRow() {
+      const title = $('[data-f-title]').value.trim();
+      if (!title) throw new Error('Bitte einen Titel eingeben.');
+      const date = $('[data-f-date]').value;
+      if (!date) throw new Error('Bitte ein Datum wählen.');
+      const allday = $('[data-f-allday]').checked;
+      const start_at = new Date(`${date}T${allday ? '00:00' : $('[data-f-from]').value}`).toISOString();
+      const end_at = allday ? null : new Date(`${date}T${$('[data-f-to]').value}`).toISOString();
+      return {
+        title, all_day: allday, start_at, end_at,
+        assignee: $('[data-f-assignee]').value || null,
+        customer_id: $('[data-f-customer]').value || null,
+        color, description: $('[data-f-notes]').value.trim() || null,
+      };
+    }
+
+    async function save() {
+      const btn = $('[data-save]'); const lbl = btn.querySelector('span');
+      let row; try { row = buildRow(); } catch (e) { showErr(e.message); return; }
+      btn.disabled = true; lbl.textContent = 'Speichern …';
+      try {
+        let res;
+        if (editing) res = await supabase.from('events').update({ ...row, updated_at: new Date().toISOString() }).eq('id', editing);
+        else res = await supabase.from('events').insert(row);
+        if (res.error) throw res.error;
+        closeDrawer();
+      } catch (e) { showErr('Fehler beim Speichern: ' + (e.message || e)); }
+      finally { btn.disabled = false; lbl.textContent = 'Speichern'; }
+    }
+
+    async function del() {
+      if (!editing) return;
+      const btn = $('[data-del]'); btn.disabled = true;
+      try {
+        const { error } = await supabase.from('events').delete().eq('id', editing);
+        if (error) throw error;
+        closeDrawer();
+      } catch (e) { showErr('Fehler beim Löschen: ' + (e.message || e)); }
+      finally { btn.disabled = false; }
+    }
+    function showErr(m) { const e = $('[data-d-err]'); e.textContent = m; e.hidden = false; }
+
+    // ---- Realtime ----
+    function applyChange(p) {
+      if (p.eventType === 'INSERT') { if (!events.find((e) => e.id === p.new.id)) events.push(p.new); }
+      else if (p.eventType === 'UPDATE') { events = events.map((e) => e.id === p.new.id ? p.new : e); }
+      else if (p.eventType === 'DELETE') { events = events.filter((e) => e.id !== p.old.id); }
+      render();
+    }
+
+    async function init() {
+      const { data, error } = await supabase.from('events').select('*').order('start_at');
+      if (!error && data) events = data;
+      render();
+
+      supabase
+        .channel('events-rt')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, (p) => applyChange(p))
+        .subscribe((status) => {
+          const ok = status === 'SUBSCRIBED';
+          liveDot.classList.toggle('on', ok);
+          liveLabel.textContent = ok ? 'Live verbunden' : 'verbinde…';
+        });
+    }
+
+    // ---- Events verdrahten ----
+    $('[data-prev]').addEventListener('click', () => { view.setMonth(view.getMonth() - 1); render(); });
+    $('[data-next]').addEventListener('click', () => { view.setMonth(view.getMonth() + 1); render(); });
+    $('[data-today]').addEventListener('click', () => { view = new Date(); view.setDate(1); render(); });
+    $('[data-new]').addEventListener('click', () => openCreate(dateKey(new Date())));
+    $('[data-close]').addEventListener('click', closeDrawer);
+    backdrop.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+    $('[data-f-allday]').addEventListener('change', toggleTimes);
+    $('[data-swatches]').addEventListener('click', (e) => { const b = e.target.closest('.sw'); if (b) setColor(b.dataset.color); });
+    $('[data-save]').addEventListener('click', save);
+    $('[data-del]').addEventListener('click', del);
+
+    init();
+  </script>
+
+  <style>
+    .cal-bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .cal-when { display: flex; align-items: center; gap: 0.6rem; }
+    .cal-title { margin: 0; font-size: 1.2rem; min-width: 10.5rem; text-align: center; }
+    .nav-btn { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 0.6rem; cursor: pointer; color: #c3d0ff; background: rgba(255,255,255,0.05); border: 1px solid rgba(140,170,255,0.18); transition: background 0.2s ease, color 0.2s ease; }
+    .nav-btn:hover { background: rgba(77,107,255,0.18); color: #fff; }
+    .nav-btn svg { width: 1.1rem; height: 1.1rem; }
+    .cal-right { display: flex; align-items: center; gap: 0.9rem; }
+    .live { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; color: #97a6c8; }
+    .live-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #7e8db0; transition: background 0.3s ease, box-shadow 0.3s ease; }
+    .live-dot.on { background: #25d366; box-shadow: 0 0 0 0 rgba(37,211,102,0.6); animation: lpulse 2.4s ease-out infinite; }
+    @keyframes lpulse { 0% { box-shadow: 0 0 0 0 rgba(37,211,102,0.5);} 70% { box-shadow: 0 0 0 6px rgba(37,211,102,0);} 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0);} }
+
+    .cal-panel { border-radius: 1.1rem; border: 1px solid rgba(140,170,255,0.14); background: linear-gradient(180deg, rgba(12,24,46,0.65), rgba(8,18,38,0.5)); backdrop-filter: blur(10px); padding: 0.75rem; box-shadow: 0 18px 50px -30px rgba(0,0,0,0.9); }
+    .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; padding: 0.2rem 0.1rem 0.6rem; }
+    .weekdays span { text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #8294ba; }
+    .weekdays span:nth-child(6), .weekdays span:nth-child(7) { color: #6f7ea3; }
+    .grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(112px, 1fr); gap: 0.5rem; }
+
+    /* Jeder Tag = eigene Karte */
+    .day { position: relative; padding: 0; border-radius: 0.8rem; background: rgba(255,255,255,0.035); border: 1px solid rgba(140,170,255,0.12); cursor: pointer; overflow: hidden; display: flex; flex-direction: column; transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease; }
+    .day:hover { background: rgba(77,107,255,0.12); border-color: rgba(140,170,255,0.35); transform: translateY(-2px); box-shadow: 0 10px 24px -14px rgba(26,63,255,0.7); }
+    .day.other { opacity: 0.38; }
+    .day.weekend { background: rgba(120,140,190,0.06); }
+
+    .day-head { display: flex; align-items: center; justify-content: space-between; padding: 0.38rem 0.5rem 0.3rem; border-bottom: 1px solid rgba(140,170,255,0.08); }
+    .day .num { display: grid; place-items: center; min-width: 1.6rem; height: 1.6rem; font-size: 0.82rem; font-weight: 700; color: #b9c6e6; border-radius: 0.5rem; }
+    .day.today .num { color: #fff; background: linear-gradient(180deg,#2b54c8,#1a3fff); box-shadow: 0 4px 12px -4px rgba(26,63,255,0.8); }
+    .day.today { border-color: rgba(77,107,255,0.55); }
+
+    /* Feiertage */
+    .day.holiday { background: linear-gradient(180deg, rgba(245,200,66,0.10), rgba(255,255,255,0.03)); border-color: rgba(245,200,66,0.3); }
+    .day.holiday .day-head { border-bottom-color: rgba(245,200,66,0.25); }
+    .hol-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #f5c842; box-shadow: 0 0 8px rgba(245,200,66,0.7); }
+    .hol-label { margin: 0.3rem 0.5rem 0; font-size: 0.66rem; font-weight: 600; line-height: 1.15; color: #f5d77a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .day-events { display: flex; flex-direction: column; gap: 0.22rem; padding: 0.3rem 0.4rem 0.4rem; overflow: hidden; }
+
+    .event { width: 100%; text-align: left; border: 0; cursor: pointer; font: inherit; font-size: 0.74rem; line-height: 1.2; padding: 0.24rem 0.45rem; border-radius: 0.4rem; color: #eaf0ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: filter 0.15s ease, transform 0.1s ease; }
+    .event:hover { filter: brightness(1.15); }
+    .event b { font-weight: 700; opacity: 0.85; margin-right: 0.1rem; }
+    .ev-blue { background: rgba(77,107,255,0.32); box-shadow: inset 0 0 0 1px rgba(77,107,255,0.5); }
+    .ev-green { background: rgba(37,211,102,0.28); box-shadow: inset 0 0 0 1px rgba(37,211,102,0.5); }
+    .ev-amber { background: rgba(245,200,66,0.28); box-shadow: inset 0 0 0 1px rgba(245,200,66,0.5); color: #fff; }
+    .ev-violet { background: rgba(168,120,255,0.32); box-shadow: inset 0 0 0 1px rgba(168,120,255,0.5); }
+    .ev-red { background: rgba(255,93,108,0.30); box-shadow: inset 0 0 0 1px rgba(255,93,108,0.5); }
+    .ev-grey { background: rgba(160,176,210,0.28); box-shadow: inset 0 0 0 1px rgba(160,176,210,0.45); }
+
+    /* Drawer-Felder */
+    .d-check { display: flex; align-items: center; gap: 0.5rem; margin: 0.2rem 0 1rem; font-size: 0.9rem; color: #c3d0ff; cursor: pointer; }
+    .d-check input { width: 1.05rem; height: 1.05rem; accent-color: #1a3fff; }
+    .swatches { display: flex; gap: 0.5rem; }
+    .sw { width: 1.8rem; height: 1.8rem; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s ease, border-color 0.15s ease; }
+    .sw:hover { transform: scale(1.12); }
+    .sw.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.25); }
+    .d-actions { display: flex; gap: 0.6rem; margin-top: 0.6rem; }
+    .d-save { flex: 1; justify-content: center; }
+    .d-del { color: #ff8a94; }
+    .d-err { margin: 0.8rem 0 0; font-size: 0.85rem; color: #ff8a94; background: rgba(255,93,108,0.1); border: 1px solid rgba(255,93,108,0.3); padding: 0.6rem 0.75rem; border-radius: 0.5rem; }
+    .d-meta { margin: 0.8rem 0 0; font-size: 0.75rem; color: #7e8db0; }
+
+    @media (max-width: 860px) {
+      .grid { grid-auto-rows: minmax(84px, 1fr); }
+      .event { font-size: 0.68rem; }
+      .cal-title { min-width: auto; font-size: 1.05rem; }
+    }
+  </style>
+</AdminLayout>

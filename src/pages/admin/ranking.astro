@@ -1,0 +1,184 @@
+---
+// ATEAM — Rangliste / Streak. Wer mehr aktive Zeit im Dashboard verbringt, steigt auf.
+// Zeit wird über den Heartbeat im AdminLayout (RPC track_activity) gesammelt.
+// Sortierung: Gesamtzeit. Zusätzlich: 🔥 Tage-Streak + Live-Status. Realtime für alle.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { requireAdmin } from '../../lib/supabase';
+
+export const prerender = false;
+
+const { supabase, user, displayName, roleLabel, redirect } = await requireAdmin(Astro.cookies, Astro.request);
+if (redirect) return Astro.redirect(redirect);
+
+const [{ data: acts }, { data: profs }, { data: { session } }] = await Promise.all([
+  supabase.from('activity').select('user_id, total_seconds, streak_days, last_seen').order('total_seconds', { ascending: false }),
+  supabase.from('profiles').select('id, full_name, email'),
+  supabase.auth.getSession(),
+]);
+
+const profMap: Record<string, string> = {};
+for (const p of profs ?? []) {
+  profMap[p.id] = (p.full_name || (p.email ? p.email.split('@')[0] : '') || 'Mitarbeiter');
+}
+
+const clientData = {
+  url: import.meta.env.PUBLIC_SUPABASE_URL,
+  key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+  access_token: session?.access_token ?? '',
+  refresh_token: session?.refresh_token ?? '',
+  me: user?.id ?? '',
+  profiles: profMap,
+  initial: acts ?? [],
+};
+---
+<AdminLayout title="ATEAM · Rangliste — Alps Agency" heading="Rangliste" subtitle="Wer am meisten Zeit im Dashboard verbringt, steigt auf — live & in Echtzeit" active="ranking" displayName={displayName} roleLabel={roleLabel}>
+  <script type="application/json" id="rank-data" set:html={JSON.stringify(clientData)}></script>
+
+  <div class="rank-head reveal" style="--i:1">
+    <span class="live"><span class="live-dot" data-live-dot></span><span data-live-label>verbinde…</span></span>
+  </div>
+
+  <ol class="board reveal" style="--i:2" data-board></ol>
+  <p class="hint-empty" data-empty hidden>Noch keine Aktivität — sobald jemand das Dashboard nutzt, erscheint er hier.</p>
+
+  <script>
+    import { createClient } from '@supabase/supabase-js';
+    const cfg = JSON.parse(document.getElementById('rank-data').textContent);
+    const supabase = createClient(cfg.url, cfg.key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: 'Bearer ' + cfg.access_token } },
+    });
+    if (cfg.access_token) supabase.realtime.setAuth(cfg.access_token);
+
+    const board = document.querySelector('[data-board]');
+    const emptyEl = document.querySelector('[data-empty]');
+    const liveDot = document.querySelector('[data-live-dot]');
+    const liveLabel = document.querySelector('[data-live-label]');
+
+    let rows = cfg.initial || [];
+    const name = (id) => cfg.profiles[id] || 'Mitarbeiter';
+    const initials = (n) => n.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
+
+    function fmtTime(sec) {
+      sec = Math.floor(sec || 0);
+      const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+      if (h > 0) return `${h} h ${m} min`;
+      if (m > 0) return `${m} min`;
+      return `${sec} s`;
+    }
+    function lastSeenTxt(ts) {
+      if (!ts) return '';
+      const diff = (Date.now() - new Date(ts).getTime()) / 1000;
+      if (diff <= 120) return 'online';
+      if (diff < 3600) return `vor ${Math.floor(diff / 60)} min`;
+      if (diff < 86400) return `vor ${Math.floor(diff / 3600)} h`;
+      return `vor ${Math.floor(diff / 86400)} d`;
+    }
+    const isOnline = (ts) => ts && (Date.now() - new Date(ts).getTime()) / 1000 <= 120;
+
+    function render() {
+      const sorted = [...rows].sort((a, b) => (b.total_seconds || 0) - (a.total_seconds || 0));
+      board.innerHTML = '';
+      emptyEl.hidden = sorted.length > 0;
+      const max = Math.max(1, ...sorted.map((r) => r.total_seconds || 0));
+
+      sorted.forEach((r, i) => {
+        const rank = i + 1;
+        const nm = name(r.user_id);
+        const li = document.createElement('li');
+        li.className = 'rrow' + (rank <= 3 ? ' top top' + rank : '') + (r.user_id === cfg.me ? ' me' : '');
+        li.style.setProperty('--i', i);
+        li.innerHTML = `
+          <span class="rk">${rank <= 3 ? medal(rank) : '#' + rank}</span>
+          <span class="av">${initials(nm)}${isOnline(r.last_seen) ? '<i class="on"></i>' : ''}</span>
+          <span class="meta">
+            <strong>${escapeHtml(nm)}${r.user_id === cfg.me ? ' <em>(du)</em>' : ''}</strong>
+            <small>${lastSeenTxt(r.last_seen) || '—'}</small>
+            <span class="bar"><i style="width:${Math.round((r.total_seconds || 0) / max * 100)}%"></i></span>
+          </span>
+          <span class="stats">
+            <span class="time">${fmtTime(r.total_seconds)}</span>
+            <span class="streak" title="Tage-Streak">🔥 ${r.streak_days || 0}</span>
+          </span>`;
+        board.appendChild(li);
+      });
+    }
+    const medal = (r) => `<span class="medal m${r}">${r}</span>`;
+    const escapeHtml = (s) => (s || '').replace(/[&<>"]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+
+    function applyChange(p) {
+      if (p.eventType === 'DELETE') { rows = rows.filter((r) => r.user_id !== p.old.user_id); }
+      else {
+        const idx = rows.findIndex((r) => r.user_id === p.new.user_id);
+        if (idx >= 0) rows[idx] = p.new; else rows.push(p.new);
+      }
+      render();
+    }
+
+    async function refetch() {
+      const { data } = await supabase.from('activity').select('user_id, total_seconds, streak_days, last_seen');
+      if (data) rows = data;
+      render();
+    }
+
+    async function init() {
+      await refetch();
+      supabase
+        .channel('activity-rt')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'activity' }, (p) => applyChange(p))
+        .subscribe((status) => {
+          const ok = status === 'SUBSCRIBED';
+          liveDot.classList.toggle('on', ok);
+          liveLabel.textContent = ok ? 'Live verbunden' : 'verbinde…';
+          if (ok) setTimeout(refetch, 1500); // eigenen Heartbeat-Eintrag sicher einfangen
+        });
+      // Regelmäßig auffrischen (Online-Status, „vor X min", verpasste Events)
+      setInterval(refetch, 20000);
+    }
+    init();
+  </script>
+
+  <style>
+    .rank-head { display: flex; justify-content: flex-end; margin-bottom: 0.8rem; }
+    .live { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; color: #97a6c8; }
+    .live-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #7e8db0; transition: background 0.3s ease; }
+    .live-dot.on { background: #25d366; box-shadow: 0 0 0 0 rgba(37,211,102,0.6); animation: lpulse 2.4s ease-out infinite; }
+    @keyframes lpulse { 0% { box-shadow: 0 0 0 0 rgba(37,211,102,0.5);} 70% { box-shadow: 0 0 0 6px rgba(37,211,102,0);} 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0);} }
+
+    .board { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+    .rrow { display: grid; grid-template-columns: 2.6rem 3rem 1fr auto; align-items: center; gap: 0.9rem; padding: 0.85rem 1.1rem; border-radius: 1rem; border: 1px solid rgba(140,170,255,0.12); background: linear-gradient(180deg, rgba(12,24,46,0.6), rgba(8,18,38,0.45)); animation: rise 0.5s cubic-bezier(.2,.8,.3,1) both; animation-delay: calc(var(--i) * 60ms); transition: transform 0.15s ease, border-color 0.2s ease; }
+    .rrow:hover { transform: translateX(3px); border-color: rgba(140,170,255,0.3); }
+    .rrow.me { border-color: rgba(77,107,255,0.5); box-shadow: inset 0 0 0 1px rgba(77,107,255,0.35); }
+    .rrow.top1 { background: linear-gradient(180deg, rgba(245,200,66,0.16), rgba(12,24,46,0.5)); border-color: rgba(245,200,66,0.4); }
+    .rrow.top2 { background: linear-gradient(180deg, rgba(200,210,230,0.13), rgba(12,24,46,0.5)); border-color: rgba(200,210,230,0.35); }
+    .rrow.top3 { background: linear-gradient(180deg, rgba(205,127,80,0.14), rgba(12,24,46,0.5)); border-color: rgba(205,127,80,0.35); }
+
+    .rk { font-size: 1rem; font-weight: 700; color: #8294ba; text-align: center; }
+    .medal { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; font-size: 0.9rem; font-weight: 800; color: #1a2a4a; margin: 0 auto; }
+    .medal.m1 { background: linear-gradient(160deg,#ffe27a,#f5b942); box-shadow: 0 4px 14px -4px rgba(245,200,66,0.8); }
+    .medal.m2 { background: linear-gradient(160deg,#eef2fb,#b9c3d8); }
+    .medal.m3 { background: linear-gradient(160deg,#e8a06a,#c2703f); color: #2a1608; }
+
+    .av { position: relative; display: grid; place-items: center; width: 2.7rem; height: 2.7rem; border-radius: 50%; font-size: 0.85rem; font-weight: 700; color: #fff; background: linear-gradient(140deg,#2b54c8,#1a3fff); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15); }
+    .av .on { position: absolute; right: -1px; bottom: -1px; width: 0.8rem; height: 0.8rem; border-radius: 50%; background: #25d366; border: 2px solid #0b1832; }
+
+    .meta { display: flex; flex-direction: column; gap: 0.18rem; min-width: 0; }
+    .meta strong { font-size: 0.98rem; }
+    .meta strong em { font-style: normal; font-size: 0.78rem; color: #7d9bff; font-weight: 600; }
+    .meta small { font-size: 0.76rem; color: #8294ba; }
+    .bar { height: 0.35rem; border-radius: 360px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 0.25rem; }
+    .bar > i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#2b54c8,#4d6bff); transition: width 0.6s cubic-bezier(.2,.8,.3,1); }
+
+    .stats { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; }
+    .stats .time { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stats .streak { font-size: 0.82rem; color: #f5b942; font-weight: 600; }
+
+    .hint-empty { color: #7e8db0; text-align: center; padding: 2.5rem 1rem; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px);} to { opacity: 1; transform: translateY(0);} }
+
+    @media (max-width: 600px) {
+      .rrow { grid-template-columns: 2rem 2.4rem 1fr auto; gap: 0.6rem; padding: 0.7rem 0.8rem; }
+      .av { width: 2.3rem; height: 2.3rem; }
+    }
+  </style>
+</AdminLayout>

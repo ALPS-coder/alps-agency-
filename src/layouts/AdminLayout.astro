@@ -3,20 +3,33 @@
 // und das geteilte Design-System (global) bereit. Inhalt kommt über <slot/>.
 import { Image } from 'astro:assets';
 import berg from '../assets/alps-logo-symbol.png';
+import { createSupabaseServer } from '../lib/supabase';
 
 interface Props {
   title: string;
   heading: string;
   subtitle?: string;
-  active: 'leads' | 'kunden' | 'cms' | 'stats';
+  active: 'leads' | 'kunden' | 'kalender' | 'ranking' | 'cms' | 'stats';
   displayName: string;
   roleLabel: string;
 }
 const { title, heading, subtitle, active, displayName, roleLabel } = Astro.props;
 
+// Session-Tokens für den Browser-Client (Aktivitäts-Heartbeat → Ranking)
+const sbLayout = createSupabaseServer(Astro.cookies, Astro.request);
+const { data: { session: rtSession } } = await sbLayout.auth.getSession();
+const rtData = {
+  url: import.meta.env.PUBLIC_SUPABASE_URL,
+  key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+  access_token: rtSession?.access_token ?? '',
+  refresh_token: rtSession?.refresh_token ?? '',
+};
+
 const nav = [
   { id: 'leads', label: 'Anfragen', href: '/admin/', icon: 'M4 5h16M4 12h16M4 19h10' },
   { id: 'kunden', label: 'Kunden & Projekte', href: '/admin/kunden', icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2' },
+  { id: 'kalender', label: 'Kalender', href: '/admin/kalender', icon: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z' },
+  { id: 'ranking', label: 'Rangliste', href: '/admin/ranking', icon: 'M8 21h8M12 17v4M5 4h14v4a7 7 0 0 1-14 0V4zM5 8H3V6a2 2 0 0 1 2-2M19 8h2V6a2 2 0 0 0-2-2' },
   { id: 'cms', label: 'Website-Inhalte', href: '/admin/cms', icon: 'M4 4h16v16H4zM4 9h16M9 4v16' },
   { id: 'stats', label: 'Statistiken', href: '/admin/statistiken', icon: 'M4 19V5m5 14V9m5 10v-6m5 6V7' },
 ];
@@ -75,6 +88,23 @@ const initials = (n: string) => n.split(' ').map((p) => p[0]).slice(0, 2).join('
         <slot />
       </main>
     </div>
+
+    <!-- Aktivitäts-Heartbeat: zählt aktive Zeit im Dashboard (→ Rangliste) -->
+    <script type="application/json" id="rt-data" set:html={JSON.stringify(rtData)}></script>
+    <script>
+      import { createClient } from '@supabase/supabase-js';
+      const c = JSON.parse(document.getElementById('rt-data').textContent);
+      if (c.access_token && !window.__ateamHB) {
+        window.__ateamHB = true;
+        const sb = createClient(c.url, c.key, {
+          auth: { persistSession: false, autoRefreshToken: false },
+          global: { headers: { Authorization: 'Bearer ' + c.access_token } },
+        });
+        const credit = (s) => { sb.rpc('track_activity', { p_seconds: s }).then(() => {}, () => {}); };
+        credit(5);                                                            // beim Öffnen sofort gutschreiben
+        setInterval(() => { if (document.visibilityState === 'visible') credit(30); }, 30000); // nur aktive Zeit
+      }
+    </script>
 
     <style is:global>
       :root { color-scheme: dark; }

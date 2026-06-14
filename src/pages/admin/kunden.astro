@@ -1,17 +1,12 @@
 ---
 // ATEAM — Kunden & Projekte. Echte Daten + Anlegen/Bearbeiten via API.
 import AdminLayout from '../../layouts/AdminLayout.astro';
-import { createSupabaseServer } from '../../lib/supabase';
+import { requireAdmin } from '../../lib/supabase';
 
 export const prerender = false;
 
-const supabase = createSupabaseServer(Astro.cookies, Astro.request);
-const { data: { user } } = await supabase.auth.getUser();
-if (!user) return Astro.redirect('/admin/login');
-
-const { data: profile } = await supabase.from('profiles').select('full_name, role').eq('id', user.id).single();
-const displayName = profile?.full_name || user.email?.split('@')[0] || 'Team';
-const roleLabel = profile?.role === 'admin' ? 'Admin' : 'Mitarbeiter';
+const { supabase, displayName, roleLabel, redirect } = await requireAdmin(Astro.cookies, Astro.request);
+if (redirect) return Astro.redirect(redirect);
 
 const { data: customersRaw } = await supabase
   .from('customers').select('id, name, company, email, phone, industry, status, notes, created_at')

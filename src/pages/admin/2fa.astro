@@ -1,0 +1,134 @@
+---
+// ATEAM — 2FA-Abfrage bei jedem Login (Faktor ist bereits eingerichtet).
+// Fragt den 6-stelligen TOTP-Code ab und hebt die Session auf aal2.
+import { Image } from 'astro:assets';
+import berg from '../../assets/alps-logo-symbol.png';
+import { createSupabaseServer } from '../../lib/supabase';
+
+export const prerender = false;
+
+const supabase = createSupabaseServer(Astro.cookies, Astro.request);
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return Astro.redirect('/admin/login');
+
+const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+if (aal?.currentLevel === 'aal2') return Astro.redirect('/admin/');
+if (aal?.nextLevel !== 'aal2') return Astro.redirect('/admin/2fa-setup'); // kein Faktor → einrichten
+
+const { data: list } = await supabase.auth.mfa.listFactors();
+const factor = (list?.totp ?? [])[0];
+if (!factor) return Astro.redirect('/admin/2fa-setup');
+const factorId = factor.id;
+
+let errorMsg = '';
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const code = String(form.get('code') ?? '').replace(/\s/g, '');
+  if (code.length < 6) {
+    errorMsg = 'Bitte gib den 6-stelligen Code ein.';
+  } else {
+    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId });
+    if (chErr || !ch) {
+      errorMsg = 'Etwas ist schiefgelaufen. Bitte lade die Seite neu.';
+    } else {
+      const { error: vErr } = await supabase.auth.mfa.verify({ factorId, challengeId: ch.id, code });
+      if (vErr) {
+        errorMsg = 'Der Code ist falsch oder abgelaufen. Bitte erneut versuchen.';
+      } else {
+        return Astro.redirect('/admin/');
+      }
+    }
+  }
+}
+---
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>ATEAM · 2FA — Alps Agency</title>
+    <style is:global>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; min-height: 100%; }
+      body {
+        font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+        color: #eaf0ff; background: #07142b; -webkit-font-smoothing: antialiased;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="card">
+        <div class="brand">
+          <Image class="brand-mark" src={berg} alt="" aria-hidden="true" width={132} height={61} />
+          <span class="brand-word"><strong>ALPS</strong><em>ATEAM</em></span>
+        </div>
+
+        <span class="step">Sicherheitsprüfung</span>
+        <h1>Zwei-Faktor-Code</h1>
+        <p class="sub">Gib den aktuellen 6-stelligen Code aus deiner Authenticator-App ein.</p>
+
+        <form method="POST" novalidate id="verify-form">
+          <label class="field">
+            <span>Code</span>
+            <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code"
+              pattern="[0-9]*" maxlength="6" placeholder="123456" required autofocus />
+          </label>
+
+          {errorMsg && <p class="hint err">{errorMsg}</p>}
+
+          <button type="submit" class="submit">Bestätigen</button>
+        </form>
+
+        <p class="foot"><a href="/admin/logout">Abbrechen &amp; abmelden</a></p>
+      </section>
+    </main>
+
+    <script is:inline>
+      const form = document.getElementById('verify-form');
+      form?.addEventListener('submit', () => {
+        const btn = form.querySelector('.submit');
+        if (btn) { btn.textContent = 'Wird geprüft …'; btn.disabled = true; }
+      });
+    </script>
+
+    <style>
+      .wrap { min-height: 100svh; display: grid; place-items: center; padding: 2rem 1.25rem;
+        background: radial-gradient(120% 100% at 50% -10%, #1e3f86 0%, #0c2150 42%, #07142b 84%); }
+      .card { width: 100%; max-width: 22rem; }
+      .brand { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.6rem; }
+      .brand-mark { width: 2.8rem; height: auto; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
+      .brand-word { display: flex; align-items: baseline; gap: 0.4rem; }
+      .brand-word strong { font-weight: 700; font-size: 1.05rem; letter-spacing: 0.02em; }
+      .brand-word em { font-style: normal; font-weight: 500; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: #a9b8d4; }
+
+      .step { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: #7d9bff; }
+      h1 { margin: 0.35rem 0 0.5rem; font-size: clamp(1.5rem, 4vw, 1.9rem); font-weight: 700; }
+      .sub { margin: 0 0 1.6rem; color: #a9b8d4; font-size: 0.92rem; line-height: 1.55; }
+
+      .field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
+      .field > span { font-size: 0.82rem; color: #a9b8d4; font-weight: 500; }
+      .field input { width: 100%; padding: 0.85rem 1rem; border-radius: 0.7rem; letter-spacing: 0.4em; font-size: 1.25rem; text-align: center;
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); color: #fff; font-family: ui-monospace, monospace;
+        transition: border-color 0.25s ease, background 0.25s ease; }
+      .field input::placeholder { color: rgba(169,184,212,0.4); letter-spacing: 0.4em; }
+      .field input:focus { outline: none; border-color: #4d6bff; background: rgba(26,63,255,0.07); }
+
+      .submit { width: 100%; margin-top: 0.2rem; padding: 0.95rem 1rem; border: 0; border-radius: 0.7rem; cursor: pointer;
+        font: inherit; font-weight: 600; font-size: 1.02rem; color: #fff;
+        background: linear-gradient(180deg, #2b54c8 0%, #1a3fff 100%); box-shadow: 0 8px 26px -8px rgba(26,63,255,0.6);
+        transition: filter 0.2s ease, box-shadow 0.3s ease, transform 0.15s ease; }
+      .submit:hover { filter: brightness(1.08); box-shadow: 0 0 40px -6px rgba(26,63,255,0.75); }
+      .submit:active { transform: translateY(1px); }
+      .submit:disabled { opacity: 0.8; cursor: default; }
+
+      .hint { margin: 0 0 1rem; font-size: 0.85rem; color: #ff8a94;
+        background: rgba(255,93,108,0.1); border: 1px solid rgba(255,93,108,0.3); padding: 0.7rem 0.85rem; border-radius: 0.6rem; }
+      .foot { margin: 1.6rem 0 0; text-align: center; font-size: 0.8rem; }
+      .foot a { color: #7e8db0; text-decoration: none; }
+      .foot a:hover { color: #a9b8d4; text-decoration: underline; }
+    </style>
+  </body>
+</html>
