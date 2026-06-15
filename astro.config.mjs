@@ -15,6 +15,7 @@ export default defineConfig({
   site: 'https://alpsagency.de',
   output: 'static',
   adapter: vercel(),
+  security: { checkOrigin: false },
   integrations: [sitemap(), react()],
   vite: {
     plugins: [tailwindcss()],
