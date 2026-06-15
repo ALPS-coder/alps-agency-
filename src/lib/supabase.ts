@@ -54,7 +54,7 @@ export async function requireAdmin(cookies: AstroCookies, request: Request) {
 
   // Temporärer Schalter: ENFORCE_2FA=false in .env hebt den 2FA-Zwang auf
   // (z. B. zum Anpassen des Dashboards). Standard = an.
-  const enforce2fa = import.meta.env.ENFORCE_2FA !== 'false';
+  const enforce2fa = import.meta.env.ENFORCE_2FA === 'true';
 
   const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (enforce2fa && aal?.currentLevel !== 'aal2') {

@@ -12,7 +12,7 @@ const { data: { user } } = await supabase.auth.getUser();
 if (!user) return Astro.redirect('/admin/login');
 
 // 2FA muss abgeschlossen sein (aal2), sonst zuerst dorthin.
-const enforce2fa = import.meta.env.ENFORCE_2FA !== 'false';
+const enforce2fa = import.meta.env.ENFORCE_2FA === 'true';
 const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 if (enforce2fa && aal?.currentLevel !== 'aal2') {
   return Astro.redirect(aal?.nextLevel === 'aal2' ? '/admin/2fa' : '/admin/2fa-setup');
