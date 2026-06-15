@@ -22,9 +22,21 @@ const items = [
       {items.map((item) => (
         <li class="work-card glass" data-reveal>
           <div class="work-thumb" style={`--from:${item.from};--to:${item.to};`} aria-hidden="true">
-            <svg class="work-peak" viewBox="0 0 64 40" aria-hidden="true">
-              <path d="M2 38 L22 8 L32 22 L42 4 L62 38 Z" fill="rgba(255,255,255,0.16)" />
-            </svg>
+            {item.key === 'one' ? (
+              <video
+                class="work-video"
+                src="/webdesign-referenz.mp4"
+                muted
+                loop
+                playsinline
+                preload="none"
+                data-autoplay
+              />
+            ) : (
+              <svg class="work-peak" viewBox="0 0 64 40" aria-hidden="true">
+                <path d="M2 38 L22 8 L32 22 L42 4 L62 38 Z" fill="rgba(255,255,255,0.16)" />
+              </svg>
+            )}
           </div>
           <div class="work-body">
             <span class="work-cat">{t(`work.items.${item.key}.category`)}</span>
@@ -38,7 +50,6 @@ const items = [
       ))}
     </ul>
 
-    <p class="work-note" data-reveal>{t('work.placeholder_note')}</p>
   </div>
 </section>
 
@@ -80,6 +91,15 @@ const items = [
   .work-peak { width: 45%; height: auto; position: relative; z-index: 1; transition: transform 0.5s ease; }
   .work-card:hover .work-peak { transform: translateY(-4px) scale(1.05); }
 
+  .work-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
+
   .work-body { padding: 1.4rem 1.6rem 1.6rem; }
   .work-cat {
     font-family: var(--font-display);
@@ -100,18 +120,31 @@ const items = [
   .work-link svg { width: 1.1rem; height: 1.1rem; transition: transform 0.25s ease; }
   .work-link:hover svg { transform: translateX(4px); }
 
-  .work-note {
-    margin-top: 2rem;
-    font-size: 0.9rem;
-    color: var(--color-muted);
-    opacity: 0.8;
-  }
 </style>
 
 <script>
   import gsap from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
+
+  // Autoplay video wenn Sektion sichtbar wird
+  const videos = document.querySelectorAll<HTMLVideoElement>('[data-autoplay]');
+  if (videos.length) {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          const vid = e.target as HTMLVideoElement;
+          if (e.isIntersecting) {
+            vid.play().catch(() => {});
+          } else {
+            vid.pause();
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    videos.forEach((v) => obs.observe(v));
+  }
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const section = document.getElementById('work');

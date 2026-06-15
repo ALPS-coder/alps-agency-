@@ -135,6 +135,27 @@ export default function MarqueeHero({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Beispiele-Overlay-Kopplung: Solange das Overlay offen ist, darf der Marquee-„Zurück
+  // zum Start"-Button (Portal, liegt sonst ÜBER dem Overlay) NICHT sichtbar sein — sonst
+  // klickt der Nutzer ihn statt des Overlay-Zurück und müsste zweimal klicken. Schließt
+  // das Overlay „zurück zu den Referenzen", blenden wir ihn wieder ein (Zustand merken).
+  const backBeforeOverlayRef = useRef(false);
+  useEffect(() => {
+    const onOverlayOpen = () => {
+      setShowBack((prev) => {
+        backBeforeOverlayRef.current = prev;
+        return false;
+      });
+    };
+    const onOverlayBackWork = () => setShowBack(backBeforeOverlayRef.current);
+    window.addEventListener("beispiele-open", onOverlayOpen);
+    window.addEventListener("beispiele-back-work", onOverlayBackWork);
+    return () => {
+      window.removeEventListener("beispiele-open", onOverlayOpen);
+      window.removeEventListener("beispiele-back-work", onOverlayBackWork);
+    };
+  }, []);
+
   const flyBack = () => {
     if (flyingRef.current || !lastRef.current) return;
     flyingRef.current = true;

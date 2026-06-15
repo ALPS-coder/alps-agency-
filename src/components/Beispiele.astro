@@ -58,7 +58,6 @@ const items = [
           ))}
         </ul>
 
-        <p class="gallery-note">{t('beispiele.note')}</p>
       </div>
     </section>
   </div>
@@ -205,12 +204,6 @@ const items = [
   }
   .gallery-title { font-size: 1.2rem; font-weight: 600; margin: 0.45rem 0 0; }
 
-  .gallery-note {
-    margin-top: 2rem;
-    font-size: 0.9rem;
-    color: var(--color-muted);
-    opacity: 0.8;
-  }
 
   @media (prefers-reduced-motion: reduce) {
     .beispiele-overlay,
@@ -227,35 +220,59 @@ const items = [
     const root = document.documentElement;
     const scroller = overlay.querySelector<HTMLElement>('.beispiele-scroll');
     let open = false;
+    // Merken, ob das Overlay über „Web Design" (aus den Referenzen) geöffnet wurde:
+    // dann beim Schließen direkt zum Hero zurück statt zur runtergescrollten Sektion.
+    let fromWebDesign = false;
 
-    const show = () => {
+    const show = (viaWebDesign = false) => {
       if (open) return;
       open = true;
+      fromWebDesign = viaWebDesign;
       overlay.hidden = false;
       overlay.setAttribute('aria-hidden', 'false');
       root.classList.add('beispiele-open');
+      // Marquee-„Zurück zum Start"-Button (Portal, läge sonst über dem Overlay) ausblenden,
+      // damit der Nutzer nur den EINEN Zurück-Button des Overlays sieht.
+      window.dispatchEvent(new CustomEvent('beispiele-open'));
       if (scroller) scroller.scrollTop = 0;
       requestAnimationFrame(() => overlay.classList.add('is-open'));
     };
 
-    const hide = () => {
+    // returnHome=true (Zurück-Button / ESC): bei „Web Design"-Herkunft zum Hero zurück.
+    // Header-Navi-Links rufen hide(false) → sie navigieren selbst zu ihrem Anker.
+    const hide = (returnHome = false) => {
       if (!open) return;
       open = false;
       overlay.classList.remove('is-open');
       overlay.setAttribute('aria-hidden', 'true');
       root.classList.remove('beispiele-open');
+      // Bei „Web Design"-Herkunft: zurück zur Referenzen-Sektion (#work) springen, SOLANGE
+      // das Overlay noch deckt (instant, damit der Sprung unsichtbar bleibt). Danach den
+      // Marquee-„Zurück zum Start"-Button wieder einblenden (er wurde beim Öffnen versteckt).
+      if (returnHome && fromWebDesign) {
+        const work = document.getElementById('work');
+        if (work) {
+          const html = document.documentElement;
+          const prev = html.style.scrollBehavior;
+          html.style.scrollBehavior = 'auto';
+          work.scrollIntoView({ block: 'start' });
+          html.style.scrollBehavior = prev;
+        }
+        window.dispatchEvent(new CustomEvent('beispiele-back-work'));
+      }
+      fromWebDesign = false;
       // Nach dem Ausblenden komplett aus dem Layout nehmen (sonst fängt die unsichtbare
       // Hülle Klicks ab). Timeout statt transitionend → robust auch bei reduzierter Bewegung.
       window.setTimeout(() => { if (!open) overlay.hidden = true; }, 420);
     };
 
-    window.addEventListener('open-beispiele', show);
-    overlay.querySelector('.beispiele-back')?.addEventListener('click', hide);
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(); });
+    window.addEventListener('open-beispiele', () => show(false));
+    overlay.querySelector('.beispiele-back')?.addEventListener('click', () => hide(true));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') hide(true); });
 
-    // „Web Design" (und ggf. weitere Auslöser) öffnen das Overlay.
+    // „Web Design" (aus den Referenzen) öffnet das Overlay → beim Schließen zum Hero zurück.
     document.querySelectorAll('[data-open-beispiele]').forEach((el) =>
-      el.addEventListener('click', (e) => { e.preventDefault(); show(); }),
+      el.addEventListener('click', (e) => { e.preventDefault(); show(true); }),
     );
 
     // Klick auf einen Header-/Navi-Link verlässt Beispiele (die Navigation läuft darunter).
