@@ -5,14 +5,8 @@
 import { createServerClient, parseCookieHeader, type CookieOptions } from '@supabase/ssr';
 import type { AstroCookies } from 'astro';
 
-// Private Vars (ohne PUBLIC_ Prefix) werden von Vercel zur Laufzeit injiziert.
-// PUBLIC_* Vars sind in Astro nur zur Build-Zeit verfügbar (client-seitig).
-const supabaseUrl = process.env.SUPABASE_URL || import.meta.env.PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '';
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('[supabase] ENV fehlt: SUPABASE_URL / SUPABASE_ANON_KEY in Vercel setzen.');
-}
+const supabaseUrl = 'https://bymnbztudvcjmvbchzvi.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5bW5ienR1ZHZjam12YmNoenZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNzM5ODgsImV4cCI6MjA5Njk0OTk4OH0.bUKCHAj_KLhp7azTRJ-MmaydlngPa11cXiKnMYAN8Us';
 
 /**
  * Server-Client an die aktuelle Astro-Anfrage gebunden.
