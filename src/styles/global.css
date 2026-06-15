@@ -336,7 +336,7 @@
     line-height: 1.2;
     font-weight: 600;
     border: 1px solid transparent;
-    border-radius: 360px;
+    border-radius: 0.6rem;
     color: var(--shiny-fg);
     /* Body leicht royal-blau gefüllt (statt fast-schwarz), damit der Button im
        Ruhezustand klar als CTA erkennbar ist — bleibt aber dezent. */

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Alps Agency — KI-Webdesign & lokale Google-Sichtbarkeit",
-    "description": "Alps Agency bringt lokale Unternehmen an die Spitze: KI-gestütztes Webdesign, Google-Profil-Optimierung und mehr Bewertungen — damit dich mehr Kunden finden und buchen.",
+    "title": "Alps Agency — Webdesign & lokale Google-Sichtbarkeit",
+    "description": "Alps Agency bringt lokale Unternehmen an die Spitze: modernes Webdesign, Google-Profil-Optimierung und mehr Bewertungen — damit dich mehr Kunden finden und buchen.",
     "og_alt": "Alps Agency — Berggipfel über den Wolken"
   },
   "nav": {
@@ -20,10 +20,10 @@
     "label": "Alps Agency wird geladen"
   },
   "hero": {
-    "badge": "KI-Webdesign · Automatisierung · Wachstum",
+    "badge": "Webdesign · Automatisierung · Wachstum",
     "title_pre": "Mehr Kunden.",
     "title_accent": "Weniger Aufwand.",
-    "subtitle": "Modernes KI-Webdesign trifft smarte Automatisierung — damit Sie online gefunden werden, mehr Anfragen gewinnen und planbar wachsen.",
+    "subtitle": "Modernes Webdesign trifft smarte Automatisierung — damit Sie online gefunden werden, mehr Anfragen gewinnen und planbar wachsen.",
     "cta_primary": "Kostenloses Erstgespräch",
     "cta_secondary": "Unsere Arbeiten",
     "scroll": "Scrollen",
@@ -48,7 +48,7 @@
       },
       "webdesign": {
         "title": "AI Webdesign",
-        "desc": "Moderne, schnelle Websites mit KI gestaltet — individuell auf Ihre Marke abgestimmt."
+        "desc": "Moderne, schnelle Websites — individuell auf Ihre Marke abgestimmt."
       },
       "reviews": {
         "title": "Bewertungen sammeln & beantworten",
@@ -81,16 +81,16 @@
     "back": "Zurück",
     "items": {
       "one": {
-        "title": "Website-Relaunch",
-        "category": "Live-Beispiel"
+        "title": "Restaurant & Pizzeria",
+        "category": "Gastronomie"
       },
       "two": {
-        "title": "Lokale Sichtbarkeit",
-        "category": "Bald verfügbar"
+        "title": "Gebäudereinigung",
+        "category": "Dienstleistung"
       },
       "three": {
-        "title": "Marken-Auftritt",
-        "category": "Bald verfügbar"
+        "title": "Hotel & Resort",
+        "category": "Hotellerie"
       }
     }
   },
@@ -131,7 +131,7 @@
         "period": "einmalig",
         "features": [
           "Alles aus Starter",
-          "KI-Website (One-Pager)",
+          "Moderne Website (One-Pager)",
           "Bewertungs-Management",
           "Wöchentliche Beiträge",
           "Priority Support"
@@ -163,7 +163,7 @@
       },
       "q2": {
         "q": "Wie viel Aufwand habe ich — und wie schnell geht es?",
-        "a": "Sehr wenig. Sie liefern uns ein paar Basics wie Logo und Eckdaten, den Rest übernehmen wir: Texte, Design und Technik. Dank KI-gestütztem Aufbau geht das schnell — viele Websites stehen in unter zwei Wochen, erste Effekte bei der Sichtbarkeit zeigen sich oft kurz danach."
+        "a": "Sehr wenig. Sie liefern uns ein paar Basics wie Logo und Eckdaten, den Rest übernehmen wir: Texte, Design und Technik. Dank unserem professionellen Aufbau geht das schnell — viele Websites stehen in unter zwei Wochen, erste Effekte bei der Sichtbarkeit zeigen sich oft kurz danach."
       },
       "q3": {
         "q": "Was kostet das — und gibt es versteckte Kosten?",
@@ -179,7 +179,7 @@
       },
       "q6": {
         "q": "Warum Alps Agency — und was riskiere ich?",
-        "a": "Wir verbinden echten KI-Einsatz mit ehrlichem, persönlichem Marketing: schnell live, transparent und ortsunabhängig in mehreren Sprachen. Betreut werden Sie immer persönlich, nicht von einem Bot. Ihr Risiko dabei: keines — das Erstgespräch ist kostenlos und unverbindlich. Lernen Sie uns kennen und entscheiden Sie danach in Ruhe."
+        "a": "Wir verbinden modernes Webdesign mit ehrlichem, persönlichem Marketing: schnell live, transparent und ortsunabhängig in mehreren Sprachen. Betreut werden Sie immer persönlich, nicht von einem Bot. Ihr Risiko dabei: keines — das Erstgespräch ist kostenlos und unverbindlich. Lernen Sie uns kennen und entscheiden Sie danach in Ruhe."
       }
     }
   },
@@ -230,11 +230,11 @@
     }
   },
   "footer": {
-    "tagline": "KI-Webdesign & lokale Google-Sichtbarkeit für Unternehmen, die wachsen wollen.",
+    "tagline": "Webdesign & lokale Google-Sichtbarkeit für Unternehmen, die wachsen wollen.",
     "nav_title": "Navigation",
     "contact_title": "Kontakt",
     "legal_title": "Rechtliches",
-    "email": "hallo@alpsagency.de",
+    "email": "ALPSAGENCY@proton.me",
     "phone": "+49 000 0000000",
     "whatsapp": "WhatsApp schreiben",
     "imprint": "Impressum",

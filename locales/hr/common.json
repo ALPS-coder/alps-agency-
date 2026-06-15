@@ -81,16 +81,16 @@
     "back": "Natrag",
     "items": {
       "one": {
-        "title": "Redizajn web stranice",
-        "category": "Primjer uživo"
+        "title": "Restoran & Pizzerija",
+        "category": "Gastronomija"
       },
       "two": {
-        "title": "Lokalna vidljivost",
-        "category": "Uskoro dostupno"
+        "title": "Čišćenje objekata",
+        "category": "Usluge"
       },
       "three": {
-        "title": "Nastup brenda",
-        "category": "Uskoro dostupno"
+        "title": "Hotel & Resort",
+        "category": "Hotelijerstvo"
       }
     }
   },
@@ -234,7 +234,7 @@
     "nav_title": "Navigacija",
     "contact_title": "Kontakt",
     "legal_title": "Pravne informacije",
-    "email": "hallo@alpsagency.de",
+    "email": "ALPSAGENCY@proton.me",
     "phone": "+49 000 0000000",
     "whatsapp": "Pošalji poruku na WhatsApp",
     "imprint": "Impressum",

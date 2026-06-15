@@ -1,6 +1,8 @@
 ---
-// ATEAM — 2FA-Abfrage bei jedem Login (Faktor ist bereits eingerichtet).
-// Fragt den 6-stelligen TOTP-Code ab und hebt die Session auf aal2.
+// ATEAM — erzwungene Passwort-Änderung nach dem ersten Login.
+// Greift nur, wenn profiles.must_change_password = true ist. Setzt das neue
+// Passwort und hebt das Flag auf. Eigener Guard (nicht requireAdmin), damit
+// keine Endlosschleife mit dem Passwort-Redirect entsteht.
 import { Image } from 'astro:assets';
 import berg from '../../assets/alps-logo-symbol.png';
 import { createSupabaseServer } from '../../lib/supabase';
@@ -11,32 +13,39 @@ const supabase = createSupabaseServer(Astro.cookies, Astro.request);
 const { data: { user } } = await supabase.auth.getUser();
 if (!user) return Astro.redirect('/admin/login');
 
+// 2FA muss abgeschlossen sein (aal2), sonst zuerst dorthin.
+const enforce2fa = import.meta.env.ENFORCE_2FA !== 'false';
 const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-if (aal?.currentLevel === 'aal2') return Astro.redirect('/admin/');
-if (aal?.nextLevel !== 'aal2') return Astro.redirect('/admin/2fa-setup'); // kein Faktor → einrichten
+if (enforce2fa && aal?.currentLevel !== 'aal2') {
+  return Astro.redirect(aal?.nextLevel === 'aal2' ? '/admin/2fa' : '/admin/2fa-setup');
+}
 
-const { data: list } = await supabase.auth.mfa.listFactors();
-const factor = (list?.totp ?? [])[0];
-if (!factor) return Astro.redirect('/admin/2fa-setup');
-const factorId = factor.id;
+// Kein Zwang gesetzt → nichts zu tun.
+const { data: profile } = await supabase
+  .from('profiles')
+  .select('must_change_password')
+  .eq('id', user.id)
+  .single();
+if (!profile?.must_change_password) return Astro.redirect('/admin/');
 
 let errorMsg = '';
 if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData();
-  const code = String(form.get('code') ?? '').replace(/\s/g, '');
-  if (code.length < 6) {
-    errorMsg = 'Bitte gib den 6-stelligen Code ein.';
+  const pw = String(form.get('password') ?? '');
+  const pw2 = String(form.get('password2') ?? '');
+  if (pw.length < 8) {
+    errorMsg = 'Das Passwort muss mindestens 8 Zeichen haben.';
+  } else if (pw !== pw2) {
+    errorMsg = 'Die beiden Passwörter stimmen nicht überein.';
   } else {
-    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId });
-    if (chErr || !ch) {
-      errorMsg = 'Etwas ist schiefgelaufen. Bitte lade die Seite neu.';
+    const { error: upErr } = await supabase.auth.updateUser({ password: pw });
+    if (upErr) {
+      errorMsg = upErr.message.includes('different from the old')
+        ? 'Bitte wähle ein anderes Passwort als das temporäre.'
+        : 'Passwort konnte nicht gesetzt werden. Bitte erneut versuchen.';
     } else {
-      const { error: vErr } = await supabase.auth.mfa.verify({ factorId, challengeId: ch.id, code });
-      if (vErr) {
-        errorMsg = 'Der Code ist falsch oder abgelaufen. Bitte erneut versuchen.';
-      } else {
-        return Astro.redirect('/admin/');
-      }
+      await supabase.from('profiles').update({ must_change_password: false }).eq('id', user.id);
+      return Astro.redirect('/admin/');
     }
   }
 }
@@ -48,7 +57,7 @@ if (Astro.request.method === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/png" href="/favicon.png" />
-    <title>ATEAM · 2FA — Alps Agency</title>
+    <title>ATEAM · Passwort ändern — Alps Agency</title>
     <style is:global>
       :root { color-scheme: dark; }
       * { box-sizing: border-box; }
@@ -67,20 +76,25 @@ if (Astro.request.method === 'POST') {
           <span class="brand-word"><strong>ALPS</strong><em>ATEAM</em></span>
         </div>
 
-        <span class="step">Sicherheitsprüfung</span>
-        <h1>Zwei-Faktor-Code</h1>
-        <p class="sub">Gib den aktuellen 6-stelligen Code aus deiner Authenticator-App ein.</p>
+        <span class="step">Erster Login</span>
+        <h1>Neues Passwort wählen</h1>
+        <p class="sub">Lege jetzt dein persönliches Passwort fest. Das temporäre Start-Passwort wird damit ungültig.</p>
 
-        <form method="POST" novalidate id="verify-form">
+        <form method="POST" novalidate id="pw-form">
           <label class="field">
-            <span>Code</span>
-            <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code"
-              pattern="[0-9]*" maxlength="6" placeholder="123456" required autofocus />
+            <span>Neues Passwort</span>
+            <input type="password" name="password" autocomplete="new-password"
+              minlength="8" placeholder="Mind. 8 Zeichen" required autofocus />
+          </label>
+          <label class="field">
+            <span>Passwort wiederholen</span>
+            <input type="password" name="password2" autocomplete="new-password"
+              minlength="8" placeholder="Erneut eingeben" required />
           </label>
 
           {errorMsg && <p class="hint err">{errorMsg}</p>}
 
-          <button type="submit" class="submit">Bestätigen</button>
+          <button type="submit" class="submit">Passwort speichern</button>
         </form>
 
         <p class="foot"><a href="/admin/logout">Abbrechen &amp; abmelden</a></p>
@@ -88,10 +102,10 @@ if (Astro.request.method === 'POST') {
     </main>
 
     <script is:inline>
-      const form = document.getElementById('verify-form');
+      const form = document.getElementById('pw-form');
       form?.addEventListener('submit', () => {
         const btn = form.querySelector('.submit');
-        if (btn) { btn.textContent = 'Wird geprüft …'; btn.disabled = true; }
+        if (btn) { btn.textContent = 'Wird gespeichert …'; btn.disabled = true; }
       });
     </script>
 
@@ -111,10 +125,10 @@ if (Astro.request.method === 'POST') {
 
       .field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
       .field > span { font-size: 0.82rem; color: #a9b8d4; font-weight: 500; }
-      .field input { width: 100%; padding: 0.85rem 1rem; border-radius: 0.7rem; letter-spacing: 0.4em; font-size: 1.25rem; text-align: center;
-        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); color: #fff; font-family: ui-monospace, monospace;
+      .field input { width: 100%; padding: 0.85rem 1rem; border-radius: 0.7rem; font-size: 1.02rem;
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); color: #fff;
         transition: border-color 0.25s ease, background 0.25s ease; }
-      .field input::placeholder { color: rgba(169,184,212,0.4); letter-spacing: 0.4em; }
+      .field input::placeholder { color: rgba(169,184,212,0.4); }
       .field input:focus { outline: none; border-color: #4d6bff; background: rgba(26,63,255,0.07); }
 
       .submit { width: 100%; margin-top: 0.2rem; padding: 0.95rem 1rem; border: 0; border-radius: 0.7rem; cursor: pointer;

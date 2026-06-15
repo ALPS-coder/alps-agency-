@@ -81,16 +81,16 @@
     "back": "กลับ",
     "items": {
       "one": {
-        "title": "เปิดตัวเว็บไซต์ใหม่",
-        "category": "ตัวอย่างจริง"
+        "title": "ร้านอาหาร & พิซซ่า",
+        "category": "ร้านอาหาร"
       },
       "two": {
-        "title": "การมองเห็นในพื้นที่",
-        "category": "เร็ว ๆ นี้"
+        "title": "บริการทำความสะอาดอาคาร",
+        "category": "บริการ"
       },
       "three": {
-        "title": "ภาพลักษณ์แบรนด์",
-        "category": "เร็ว ๆ นี้"
+        "title": "โรงแรม & รีสอร์ท",
+        "category": "การโรงแรม"
       }
     }
   },
@@ -234,7 +234,7 @@
     "nav_title": "นำทาง",
     "contact_title": "ติดต่อ",
     "legal_title": "ข้อมูลทางกฎหมาย",
-    "email": "hallo@alpsagency.de",
+    "email": "ALPSAGENCY@proton.me",
     "phone": "+49 000 0000000",
     "whatsapp": "ส่งข้อความทาง WhatsApp",
     "imprint": "ข้อมูลผู้จัดทำ",

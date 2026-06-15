@@ -1,12 +1,48 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Alps Agency">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="peak" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#eef2ff"/>
-      <stop offset="0.55" stop-color="#9fb4ff"/>
-      <stop offset="1" stop-color="#1a3fff"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d1f45"/>
+      <stop offset="1" stop-color="#060f22"/>
+    </linearGradient>
+    <linearGradient id="peak-l" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#d0daf5"/>
+      <stop offset="0.5" stop-color="#8fa4cc"/>
+      <stop offset="1" stop-color="#5570a0"/>
+    </linearGradient>
+    <linearGradient id="peak-c" x1="0" y1="0" x2="0.2" y2="1">
+      <stop offset="0" stop-color="#eaf0ff"/>
+      <stop offset="0.45" stop-color="#a8bde8"/>
+      <stop offset="1" stop-color="#4d6baf"/>
+    </linearGradient>
+    <linearGradient id="peak-r" x1="0.1" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#c8d4ee"/>
+      <stop offset="0.5" stop-color="#7a92bc"/>
+      <stop offset="1" stop-color="#4a6090"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="15" fill="#0a1628"/>
-  <path d="M9 47 L25 19 L33 31 L41 16 L55 47 Z" fill="url(#peak)"/>
-  <path d="M25 19 L31 28 L27 33 L20 30 Z" fill="#0a1628" opacity="0.18"/>
+
+  <!-- Hintergrund -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- Linker Berg -->
+  <polygon points="8,50 20,24 29,40 22,50" fill="url(#peak-l)"/>
+  <!-- Linker Berg Schatten -->
+  <polygon points="20,24 29,40 24,40" fill="#2a3c6a" opacity="0.35"/>
+
+  <!-- Rechter Berg -->
+  <polygon points="35,50 44,28 56,50" fill="url(#peak-r)"/>
+  <!-- Rechter Berg Schatten -->
+  <polygon points="44,28 50,42 44,42" fill="#1e2f55" opacity="0.3"/>
+
+  <!-- Mittlerer Berg (vorne, größer) -->
+  <polygon points="18,50 32,14 46,50" fill="url(#peak-c)"/>
+  <!-- Mittlerer Berg Schatten (rechte Flanke) -->
+  <polygon points="32,14 46,50 39,50" fill="#1a2d5a" opacity="0.32"/>
+
+  <!-- Schneekappe Mitte -->
+  <polygon points="32,14 27,26 32,23 37,26" fill="#f0f4ff" opacity="0.9"/>
+  <!-- Schneekappe Links -->
+  <polygon points="20,24 18,30 20,28 23,30" fill="#e8eeff" opacity="0.7"/>
+  <!-- Schneekappe Rechts -->
+  <polygon points="44,28 42,34 44,32 47,34" fill="#e0eaff" opacity="0.65"/>
 </svg>

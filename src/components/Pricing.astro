@@ -4,10 +4,10 @@ const { lang = defaultLang } = Astro.props as { lang?: Lang };
 const t = useTranslations(lang);
 
 const plans = [
-  { key: 'free', popular: false },
-  { key: 'starter', popular: true },
-  { key: 'professional', popular: false },
-  { key: 'premium', popular: false },
+  { key: 'free', popular: false, ctaClass: 'shiny-cta' },
+  { key: 'starter', popular: true, ctaClass: 'btn-primary' },
+  { key: 'professional', popular: false, ctaClass: 'btn-ghost' },
+  { key: 'premium', popular: false, ctaClass: 'btn-ghost' },
 ].map((p) => ({
   ...p,
   name: t(`pricing.items.${p.key}.name`),
@@ -42,8 +42,8 @@ const plans = [
               </li>
             ))}
           </ul>
-          <a href="#contact" class:list={[plan.popular ? 'btn-primary' : 'btn-ghost', 'price-cta']}>
-            {plan.cta}
+          <a href="#contact" class:list={[plan.ctaClass, 'price-cta']}>
+            {plan.ctaClass === 'shiny-cta' ? <span>{plan.cta}</span> : plan.cta}
           </a>
         </li>
       ))}

@@ -9,7 +9,6 @@ export const prerender = false;
 const { supabase, displayName, roleLabel, redirect } = await requireAdmin(Astro.cookies, Astro.request);
 if (redirect) return Astro.redirect(redirect);
 
-// Daten für die Dropdowns + Session-Tokens für den Browser-Realtime-Client
 const [{ data: customers }, { data: profiles }, { data: { session } }] = await Promise.all([
   supabase.from('customers').select('id, name, company').order('name'),
   supabase.from('profiles').select('full_name').order('full_name'),
@@ -26,7 +25,6 @@ const custOptions = (customers ?? []).map((c) => ({
   label: c.company ? `${c.name} · ${c.company}` : c.name,
 }));
 
-// An den Browser übergeben (Supabase-Config + Session + Stammdaten)
 const clientData = {
   url: import.meta.env.PUBLIC_SUPABASE_URL,
   key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
@@ -35,43 +33,75 @@ const clientData = {
   members,
   customers: custOptions,
   me: displayName,
-  country: 'AT', // Feiertage Österreich
+  country: 'AT',
 };
 ---
 <AdminLayout title="ATEAM · Kalender — Alps Agency" heading="Team-Kalender" subtitle="Gemeinsame Termine — Änderungen erscheinen live bei allen" active="kalender" displayName={displayName} roleLabel={roleLabel}>
   <script type="application/json" id="cal-data" set:html={JSON.stringify(clientData)}></script>
 
-  <div class="cal-bar reveal" style="--i:1">
-    <div class="cal-when">
-      <button class="nav-btn" data-prev aria-label="Vorheriger Monat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-      <h2 class="cal-title" data-title>—</h2>
-      <button class="nav-btn" data-next aria-label="Nächster Monat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
-      <button class="chip" data-today>Heute</button>
+  <div class="cal-wrap">
+    <!-- Top-Bar -->
+    <div class="cal-bar reveal" style="--i:1">
+      <div class="cal-when">
+        <button class="nav-btn" data-prev aria-label="Vorheriger Monat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <h2 class="cal-title" data-title>—</h2>
+        <button class="nav-btn" data-next aria-label="Nächster Monat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <button class="chip today-chip" data-today>Heute</button>
+      </div>
+      <div class="cal-right">
+        <span class="live">
+          <span class="live-dot" data-live-dot></span>
+          <span data-live-label>verbinde…</span>
+        </span>
+        <button class="btn new-btn" data-new>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Neuer Termin</span>
+        </button>
+      </div>
     </div>
-    <div class="cal-right">
-      <span class="live"><span class="live-dot" data-live-dot></span><span data-live-label>verbinde…</span></span>
-      <button class="btn" data-new><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span>Neuer Termin</span></button>
-    </div>
-  </div>
 
-  <div class="cal-panel reveal" style="--i:2">
-    <div class="weekdays">
-      <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+    <!-- Kalender-Panel -->
+    <div class="cal-panel reveal" style="--i:2">
+      <!-- Wochentage-Header -->
+      <div class="weekdays">
+        <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span>
+        <span class="wd-weekend">Sa</span><span class="wd-weekend">So</span>
+      </div>
+      <div class="divider"></div>
+      <!-- Tage-Raster -->
+      <div class="grid" data-grid></div>
     </div>
-    <div class="grid" data-grid></div>
   </div>
 
   <!-- Termin-Drawer -->
   <div class="drawer-backdrop" data-backdrop hidden></div>
   <aside class="drawer" data-drawer hidden aria-label="Termin">
-    <button class="drawer-close" data-close aria-label="Schließen">×</button>
+    <button class="drawer-close" data-close aria-label="Schließen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="drawer-icon" data-drawer-icon>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+    </div>
     <h2 data-d-heading>Neuer Termin</h2>
 
-    <label class="d-field"><span>Titel</span>
+    <div class="d-section">Allgemein</div>
+
+    <label class="d-field">
+      <span>Titel</span>
       <input type="text" data-f-title placeholder="z. B. Kunden-Meeting" />
     </label>
 
-    <label class="d-check"><input type="checkbox" data-f-allday /> <span>Ganztägig</span></label>
+    <label class="d-check">
+      <div class="d-toggle">
+        <input type="checkbox" data-f-allday />
+        <span class="d-toggle-track"></span>
+      </div>
+      <span>Ganztägig</span>
+    </label>
 
     <div class="d-row">
       <label class="d-field"><span>Datum</span><input type="date" data-f-date /></label>
@@ -79,35 +109,42 @@ const clientData = {
       <label class="d-field" data-time-to><span>Bis</span><input type="time" data-f-to value="10:00" /></label>
     </div>
 
+    <div class="d-section" style="margin-top:0.4rem">Team & Kunde</div>
+
     <div class="d-row">
-      <label class="d-field"><span>Zugewiesen an</span>
+      <label class="d-field">
+        <span>Zugewiesen an</span>
         <select data-f-assignee><option value="">— niemand —</option></select>
       </label>
-      <label class="d-field"><span>Kunde (optional)</span>
+      <label class="d-field">
+        <span>Kunde (optional)</span>
         <select data-f-customer><option value="">— kein Kunde —</option></select>
       </label>
     </div>
 
-    <div class="d-field"><span>Farbe</span>
-      <div class="swatches" data-swatches>
-        <button type="button" class="sw ev-blue" data-color="blue" aria-label="Blau"></button>
-        <button type="button" class="sw ev-green" data-color="green" aria-label="Grün"></button>
-        <button type="button" class="sw ev-amber" data-color="amber" aria-label="Gelb"></button>
-        <button type="button" class="sw ev-violet" data-color="violet" aria-label="Violett"></button>
-        <button type="button" class="sw ev-red" data-color="red" aria-label="Rot"></button>
-        <button type="button" class="sw ev-grey" data-color="grey" aria-label="Grau"></button>
-      </div>
+    <div class="d-section" style="margin-top:0.4rem">Farbe</div>
+    <div class="swatches" data-swatches>
+      <button type="button" class="sw ev-blue" data-color="blue" aria-label="Blau" title="Blau"></button>
+      <button type="button" class="sw ev-green" data-color="green" aria-label="Grün" title="Grün"></button>
+      <button type="button" class="sw ev-amber" data-color="amber" aria-label="Gelb" title="Gelb"></button>
+      <button type="button" class="sw ev-violet" data-color="violet" aria-label="Violett" title="Violett"></button>
+      <button type="button" class="sw ev-red" data-color="red" aria-label="Rot" title="Rot"></button>
+      <button type="button" class="sw ev-grey" data-color="grey" aria-label="Grau" title="Grau"></button>
     </div>
 
-    <label class="d-field"><span>Notiz</span>
-      <textarea data-f-notes rows="3" placeholder="Details …"></textarea>
+    <div class="d-section" style="margin-top:1rem">Notiz</div>
+    <label class="d-field">
+      <textarea data-f-notes rows="3" placeholder="Details, Links, Infos …"></textarea>
     </label>
 
     <p class="d-err" data-d-err hidden></p>
 
     <div class="d-actions">
       <button class="btn d-save" data-save><span>Speichern</span></button>
-      <button class="btn ghost d-del" data-del hidden><span>Löschen</span></button>
+      <button class="btn ghost d-del" data-del hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:1rem;height:1rem"><path d="M3 6h18M19 6l-1 14H6L5 6M9 6V4h6v2"/></svg>
+        <span>Löschen</span>
+      </button>
     </div>
     <p class="d-meta" data-d-meta></p>
   </aside>
@@ -141,7 +178,6 @@ const clientData = {
     let editing = null;
     let color = 'blue';
 
-    // ---- Feiertage (Österreich), inkl. beweglicher Oster-Termine ----
     function easterSunday(y) {
       const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4;
       const f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3);
@@ -174,23 +210,20 @@ const clientData = {
       return list;
     }
 
-    // ---- Dropdowns füllen ----
     const aSel = $('[data-f-assignee]');
     cfg.members.forEach((m) => { const o = document.createElement('option'); o.value = m; o.textContent = m; aSel.appendChild(o); });
     const cSel = $('[data-f-customer]');
     cfg.customers.forEach((c) => { const o = document.createElement('option'); o.value = c.id; o.textContent = c.label; cSel.appendChild(o); });
     const custName = (id) => (cfg.customers.find((c) => c.id === id) || {}).label || '';
 
-    // ---- Monatsraster zeichnen ----
     function render() {
       titleEl.textContent = `${MONTHS[view.getMonth()]} ${view.getFullYear()}`;
       grid.innerHTML = '';
       const first = new Date(view.getFullYear(), view.getMonth(), 1);
-      const offset = (first.getDay() + 6) % 7; // Montag = 0
+      const offset = (first.getDay() + 6) % 7;
       const start = new Date(first); start.setDate(1 - offset);
       const todayKey = dateKey(new Date());
 
-      // Events nach Tag gruppieren
       const byDay = {};
       for (const ev of events) { (byDay[keyOfIso(ev.start_at)] ||= []).push(ev); }
       for (const k in byDay) byDay[k].sort((a,b) => a.start_at.localeCompare(b.start_at));
@@ -198,7 +231,7 @@ const clientData = {
       for (let i = 0; i < 42; i++) {
         const d = new Date(start); d.setDate(start.getDate() + i);
         const k = dateKey(d);
-        const dow = (d.getDay() + 6) % 7;        // 5,6 = Sa,So
+        const dow = (d.getDay() + 6) % 7;
         const holiday = holidays(d.getFullYear())[k];
         const cell = document.createElement('div');
         cell.className = 'day'
@@ -207,6 +240,7 @@ const clientData = {
           + (dow >= 5 ? ' weekend' : '')
           + (holiday ? ' holiday' : '');
         cell.dataset.date = k;
+        cell.style.setProperty('--ci', i);
 
         const head = document.createElement('div'); head.className = 'day-head';
         const num = document.createElement('span'); num.className = 'num'; num.textContent = d.getDate();
@@ -236,13 +270,13 @@ const clientData = {
     }
     const escapeHtml = (s) => (s||'').replace(/[&<>"]/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
-    // ---- Drawer ----
     function setColor(c) { color = c; document.querySelectorAll('.sw').forEach((b) => b.classList.toggle('active', b.dataset.color === c)); }
     function toggleTimes() { const all = $('[data-f-allday]').checked; $('[data-time-from]').style.display = all ? 'none' : ''; $('[data-time-to]').style.display = all ? 'none' : ''; }
 
     function openCreate(k) {
       editing = null;
       $('[data-d-heading]').textContent = 'Neuer Termin';
+      $('[data-drawer-icon]').className = 'drawer-icon create';
       $('[data-f-title]').value = '';
       $('[data-f-allday]').checked = false;
       $('[data-f-date]').value = k || dateKey(new Date());
@@ -260,6 +294,7 @@ const clientData = {
     function openEdit(ev) {
       editing = ev.id;
       $('[data-d-heading]').textContent = 'Termin bearbeiten';
+      $('[data-drawer-icon]').className = `drawer-icon edit ev-icon-${ev.color || 'blue'}`;
       $('[data-f-title]').value = ev.title || '';
       $('[data-f-allday]').checked = !!ev.all_day;
       $('[data-f-date]').value = keyOfIso(ev.start_at);
@@ -280,7 +315,7 @@ const clientData = {
       requestAnimationFrame(() => { drawer.classList.add('show'); backdrop.classList.add('show'); });
       setTimeout(() => $('[data-f-title]').focus(), 60);
     }
-    function closeDrawer() { drawer.classList.remove('show'); backdrop.classList.remove('show'); setTimeout(() => { drawer.hidden = true; backdrop.hidden = true; }, 260); }
+    function closeDrawer() { drawer.classList.remove('show'); backdrop.classList.remove('show'); setTimeout(() => { drawer.hidden = true; backdrop.hidden = true; }, 280); }
 
     function buildRow() {
       const title = $('[data-f-title]').value.trim();
@@ -324,7 +359,6 @@ const clientData = {
     }
     function showErr(m) { const e = $('[data-d-err]'); e.textContent = m; e.hidden = false; }
 
-    // ---- Realtime ----
     function applyChange(p) {
       if (p.eventType === 'INSERT') { if (!events.find((e) => e.id === p.new.id)) events.push(p.new); }
       else if (p.eventType === 'UPDATE') { events = events.map((e) => e.id === p.new.id ? p.new : e); }
@@ -347,7 +381,6 @@ const clientData = {
         });
     }
 
-    // ---- Events verdrahten ----
     $('[data-prev]').addEventListener('click', () => { view.setMonth(view.getMonth() - 1); render(); });
     $('[data-next]').addEventListener('click', () => { view.setMonth(view.getMonth() + 1); render(); });
     $('[data-today]').addEventListener('click', () => { view = new Date(); view.setDate(1); render(); });
@@ -364,70 +397,350 @@ const clientData = {
   </script>
 
   <style>
-    .cal-bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
-    .cal-when { display: flex; align-items: center; gap: 0.6rem; }
-    .cal-title { margin: 0; font-size: 1.2rem; min-width: 10.5rem; text-align: center; }
-    .nav-btn { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 0.6rem; cursor: pointer; color: #c3d0ff; background: rgba(255,255,255,0.05); border: 1px solid rgba(140,170,255,0.18); transition: background 0.2s ease, color 0.2s ease; }
-    .nav-btn:hover { background: rgba(77,107,255,0.18); color: #fff; }
+    /* ===== WRAPPER ===== */
+    .cal-wrap { display: flex; flex-direction: column; gap: 1.1rem; }
+
+    /* ===== TOP BAR ===== */
+    .cal-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem; flex-wrap: wrap;
+      padding: 0.9rem 1.2rem;
+      border-radius: 1.25rem;
+      background: linear-gradient(135deg, rgba(14,26,52,0.9) 0%, rgba(8,17,38,0.85) 100%);
+      border: 1px solid rgba(140,170,255,0.16);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 4px 32px -8px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07);
+    }
+    .cal-when { display: flex; align-items: center; gap: 0.55rem; }
+
+    .cal-title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      min-width: 12rem;
+      text-align: center;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, #ffffff 0%, #c3d0ff 50%, #8aa4ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-btn {
+      display: grid; place-items: center;
+      width: 2.35rem; height: 2.35rem;
+      border-radius: 0.8rem; cursor: pointer;
+      color: #b0c0e8;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(140,170,255,0.18);
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: rgba(77,107,255,0.22);
+      border-color: rgba(100,140,255,0.55);
+      color: #fff;
+      transform: scale(1.08);
+      box-shadow: 0 0 18px -4px rgba(77,107,255,0.55);
+    }
     .nav-btn svg { width: 1.1rem; height: 1.1rem; }
-    .cal-right { display: flex; align-items: center; gap: 0.9rem; }
-    .live { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; color: #97a6c8; }
-    .live-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #7e8db0; transition: background 0.3s ease, box-shadow 0.3s ease; }
-    .live-dot.on { background: #25d366; box-shadow: 0 0 0 0 rgba(37,211,102,0.6); animation: lpulse 2.4s ease-out infinite; }
-    @keyframes lpulse { 0% { box-shadow: 0 0 0 0 rgba(37,211,102,0.5);} 70% { box-shadow: 0 0 0 6px rgba(37,211,102,0);} 100% { box-shadow: 0 0 0 0 rgba(37,211,102,0);} }
 
-    .cal-panel { border-radius: 1.1rem; border: 1px solid rgba(140,170,255,0.14); background: linear-gradient(180deg, rgba(12,24,46,0.65), rgba(8,18,38,0.5)); backdrop-filter: blur(10px); padding: 0.75rem; box-shadow: 0 18px 50px -30px rgba(0,0,0,0.9); }
-    .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; padding: 0.2rem 0.1rem 0.6rem; }
-    .weekdays span { text-align: center; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #8294ba; }
-    .weekdays span:nth-child(6), .weekdays span:nth-child(7) { color: #6f7ea3; }
-    .grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(112px, 1fr); gap: 0.5rem; }
+    .today-chip {
+      padding: 0.45rem 1rem; border-radius: 360px; cursor: pointer;
+      font: inherit; font-size: 0.84rem; font-weight: 500;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(140,170,255,0.2);
+      color: #a9b8d4;
+      transition: all 0.2s ease;
+    }
+    .today-chip:hover { color: #fff; border-color: #4d6bff; background: rgba(77,107,255,0.15); }
 
-    /* Jeder Tag = eigene Karte */
-    .day { position: relative; padding: 0; border-radius: 0.8rem; background: rgba(255,255,255,0.035); border: 1px solid rgba(140,170,255,0.12); cursor: pointer; overflow: hidden; display: flex; flex-direction: column; transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease; }
-    .day:hover { background: rgba(77,107,255,0.12); border-color: rgba(140,170,255,0.35); transform: translateY(-2px); box-shadow: 0 10px 24px -14px rgba(26,63,255,0.7); }
-    .day.other { opacity: 0.38; }
-    .day.weekend { background: rgba(120,140,190,0.06); }
+    .cal-right { display: flex; align-items: center; gap: 1rem; }
 
-    .day-head { display: flex; align-items: center; justify-content: space-between; padding: 0.38rem 0.5rem 0.3rem; border-bottom: 1px solid rgba(140,170,255,0.08); }
-    .day .num { display: grid; place-items: center; min-width: 1.6rem; height: 1.6rem; font-size: 0.82rem; font-weight: 700; color: #b9c6e6; border-radius: 0.5rem; }
-    .day.today .num { color: #fff; background: linear-gradient(180deg,#2b54c8,#1a3fff); box-shadow: 0 4px 12px -4px rgba(26,63,255,0.8); }
-    .day.today { border-color: rgba(77,107,255,0.55); }
+    .live { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; color: #7e8db0; }
+    .live-dot {
+      width: 0.55rem; height: 0.55rem; border-radius: 50%;
+      background: #4a5a7a;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    .live-dot.on {
+      background: #25d366;
+      box-shadow: 0 0 0 0 rgba(37,211,102,0.6);
+      animation: lpulse 2.4s ease-out infinite;
+    }
+    @keyframes lpulse {
+      0%   { box-shadow: 0 0 0 0 rgba(37,211,102,0.5); }
+      70%  { box-shadow: 0 0 0 6px rgba(37,211,102,0); }
+      100% { box-shadow: 0 0 0 0 rgba(37,211,102,0); }
+    }
 
-    /* Feiertage */
-    .day.holiday { background: linear-gradient(180deg, rgba(245,200,66,0.10), rgba(255,255,255,0.03)); border-color: rgba(245,200,66,0.3); }
-    .day.holiday .day-head { border-bottom-color: rgba(245,200,66,0.25); }
-    .hol-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #f5c842; box-shadow: 0 0 8px rgba(245,200,66,0.7); }
-    .hol-label { margin: 0.3rem 0.5rem 0; font-size: 0.66rem; font-weight: 600; line-height: 1.15; color: #f5d77a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .new-btn {
+      position: relative; overflow: hidden;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.15rem;
+      border: 0; border-radius: 0.8rem; cursor: pointer;
+      font: inherit; font-weight: 600; font-size: 0.9rem; color: #fff;
+      background: linear-gradient(135deg, #2b54c8 0%, #1a3fff 100%);
+      box-shadow: 0 8px 24px -8px rgba(26,63,255,0.75), inset 0 1px 0 rgba(255,255,255,0.18);
+      transition: filter 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    .new-btn svg { width: 1rem; height: 1rem; }
+    .new-btn::before {
+      content: '';
+      position: absolute; top: 0; left: -120%; width: 60%; height: 100%;
+      background: linear-gradient(110deg, transparent, rgba(255,255,255,0.3), transparent);
+      transform: skewX(-20deg);
+      transition: left 0.55s ease;
+    }
+    .new-btn:hover { filter: brightness(1.1); box-shadow: 0 12px 30px -8px rgba(26,63,255,0.9); }
+    .new-btn:hover::before { left: 130%; }
+    .new-btn:active { transform: translateY(1px); }
 
-    .day-events { display: flex; flex-direction: column; gap: 0.22rem; padding: 0.3rem 0.4rem 0.4rem; overflow: hidden; }
+    /* ===== KALENDER-PANEL ===== */
+    .cal-panel {
+      border-radius: 1.4rem;
+      border: 1px solid rgba(140,170,255,0.13);
+      background: linear-gradient(170deg, rgba(10,22,46,0.82) 0%, rgba(6,14,32,0.72) 100%);
+      backdrop-filter: blur(20px);
+      padding: 0;
+      overflow: hidden;
+      box-shadow:
+        0 40px 70px -30px rgba(0,0,0,0.85),
+        inset 0 1px 0 rgba(255,255,255,0.06),
+        inset 0 -1px 0 rgba(0,0,0,0.3);
+    }
 
-    .event { width: 100%; text-align: left; border: 0; cursor: pointer; font: inherit; font-size: 0.74rem; line-height: 1.2; padding: 0.24rem 0.45rem; border-radius: 0.4rem; color: #eaf0ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: filter 0.15s ease, transform 0.1s ease; }
-    .event:hover { filter: brightness(1.15); }
-    .event b { font-weight: 700; opacity: 0.85; margin-right: 0.1rem; }
-    .ev-blue { background: rgba(77,107,255,0.32); box-shadow: inset 0 0 0 1px rgba(77,107,255,0.5); }
-    .ev-green { background: rgba(37,211,102,0.28); box-shadow: inset 0 0 0 1px rgba(37,211,102,0.5); }
-    .ev-amber { background: rgba(245,200,66,0.28); box-shadow: inset 0 0 0 1px rgba(245,200,66,0.5); color: #fff; }
-    .ev-violet { background: rgba(168,120,255,0.32); box-shadow: inset 0 0 0 1px rgba(168,120,255,0.5); }
-    .ev-red { background: rgba(255,93,108,0.30); box-shadow: inset 0 0 0 1px rgba(255,93,108,0.5); }
-    .ev-grey { background: rgba(160,176,210,0.28); box-shadow: inset 0 0 0 1px rgba(160,176,210,0.45); }
+    /* ===== WOCHENTAGE ===== */
+    .weekdays {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid rgba(140,170,255,0.14);
+    }
+    .weekdays span {
+      text-align: center;
+      font-size: 0.67rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: #5572a0;
+      padding: 0.75rem 0;
+      border-right: 1px solid rgba(140,170,255,0.22);
+    }
+    .weekdays span:last-child { border-right: none; }
+    .wd-weekend { color: #3a4f78 !important; }
 
-    /* Drawer-Felder */
-    .d-check { display: flex; align-items: center; gap: 0.5rem; margin: 0.2rem 0 1rem; font-size: 0.9rem; color: #c3d0ff; cursor: pointer; }
-    .d-check input { width: 1.05rem; height: 1.05rem; accent-color: #1a3fff; }
-    .swatches { display: flex; gap: 0.5rem; }
-    .sw { width: 1.8rem; height: 1.8rem; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s ease, border-color 0.15s ease; }
-    .sw:hover { transform: scale(1.12); }
-    .sw.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.25); }
-    .d-actions { display: flex; gap: 0.6rem; margin-top: 0.6rem; }
+    .divider { display: none; }
+
+    /* ===== TAGE-RASTER ===== */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      grid-auto-rows: minmax(128px, 1fr);
+      border-left: 1px solid rgba(140,170,255,0.22);
+      border-top: 1px solid rgba(140,170,255,0.22);
+    }
+
+    /* ===== TAG-ZELLE ===== */
+    .day {
+      position: relative;
+      padding: 0;
+      background: transparent;
+      border-right: 1px solid rgba(140,170,255,0.22);
+      border-bottom: 1px solid rgba(140,170,255,0.22);
+      border-top: none; border-left: none;
+      cursor: pointer; overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+      animation: cellrise 0.45s cubic-bezier(.2,.8,.3,1) both;
+      animation-delay: calc(var(--ci, 0) * 12ms);
+    }
+    @keyframes cellrise { from { opacity: 0; transform: scale(0.96) translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .day::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(70% 50% at 50% 0%, rgba(77,107,255,0.1), transparent 80%);
+      opacity: 0; transition: opacity 0.22s ease; pointer-events: none;
+    }
+    .day:hover {
+      background: rgba(60,90,240,0.09);
+      box-shadow: inset 0 0 0 1px rgba(100,140,255,0.3);
+      z-index: 1;
+    }
+    .day:hover::before { opacity: 1; }
+
+    .day.other { opacity: 0.22; pointer-events: none; }
+    .day.weekend { background: rgba(50,65,120,0.12); }
+
+    /* HEUTE */
+    .day.today {
+      background: rgba(26,63,255,0.09);
+      box-shadow: inset 0 0 0 1.5px rgba(77,107,255,0.6), inset 0 0 24px rgba(26,63,255,0.07);
+      z-index: 1;
+    }
+    .day.today::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(55% 38% at 50% 0%, rgba(77,107,255,0.2), transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* FEIERTAG */
+    .day.holiday {
+      background: linear-gradient(160deg, rgba(245,200,66,0.07), transparent);
+      box-shadow: inset 0 0 0 1px rgba(245,200,66,0.22);
+    }
+
+    /* ===== TAG-KOPF ===== */
+    .day-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.45rem 0.5rem 0.3rem;
+      position: relative; z-index: 1;
+    }
+
+    .day .num {
+      display: grid; place-items: center;
+      min-width: 1.72rem; height: 1.72rem;
+      font-size: 0.82rem; font-weight: 700;
+      color: #6878a0; border-radius: 0.5rem;
+      transition: color 0.2s ease;
+    }
+    .day:hover .num { color: #b8c8e8; }
+
+    .day.today .num {
+      color: #fff;
+      background: linear-gradient(145deg, #3b67e8 0%, #1a3fff 100%);
+      box-shadow: 0 0 0 3px rgba(77,107,255,0.28), 0 4px 14px -4px rgba(26,63,255,0.9);
+      animation: todaypulse 3s ease-in-out infinite;
+    }
+    @keyframes todaypulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(77,107,255,0.28), 0 4px 14px -4px rgba(26,63,255,0.9); }
+      50%       { box-shadow: 0 0 0 5px rgba(77,107,255,0.15), 0 4px 18px -2px rgba(26,63,255,0.9); }
+    }
+
+    .hol-dot {
+      width: 0.48rem; height: 0.48rem; border-radius: 50%;
+      background: #f5c842;
+      box-shadow: 0 0 8px rgba(245,200,66,0.9), 0 0 18px rgba(245,200,66,0.45);
+    }
+
+    .hol-label {
+      margin: 0 0.5rem 0.28rem;
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.01em;
+      color: #d4ab3a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      position: relative; z-index: 1;
+    }
+
+    /* ===== EVENTS ===== */
+    .day-events {
+      display: flex; flex-direction: column; gap: 0.22rem;
+      padding: 0.15rem 0.42rem 0.5rem;
+      overflow: hidden; flex: 1;
+      position: relative; z-index: 1;
+    }
+
+    .event {
+      width: 100%; text-align: left; border: 0; cursor: pointer;
+      font: inherit; font-size: 0.75rem; font-weight: 500; line-height: 1.25;
+      padding: 0.3rem 0.5rem 0.3rem 0.75rem;
+      border-radius: 0.5rem;
+      color: #e2ecff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      position: relative;
+      transition: transform 0.14s ease, filter 0.14s ease, box-shadow 0.14s ease;
+    }
+    .event::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; border-radius: 0 2px 2px 0;
+    }
+    .event:hover { transform: translateX(3px); filter: brightness(1.25); }
+    .event b { font-weight: 700; opacity: 0.9; margin-right: 0.2rem; font-size: 0.7rem; }
+
+    .ev-blue   { background: rgba(77,107,255,0.22); box-shadow: inset 0 0 0 1px rgba(77,107,255,0.3); }
+    .ev-blue::before   { background: linear-gradient(180deg,#7b9bff,#4d6bff); box-shadow: 2px 0 8px rgba(77,107,255,0.7); }
+    .ev-green  { background: rgba(37,211,102,0.18); box-shadow: inset 0 0 0 1px rgba(37,211,102,0.28); }
+    .ev-green::before  { background: linear-gradient(180deg,#4ade80,#25d366); box-shadow: 2px 0 8px rgba(37,211,102,0.7); }
+    .ev-amber  { background: rgba(245,200,66,0.2); box-shadow: inset 0 0 0 1px rgba(245,200,66,0.3); color: #ffe9a8; }
+    .ev-amber::before  { background: linear-gradient(180deg,#fde272,#f5c842); box-shadow: 2px 0 8px rgba(245,200,66,0.7); }
+    .ev-violet { background: rgba(168,120,255,0.22); box-shadow: inset 0 0 0 1px rgba(168,120,255,0.3); }
+    .ev-violet::before { background: linear-gradient(180deg,#c4a5ff,#a878ff); box-shadow: 2px 0 8px rgba(168,120,255,0.7); }
+    .ev-red    { background: rgba(255,93,108,0.2); box-shadow: inset 0 0 0 1px rgba(255,93,108,0.3); }
+    .ev-red::before    { background: linear-gradient(180deg,#ff8a94,#ff5d6c); box-shadow: 2px 0 8px rgba(255,93,108,0.7); }
+    .ev-grey   { background: rgba(140,158,200,0.16); box-shadow: inset 0 0 0 1px rgba(140,158,200,0.25); }
+    .ev-grey::before   { background: linear-gradient(180deg,#b0c0de,#8c9ec8); }
+
+    /* ===== DRAWER ===== */
+    .drawer-icon {
+      display: grid; place-items: center;
+      width: 3rem; height: 3rem; border-radius: 0.9rem; margin-bottom: 0.9rem;
+      background: rgba(77,107,255,0.15);
+      border: 1px solid rgba(77,107,255,0.3);
+      color: #9fb4ff;
+    }
+    .drawer-icon.edit.ev-icon-green  { background: rgba(37,211,102,0.12); border-color: rgba(37,211,102,0.3); color: #4ade80; }
+    .drawer-icon.edit.ev-icon-amber  { background: rgba(245,200,66,0.12); border-color: rgba(245,200,66,0.3); color: #f5d34a; }
+    .drawer-icon.edit.ev-icon-violet { background: rgba(168,120,255,0.12); border-color: rgba(168,120,255,0.3); color: #c4a5ff; }
+    .drawer-icon.edit.ev-icon-red    { background: rgba(255,93,108,0.12); border-color: rgba(255,93,108,0.3); color: #ff8a94; }
+    .drawer-icon.edit.ev-icon-grey   { background: rgba(140,158,200,0.1); border-color: rgba(140,158,200,0.25); color: #aab8d6; }
+    .drawer-icon svg { width: 1.4rem; height: 1.4rem; }
+
+    .d-section {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: #4e6595;
+      padding-bottom: 0.55rem; margin-bottom: 0.7rem;
+      border-bottom: 1px solid rgba(140,170,255,0.1);
+    }
+
+    .d-check { display: flex; align-items: center; gap: 0.65rem; margin: 0.1rem 0 1rem; cursor: pointer; }
+    .d-toggle { position: relative; width: 2.2rem; height: 1.2rem; flex-shrink: 0; }
+    .d-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .d-toggle-track {
+      position: absolute; inset: 0; border-radius: 360px;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+      transition: background 0.2s ease, border-color 0.2s ease;
+      cursor: pointer;
+    }
+    .d-toggle-track::after {
+      content: ''; position: absolute;
+      width: 0.9rem; height: 0.9rem; border-radius: 50%;
+      top: 50%; left: 0.1rem; transform: translateY(-50%);
+      background: #6878a0;
+      transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), background 0.2s ease;
+    }
+    .d-toggle input:checked + .d-toggle-track { background: rgba(26,63,255,0.4); border-color: rgba(77,107,255,0.6); }
+    .d-toggle input:checked + .d-toggle-track::after { transform: translate(1rem, -50%); background: #fff; }
+    .d-check > span { font-size: 0.88rem; color: #b0c0e0; }
+
+    .swatches { display: flex; gap: 0.55rem; }
+    .sw {
+      width: 1.85rem; height: 1.85rem; border-radius: 50%;
+      cursor: pointer; border: 2px solid transparent;
+      transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .sw:hover { transform: scale(1.15); }
+    .sw.active { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.18); }
+    .sw.ev-blue   { background: #4d6bff; }
+    .sw.ev-green  { background: #25d366; }
+    .sw.ev-amber  { background: #f5c842; }
+    .sw.ev-violet { background: #a878ff; }
+    .sw.ev-red    { background: #ff5d6c; }
+    .sw.ev-grey   { background: #8c9ec8; }
+
+    .d-actions { display: flex; gap: 0.6rem; margin-top: 0.9rem; }
     .d-save { flex: 1; justify-content: center; }
     .d-del { color: #ff8a94; }
-    .d-err { margin: 0.8rem 0 0; font-size: 0.85rem; color: #ff8a94; background: rgba(255,93,108,0.1); border: 1px solid rgba(255,93,108,0.3); padding: 0.6rem 0.75rem; border-radius: 0.5rem; }
-    .d-meta { margin: 0.8rem 0 0; font-size: 0.75rem; color: #7e8db0; }
+    .d-err {
+      margin: 0.8rem 0 0; font-size: 0.84rem; color: #ff8a94;
+      background: rgba(255,93,108,0.1); border: 1px solid rgba(255,93,108,0.28);
+      padding: 0.65rem 0.8rem; border-radius: 0.6rem;
+    }
+    .d-meta { margin: 0.75rem 0 0; font-size: 0.74rem; color: #5e6e90; }
+    .d-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
 
-    @media (max-width: 860px) {
-      .grid { grid-auto-rows: minmax(84px, 1fr); }
-      .event { font-size: 0.68rem; }
-      .cal-title { min-width: auto; font-size: 1.05rem; }
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .grid { grid-auto-rows: minmax(80px, 1fr); }
+      .event { font-size: 0.66rem; }
+      .cal-title { min-width: auto; font-size: 1.2rem; }
+    }
+    @media (max-width: 640px) {
+      .cal-bar { padding: 0.75rem 0.9rem; border-radius: 1rem; }
+      .new-btn span { display: none; }
+      .live span:last-child { display: none; }
+      .d-row { grid-template-columns: 1fr; gap: 0; }
     }
   </style>
 </AdminLayout>

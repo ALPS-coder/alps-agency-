@@ -1,0 +1,220 @@
+---
+// ATEAM — Team-Accounts. Mitarbeiter anlegen, auflisten & löschen.
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { requireAdmin } from '../../lib/supabase';
+
+export const prerender = false;
+
+const { supabase, displayName, roleLabel, redirect, user } = await requireAdmin(Astro.cookies, Astro.request);
+if (redirect) return Astro.redirect(redirect);
+
+// Nur Admins dürfen diese Seite sehen
+if (roleLabel !== 'Admin') return Astro.redirect('/admin/');
+
+let successMsg = '';
+let errorMsg = '';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const action = String(form.get('action') ?? '');
+
+  if (action === 'create') {
+    const email     = String(form.get('email') ?? '').trim().toLowerCase();
+    const full_name = String(form.get('full_name') ?? '').trim();
+    const password  = String(form.get('password') ?? '');
+    const role      = String(form.get('role') ?? 'team');
+
+    if (!email || !full_name || !password) {
+      errorMsg = 'Alle Felder sind Pflicht.';
+    } else if (password.length < 8) {
+      errorMsg = 'Passwort muss mindestens 8 Zeichen haben.';
+    } else {
+      const { data, error } = await supabase.rpc('create_team_member', {
+        p_email: email, p_full_name: full_name, p_password: password, p_role: role,
+      });
+      if (error) {
+        errorMsg = error.message.replace('ERROR: ', '').split('\n')[0];
+      } else {
+        successMsg = `Account für ${full_name} (${email}) wurde angelegt. Temporäres Passwort muss beim ersten Login geändert werden.`;
+      }
+    }
+  }
+
+  if (action === 'delete') {
+    const userId = String(form.get('user_id') ?? '');
+    const { error } = await supabase.rpc('delete_team_member', { p_user_id: userId });
+    if (error) {
+      errorMsg = error.message.replace('ERROR: ', '').split('\n')[0];
+    } else {
+      successMsg = 'Mitarbeiter wurde entfernt.';
+    }
+  }
+
+  if (action === 'reset_pw') {
+    const userId = String(form.get('user_id') ?? '');
+    const { error } = await supabase.rpc('admin_set_must_change_password', {
+      p_user_id: userId, p_value: true,
+    });
+    if (error) {
+      errorMsg = 'Fehler beim Zurücksetzen: ' + error.message.split('\n')[0];
+    } else {
+      successMsg = 'Passwort-Änderungs-Pflicht gesetzt — Mitarbeiter wird beim nächsten Login aufgefordert.';
+    }
+  }
+}
+
+const { data: members } = await supabase
+  .from('profiles')
+  .select('id, email, full_name, role, must_change_password, created_at')
+  .order('created_at', { ascending: true });
+
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const initials = (n: string) => (n || '?').split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
+---
+<AdminLayout title="ATEAM · Team-Accounts — Alps Agency" heading="Team-Accounts" subtitle="Mitarbeiter anlegen, verwalten & entfernen" active="team" displayName={displayName} roleLabel={roleLabel}>
+
+  {successMsg && <div class="banner ok">{successMsg}</div>}
+  {errorMsg   && <div class="banner err">{errorMsg}</div>}
+
+  <!-- Bestehende Mitarbeiter -->
+  <section class="card reveal" style="--i:1">
+    <h2 class="sec-title">Aktuelle Mitarbeiter</h2>
+    <div class="member-list">
+      {(members ?? []).map((m) => (
+        <div class="member-row">
+          <div class="m-avatar">{initials(m.full_name ?? m.email ?? '?')}</div>
+          <div class="m-info">
+            <span class="m-name">{m.full_name || '–'}</span>
+            <span class="m-email">{m.email}</span>
+          </div>
+          <div class="m-badges">
+            <span class:list={['badge', m.role]}>{m.role === 'admin' ? 'Admin' : 'Team'}</span>
+            {m.must_change_password && <span class="badge warn">Muss PW ändern</span>}
+          </div>
+          <span class="m-date">{fmtDate(m.created_at)}</span>
+          {m.id !== user!.id && (
+            <div class="m-actions">
+              <form method="POST">
+                <input type="hidden" name="action" value="reset_pw" />
+                <input type="hidden" name="user_id" value={m.id} />
+                <button class="btn-sm secondary" type="submit" title="PW-Änderung erzwingen">PW reset</button>
+              </form>
+              <form method="POST" onsubmit="return confirm('Mitarbeiter wirklich löschen?')">
+                <input type="hidden" name="action" value="delete" />
+                <input type="hidden" name="user_id" value={m.id} />
+                <button class="btn-sm danger" type="submit">Löschen</button>
+              </form>
+            </div>
+          )}
+          {m.id === user!.id && <span class="m-self">(du)</span>}
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Neuen Mitarbeiter anlegen -->
+  <section class="card reveal" style="--i:2">
+    <h2 class="sec-title">Neuen Mitarbeiter anlegen</h2>
+    <p class="muted" style="margin:0 0 1.5rem">Der Mitarbeiter erhält ein temporäres Passwort und muss es beim ersten Login ändern.</p>
+    <form method="POST" class="create-form" autocomplete="off">
+      <input type="hidden" name="action" value="create" />
+      <div class="fields">
+        <label class="field">
+          <span>Vollständiger Name</span>
+          <input type="text" name="full_name" placeholder="Max Mustermann" required />
+        </label>
+        <label class="field">
+          <span>E-Mail-Adresse</span>
+          <input type="email" name="email" placeholder="max@alpsagency.de" required />
+        </label>
+        <label class="field">
+          <span>Temporäres Passwort</span>
+          <input type="text" name="password" placeholder="mind. 8 Zeichen" required minlength="8" autocomplete="new-password" />
+        </label>
+        <label class="field">
+          <span>Rolle</span>
+          <select name="role">
+            <option value="team">Team</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+      </div>
+      <button class="btn-primary" type="submit">Account anlegen</button>
+    </form>
+  </section>
+
+</AdminLayout>
+
+<style>
+  .banner {
+    padding: 0.85rem 1.1rem; border-radius: 0.65rem; font-size: 0.9rem;
+    margin-bottom: 1.5rem; font-weight: 500;
+  }
+  .banner.ok  { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.3); color: #6ee7b7; }
+  .banner.err { background: rgba(255,93,108,0.1);  border: 1px solid rgba(255,93,108,0.3); color: #ff8a94; }
+
+  .card {
+    background: rgba(255,255,255,0.035); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 1rem; padding: 1.75rem; margin-bottom: 1.5rem;
+  }
+  .sec-title { margin: 0 0 1.25rem; font-size: 1.05rem; font-weight: 600; }
+
+  .member-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .member-row {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    padding: 0.85rem 1rem; border-radius: 0.65rem;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  }
+  .m-avatar {
+    width: 2.4rem; height: 2.4rem; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #2b54c8, #7c3aed);
+    display: grid; place-items: center; font-size: 0.8rem; font-weight: 700;
+  }
+  .m-info { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; min-width: 0; }
+  .m-name  { font-weight: 600; font-size: 0.95rem; }
+  .m-email { font-size: 0.82rem; color: #a9b8d4; }
+  .m-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+  .badge {
+    font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 99px;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .badge.admin { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+  .badge.team  { background: rgba(52,211,153,0.12); color: #6ee7b7; border: 1px solid rgba(52,211,153,0.25); }
+  .badge.warn  { background: rgba(251,191,36,0.12); color: #fcd34d; border: 1px solid rgba(251,191,36,0.3); }
+  .m-date { font-size: 0.78rem; color: #7e8db0; margin-left: auto; white-space: nowrap; }
+  .m-actions { display: flex; gap: 0.5rem; }
+  .m-self { font-size: 0.8rem; color: #7e8db0; margin-left: auto; }
+
+  .btn-sm {
+    font: inherit; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem; border: 1px solid; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-sm:hover { opacity: 0.8; }
+  .btn-sm.secondary { background: rgba(77,107,255,0.12); border-color: rgba(77,107,255,0.3); color: #93c5fd; }
+  .btn-sm.danger    { background: rgba(255,93,108,0.1);  border-color: rgba(255,93,108,0.3); color: #ff8a94; }
+
+  .create-form .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+  @media (max-width: 640px) { .create-form .fields { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .field > span { font-size: 0.82rem; color: #a9b8d4; font-weight: 500; }
+  .field input, .field select {
+    width: 100%; padding: 0.75rem 0.9rem; border-radius: 0.6rem;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
+    color: #fff; font: inherit; font-size: 0.95rem;
+    transition: border-color 0.2s;
+  }
+  .field input::placeholder { color: rgba(169,184,212,0.45); }
+  .field input:focus, .field select:focus { outline: none; border-color: #4d6bff; }
+  .field select option { background: #0f1e3d; }
+
+  .btn-primary {
+    padding: 0.85rem 2rem; border: 0; border-radius: 0.65rem; cursor: pointer;
+    font: inherit; font-weight: 600; font-size: 0.95rem; color: #fff;
+    background: linear-gradient(180deg, #2b54c8 0%, #1a3fff 100%);
+    box-shadow: 0 6px 20px -6px rgba(26,63,255,0.55);
+    transition: filter 0.15s;
+  }
+  .btn-primary:hover { filter: brightness(1.1); }
+</style>

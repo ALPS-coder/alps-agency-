@@ -6,42 +6,69 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <a href="/" class="legal-back">&larr; Zur&uuml;ck zur Startseite</a>
     <h1>Impressum</h1>
 
-    <p class="legal-note">
-      Platzhalter &mdash; bitte vor dem Livegang mit den echten Angaben ersetzen
-      (Angaben gem&auml;&szlig; &sect; 5 DDG / &sect; 5 TMG).
-    </p>
-
     <h2>Angaben gem&auml;&szlig; &sect; 5 DDG</h2>
     <p>
       Alps Agency<br />
-      [Vor- und Nachname / Firmenname]<br />
-      [Stra&szlig;e und Hausnummer]<br />
-      [PLZ Ort]
+      Inhaber: J. Alps<br />
+      Sch&ouml;naugasse 14<br />
+      8010 Graz<br />
+      &Ouml;sterreich
     </p>
 
     <h2>Kontakt</h2>
     <p>
-      Telefon: [Telefonnummer]<br />
-      E-Mail: [E-Mail-Adresse]
+      E-Mail: <a href="mailto:ALPSAGENCY@proton.me">ALPSAGENCY@proton.me</a>
     </p>
 
-    <h2>Umsatzsteuer-ID</h2>
+<h2>Verantwortlich f&uuml;r den Inhalt gem&auml;&szlig; &sect; 18 Abs. 2 MStV</h2>
     <p>
-      Umsatzsteuer-Identifikationsnummer gem&auml;&szlig; &sect; 27a Umsatzsteuergesetz:<br />
-      [USt-IdNr.]
+      J. Alps<br />
+      Sch&ouml;naugasse 14, 8010 Graz, &Ouml;sterreich
     </p>
 
-    <h2>Redaktionell verantwortlich</h2>
+    <h2>Haftung f&uuml;r Inhalte</h2>
     <p>
-      [Name]<br />
-      [Anschrift wie oben]
+      Als Diensteanbieter sind wir gem&auml;&szlig; &sect; 7 Abs. 1 DDG f&uuml;r eigene Inhalte
+      auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach &sect;&sect; 8 bis 10
+      DDG sind wir als Diensteanbieter jedoch nicht verpflichtet, &uuml;bermittelte oder
+      gespeicherte fremde Informationen zu &uuml;berwachen oder nach Umst&auml;nden zu forschen,
+      die auf eine rechtswidrige T&auml;tigkeit hinweisen.
+    </p>
+    <p>
+      Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den
+      allgemeinen Gesetzen bleiben hiervon unber&uuml;hrt. Eine diesbez&uuml;gliche Haftung ist
+      jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung m&ouml;glich.
+      Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte
+      umgehend entfernen.
+    </p>
+
+    <h2>Haftung f&uuml;r Links</h2>
+    <p>
+      Unser Angebot enth&auml;lt Links zu externen Webseiten Dritter, auf deren Inhalte wir
+      keinen Einfluss haben. Deshalb k&ouml;nnen wir f&uuml;r diese fremden Inhalte auch keine
+      Gew&auml;hr &uuml;bernehmen. F&uuml;r die Inhalte der verlinkten Seiten ist stets der
+      jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden
+      zum Zeitpunkt der Verlinkung auf m&ouml;gliche Rechtsverst&ouml;&szlig;e &uuml;berpr&uuml;ft.
+      Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente
+      inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer
+      Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir
+      derartige Links umgehend entfernen.
+    </p>
+
+    <h2>Urheberrecht</h2>
+    <p>
+      Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen
+      dem deutschen Urheberrecht. Die Vervielf&auml;ltigung, Bearbeitung, Verbreitung und jede
+      Art der Verwertung au&szlig;erhalb der Grenzen des Urheberrechtes bed&uuml;rfen der
+      schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien
+      dieser Seite sind nur f&uuml;r den privaten, nicht kommerziellen Gebrauch gestattet.
     </p>
 
     <h2>Streitschlichtung</h2>
     <p>
       Die Europ&auml;ische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS)
       bereit:
-      <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr/</a>.
+      <a href="https://ec.europa.eu/consumers/odr/" target="_blank" rel="noopener noreferrer">https://ec.europa.eu/consumers/odr/</a>.<br />
       Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer
       Verbraucherschlichtungsstelle teilzunehmen.
     </p>
@@ -78,11 +105,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
   .legal p { margin-bottom: 1rem; }
   .legal a { color: var(--color-accent-bright); word-break: break-word; }
-  .legal-note {
-    padding: 0.9rem 1.1rem;
-    border-left: 3px solid var(--color-accent);
-    background: rgba(26, 63, 255, 0.08);
-    border-radius: 0 0.5rem 0.5rem 0;
-    font-size: 0.9rem;
+  .placeholder {
+    background: rgba(255, 160, 0, 0.15);
+    border: 1px dashed rgba(255, 160, 0, 0.5);
+    border-radius: 0.25rem;
+    padding: 0.05rem 0.35rem;
+    color: #ffa040;
+    font-size: 0.9em;
   }
 </style>

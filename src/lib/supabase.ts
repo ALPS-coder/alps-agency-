@@ -29,7 +29,11 @@ export function createSupabaseServer(cookies: AstroCookies, request: Request) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) => {
-          cookies.set(name, value, options as CookieOptions);
+          try {
+            cookies.set(name, value, options as CookieOptions);
+          } catch {
+            // Token-Refresh feuert asynchron nach dem Redirect — harmlos ignorieren
+          }
         });
       },
     },
@@ -69,11 +73,19 @@ export async function requireAdmin(cookies: AstroCookies, request: Request) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('full_name, role, must_change_password')
     .eq('id', user.id)
     .single();
+
+  // Start-Passwort-Zwang: neue Team-Accounts müssen nach dem 2FA-Login zuerst
+  // ihr temporäres Passwort ändern. Die Passwort-Seite selbst nutzt requireAdmin
+  // NICHT (eigener Guard), daher keine Endlosschleife.
+  if (profile?.must_change_password) {
+    return { supabase, user, displayName: '', roleLabel: '', redirect: '/admin/passwort-aendern' };
+  }
+
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Team';
-  const roleLabel = profile?.role === 'admin' ? 'Admin' : 'Mitarbeiter';
+  const roleLabel = profile?.role === 'admin' ? 'Admin' : profile?.role === 'team' ? 'Team' : 'Mitarbeiter';
 
   return { supabase, user, displayName, roleLabel, redirect: null };
 }
