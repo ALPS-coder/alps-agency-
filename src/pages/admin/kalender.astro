@@ -26,8 +26,8 @@ const custOptions = (customers ?? []).map((c) => ({
 }));
 
 const clientData = {
-  url: import.meta.env.PUBLIC_SUPABASE_URL,
-  key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+  url: 'https://bymnbztudvcjmvbchzvi.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5bW5ienR1ZHZjam12YmNoenZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNzM5ODgsImV4cCI6MjA5Njk0OTk4OH0.bUKCHAj_KLhp7azTRJ-MmaydlngPa11cXiKnMYAN8Us',
   access_token: session?.access_token ?? '',
   refresh_token: session?.refresh_token ?? '',
   members,

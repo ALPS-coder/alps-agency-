@@ -5,11 +5,10 @@ import { requireAdmin } from '../../lib/supabase';
 
 export const prerender = false;
 
-const { supabase, displayName, roleLabel, redirect, user } = await requireAdmin(Astro.cookies, Astro.request);
+const { supabase, displayName, roleLabel, rawRole, redirect, user } = await requireAdmin(Astro.cookies, Astro.request);
 if (redirect) return Astro.redirect(redirect);
 
-// Nur Admins dürfen diese Seite sehen
-if (roleLabel !== 'Admin') return Astro.redirect('/admin/');
+if (rawRole !== 'admin') return Astro.redirect('/admin/');
 
 let successMsg = '';
 let errorMsg = '';
@@ -22,7 +21,9 @@ if (Astro.request.method === 'POST') {
     const email     = String(form.get('email') ?? '').trim().toLowerCase();
     const full_name = String(form.get('full_name') ?? '').trim();
     const password  = String(form.get('password') ?? '');
-    const role      = String(form.get('role') ?? 'team');
+    const role      = (['team', 'admin'] as const).includes(String(form.get('role')) as 'team' | 'admin')
+      ? String(form.get('role')) as 'team' | 'admin'
+      : 'team';
 
     if (!email || !full_name || !password) {
       errorMsg = 'Alle Felder sind Pflicht.';
@@ -42,23 +43,31 @@ if (Astro.request.method === 'POST') {
 
   if (action === 'delete') {
     const userId = String(form.get('user_id') ?? '');
-    const { error } = await supabase.rpc('delete_team_member', { p_user_id: userId });
-    if (error) {
-      errorMsg = error.message.replace('ERROR: ', '').split('\n')[0];
+    if (!userId) {
+      errorMsg = 'Ungültige Anfrage.';
     } else {
-      successMsg = 'Mitarbeiter wurde entfernt.';
+      const { error } = await supabase.rpc('delete_team_member', { p_user_id: userId });
+      if (error) {
+        errorMsg = error.message.replace('ERROR: ', '').split('\n')[0];
+      } else {
+        successMsg = 'Mitarbeiter wurde entfernt.';
+      }
     }
   }
 
   if (action === 'reset_pw') {
     const userId = String(form.get('user_id') ?? '');
-    const { error } = await supabase.rpc('admin_set_must_change_password', {
-      p_user_id: userId, p_value: true,
-    });
-    if (error) {
-      errorMsg = 'Fehler beim Zurücksetzen: ' + error.message.split('\n')[0];
+    if (!userId) {
+      errorMsg = 'Ungültige Anfrage.';
     } else {
-      successMsg = 'Passwort-Änderungs-Pflicht gesetzt — Mitarbeiter wird beim nächsten Login aufgefordert.';
+      const { error } = await supabase.rpc('admin_set_must_change_password', {
+        p_user_id: userId, p_value: true,
+      });
+      if (error) {
+        errorMsg = 'Fehler beim Zurücksetzen: ' + error.message.split('\n')[0];
+      } else {
+        successMsg = 'Passwort-Änderungs-Pflicht gesetzt — Mitarbeiter wird beim nächsten Login aufgefordert.';
+      }
     }
   }
 }

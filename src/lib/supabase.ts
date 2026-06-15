@@ -77,8 +77,9 @@ export async function requireAdmin(cookies: AstroCookies, request: Request) {
     return { supabase, user, displayName: '', roleLabel: '', redirect: '/admin/passwort-aendern' };
   }
 
+  const rawRole = profile?.role ?? '';
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Team';
-  const roleLabel = profile?.role === 'admin' ? 'Admin' : profile?.role === 'team' ? 'Team' : 'Mitarbeiter';
+  const roleLabel = rawRole === 'admin' ? 'Admin' : rawRole === 'team' ? 'Team' : 'Mitarbeiter';
 
-  return { supabase, user, displayName, roleLabel, redirect: null };
+  return { supabase, user, displayName, roleLabel, rawRole, redirect: null };
 }

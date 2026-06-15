@@ -19,8 +19,8 @@ const { title, heading, subtitle, active, displayName, roleLabel } = Astro.props
 const sbLayout = createSupabaseServer(Astro.cookies, Astro.request);
 const { data: { session: rtSession } } = await sbLayout.auth.getSession();
 const rtData = {
-  url: import.meta.env.PUBLIC_SUPABASE_URL,
-  key: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+  url: 'https://bymnbztudvcjmvbchzvi.supabase.co',
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5bW5ienR1ZHZjam12YmNoenZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNzM5ODgsImV4cCI6MjA5Njk0OTk4OH0.bUKCHAj_KLhp7azTRJ-MmaydlngPa11cXiKnMYAN8Us',
   access_token: rtSession?.access_token ?? '',
   refresh_token: rtSession?.refresh_token ?? '',
 };

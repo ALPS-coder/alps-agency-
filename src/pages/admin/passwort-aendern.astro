@@ -44,8 +44,12 @@ if (Astro.request.method === 'POST') {
         ? 'Bitte wähle ein anderes Passwort als das temporäre.'
         : 'Passwort konnte nicht gesetzt werden. Bitte erneut versuchen.';
     } else {
-      await supabase.from('profiles').update({ must_change_password: false }).eq('id', user.id);
-      return Astro.redirect('/admin/');
+      const { error: flagErr } = await supabase.from('profiles').update({ must_change_password: false }).eq('id', user.id);
+      if (flagErr) {
+        errorMsg = 'Passwort gesetzt, aber Profil konnte nicht aktualisiert werden. Bitte Admin kontaktieren.';
+      } else {
+        return Astro.redirect('/admin/');
+      }
     }
   }
 }
