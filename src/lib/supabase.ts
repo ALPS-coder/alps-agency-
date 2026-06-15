@@ -5,14 +5,19 @@
 import { createServerClient, parseCookieHeader, type CookieOptions } from '@supabase/ssr';
 import type { AstroCookies } from 'astro';
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+// process.env wird in Vercel-Serverless-Functions zuverlässig zur Laufzeit injiziert.
+// import.meta.env wird nur zur Build-Zeit eingebettet – zu riskant für SSR.
+const supabaseUrl =
+  (typeof process !== 'undefined' && process.env.PUBLIC_SUPABASE_URL) ||
+  import.meta.env.PUBLIC_SUPABASE_URL ||
+  '';
+const supabaseAnonKey =
+  (typeof process !== 'undefined' && process.env.PUBLIC_SUPABASE_ANON_KEY) ||
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY ||
+  '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  // Früh & deutlich scheitern, statt mit kryptischen Fehlern weiterzulaufen.
-  throw new Error(
-    'Supabase-Env fehlt: PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY in .env setzen.'
-  );
+  console.error('[supabase] ENV fehlt: PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY nicht gesetzt.');
 }
 
 /**
