@@ -3,8 +3,6 @@
 // Schreibt einen TOTP-Faktor in Supabase ein, zeigt QR-Code + Secret,
 // und verifiziert den ersten Code aus der Authenticator-App. Erst danach
 // erreicht der Mitarbeiter das Dashboard. Komplett in Supabase, ohne externen Dienst.
-import { Image } from 'astro:assets';
-import berg from '../../assets/alps-logo-symbol.png';
 import { createSupabaseServer } from '../../lib/supabase';
 
 export const prerender = false;
@@ -89,7 +87,7 @@ if (Astro.request.method === 'POST') {
     <main class="wrap">
       <section class="card">
         <div class="brand">
-          <Image class="brand-mark" src={berg} alt="" aria-hidden="true" width={132} height={61} />
+          <img class="brand-mark" src="/alps-logo-symbol.png" alt="" aria-hidden="true" width="132" height="61" />
           <span class="brand-word"><strong>ALPS</strong><em>ATEAM</em></span>
         </div>
 

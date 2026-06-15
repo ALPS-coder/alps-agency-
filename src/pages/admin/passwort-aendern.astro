@@ -3,8 +3,6 @@
 // Greift nur, wenn profiles.must_change_password = true ist. Setzt das neue
 // Passwort und hebt das Flag auf. Eigener Guard (nicht requireAdmin), damit
 // keine Endlosschleife mit dem Passwort-Redirect entsteht.
-import { Image } from 'astro:assets';
-import berg from '../../assets/alps-logo-symbol.png';
 import { createSupabaseServer } from '../../lib/supabase';
 
 export const prerender = false;
@@ -76,7 +74,7 @@ if (Astro.request.method === 'POST') {
     <main class="wrap">
       <section class="card">
         <div class="brand">
-          <Image class="brand-mark" src={berg} alt="" aria-hidden="true" width={132} height={61} />
+          <img class="brand-mark" src="/alps-logo-symbol.png" alt="" aria-hidden="true" width="132" height="61" />
           <span class="brand-word"><strong>ALPS</strong><em>ATEAM</em></span>
         </div>
 

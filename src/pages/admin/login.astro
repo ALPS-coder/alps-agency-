@@ -1,8 +1,6 @@
 ---
 // ATEAM — Admin-Login. Split-Layout: links Bergszene, rechts Login.
 // Echte Supabase-Auth (E-Mail + Passwort). Bei Erfolg → Weiterleitung zum Dashboard.
-import { Image } from 'astro:assets';
-import berg from '../../assets/alps-logo-symbol.png';
 import { createSupabaseServer } from '../../lib/supabase';
 
 export const prerender = false;
@@ -72,7 +70,7 @@ if (Astro.request.method === 'POST') {
       <section class="panel">
         <div class="card" aria-labelledby="auth-title">
           <div class="brand">
-            <Image class="brand-mark" src={berg} alt="" aria-hidden="true" width={132} height={61} />
+            <img class="brand-mark" src="/alps-logo-symbol.png" alt="" aria-hidden="true" width="132" height="61" />
             <span class="brand-word"><strong>ALPS</strong><em>AGENCY</em></span>
           </div>
 
